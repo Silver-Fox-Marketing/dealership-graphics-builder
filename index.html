@@ -1158,8 +1158,10 @@ function aim(eye, target) {
   return { pos: eye.clone(), yaw: Math.atan2(-d.x, -d.z), pitch: Math.atan2(d.y, Math.hypot(d.x, d.z)) };
 }
 let fly = null;
+let jumpV = null;               // a jump's speed up while in the air (see "Space jumps"); null on the ground
 let upClose = false;            // flown up to one graphic: the dots step out of the way until the view moves on
 function flyTo(to, ms = 1100) {
+  jumpV = null;                                       // a jump in the air ends where the flight starts
   fly = { from: { pos: cam.pos.clone(), yaw: cam.yaw, pitch: cam.pitch, hfov: cam.hfov }, to, t0: performance.now(),
     ms: reduced ? 1 : ms };
   dirty();
@@ -1318,6 +1320,9 @@ function walkTo(p) {
 }
 const keys = new Set();
 const MOVE_KEYS = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+let focusByMouse = false;                             // did the focus last move by pointer, or by Tab (for Space)
+addEventListener('pointerdown', () => { focusByMouse = true; }, true);
+addEventListener('keydown', (e) => { if (e.key === 'Tab') focusByMouse = false; }, true);
 addEventListener('keydown', (e) => {
   if ((e.target instanceof Element && e.target.closest('input, textarea, dialog')) || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
@@ -1330,6 +1335,18 @@ addEventListener('keydown', (e) => {
   else if (k === '-') zoom(1.3);
   else if (k === 'h') setPlain(!state.plain);
   else if (k === 'n') setNight(!night);
+  else if (k === ' ') {
+    // Space jumps. Someone who tabbed to a button still presses it with Space; a button or card the mouse just clicked
+    // lets go of the focus, so Space doesn't click it again (a theme or job card would come off). Chrome counts any key
+    // as keyboard use, so how the focus got there is tracked instead (focusByMouse).
+    const el = document.activeElement;
+    if (el instanceof HTMLElement && el !== document.body && el.closest('button, a, select, summary, [role="button"]')) {
+      if (!focusByMouse) return;
+      el.blur();
+    }
+    e.preventDefault();
+    jump();
+  }
   else if (k === 'escape') hideInfo();
 });
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
@@ -1346,10 +1363,14 @@ function blocked(dir, dist) {
 function updateKeys(dt) {
   if (!keys.size) return false;
   upClose = false;
-  const f = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
+  // W and S walk, A and D step aside; the arrows look around: left and right turn, up and down tilt the view (Barrett,
+  // 2026-10-20: "look up and down using the up and down keys").
+  const f = (keys.has('w') ? 1 : 0) - (keys.has('s') ? 1 : 0);
   const s = (keys.has('d') ? 1 : 0) - (keys.has('a') ? 1 : 0);
   const turn = (keys.has('arrowleft') ? 1 : 0) - (keys.has('arrowright') ? 1 : 0);
+  const tilt = (keys.has('arrowup') ? 1 : 0) - (keys.has('arrowdown') ? 1 : 0);
   cam.yaw += turn * dt * 1.4;
+  cam.pitch = clamp(cam.pitch + tilt * dt * 1.1, -1.45, 1.45);       // the same limits as looking with the mouse
   fwd.set(-Math.sin(cam.yaw), 0, -Math.cos(cam.yaw));
   side.set(Math.cos(cam.yaw), 0, -Math.sin(cam.yaw));
   step.copy(fwd).multiplyScalar(f).addScaledVector(side, s);
@@ -1358,8 +1379,30 @@ function updateKeys(dt) {
     step.normalize();
     if (!blocked(step, dist)) {
       cam.pos.addScaledVector(step, dist);
-      if (cam.pos.y < 6) cam.pos.y += (floorAt(cam.pos) + EYE - cam.pos.y) * Math.min(1, dt * 8);
+      if (cam.pos.y < 6 && jumpV === null) cam.pos.y += (floorAt(cam.pos) + EYE - cam.pos.y) * Math.min(1, dt * 8);
     }
+  }
+  return true;
+}
+// Space jumps (Barrett, 2026-10-20): on foot only, about half a meter up and back down in two thirds of a second, and
+// walking keeps going while in the air.
+const GRAVITY = 9.8, JUMP = 3.3;                      // m/s^2, and the speed off the ground in m/s
+function jump() {
+  if (jumpV !== null || fly || cam.pos.y > 6) return;
+  if (Math.abs(cam.pos.y - (floorAt(cam.pos) + EYE)) > 0.3) return;   // standing on the floor, at eye height
+  jumpV = JUMP;
+  upClose = false;
+  hideHint();
+  dirty();
+}
+function updateJump(dt) {
+  if (jumpV === null) return false;
+  cam.pos.y += jumpV * dt;
+  jumpV -= GRAVITY * dt;
+  const ground = floorAt(cam.pos) + EYE;
+  if (jumpV < 0 && cam.pos.y <= ground) {             // landed (on whatever floor is under the camera now)
+    cam.pos.y = ground;
+    jumpV = null;
   }
   return true;
 }
@@ -2438,7 +2481,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
-    | updateWeather(now);
+    | updateWeather(now) | updateJump(dt);
   if (!busy && !needs) {
     if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
     return;

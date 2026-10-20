@@ -10,7 +10,8 @@ Silver Fox Marketing's dealership graphics on a walk-around 3D dealership: pole 
 2. **Or pick a kind of graphic.** Click a numbered dot on the dealership, or a place in the side panel. The view flies to it and a short card says what it is, where it goes and its usual size. Click a job's card to put it in that place.
 3. **Take the tour.** It steps through every kind of graphic, with Back and Next on the card.
 4. **Move around.**
-   - **Look:** drag. **Walk:** click the ground, or use W A S D.
+   - **Look:** drag, or use the arrow keys (up and down look up and down).
+   - **Walk:** click the ground, or use W A S D. **Jump:** Space.
    - **Zoom:** scroll, pinch, or press + and −.
    - **Stops:** the names along the bottom, under Outside and Inside.
 5. **Compare.**
