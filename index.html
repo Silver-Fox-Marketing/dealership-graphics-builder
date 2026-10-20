@@ -1,0 +1,2480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dealership Graphics Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='84%20-34%20264%20264'%3E%3Cpath%20fill='%2358595A'%20d='m343.94,99.66l-35.49-24.31-6.71-31.02-44.77,24.63h-.23c-5.19,0-10.36-.39-15.48-1.18-14.18-2.19-28.62-2.19-42.81,0h0c-5.12.78-10.29,1.18-15.48,1.18h-.23l-44.79-24.63-6.71,31.02-35.49,24.31,41.26,33.9s-11.83-41.58,23.66-33.26c35.49,8.33,59.16,44.77,59.16,44.77h0s23.66-36.46,59.16-44.77c35.49-8.33,23.66,33.26,23.66,33.26l41.26-33.9h.02Z'/%3E%3Cpath%20fill='%23231F20'%20d='m260.13,139.29c1.01,1.85,5.37,3.39,9.04,2.1s5.24-4.91,4.22-6.76c-1.01-1.85-3.09.12-13.26,4.66'/%3E%3Cpath%20fill='%23231F20'%20d='m179.57,139.29c-1.01,1.85-5.37,3.39-9.04,2.1-3.67-1.29-5.24-4.91-4.22-6.76s3.09.12,13.26,4.66'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Red+Hat+Display:wght@700;800&display=swap">
+<style>
+/* The Vehicle Graphics Builder's design, for the dealership: the same tokens, type and controls, so the two read as one
+   product. The stage is the dealership in real-time 3D; views.html shows the same graphics on rendered photo views. */
+:root {
+  --floor: #FFFFFF;
+  --sheet: #FFFFFF;
+  --well: #F1F3F5;
+  --ink: #220901;
+  --ink-2: #5B6470;
+  --ink-3: #8A929C;
+  --rule: #E3E6EA;
+  --hover: #F6F7F9;
+  --accent: #FD410D;
+  --accent-ink: #FFFFFF;
+  --accent-wash: #FFF1EB;
+  --navy: #1B2A4A;
+  --on-stage: #23272D;
+  --stage: #E9ECEF;
+  --logo-fox: #58595A;
+  --logo-ink: #231F20;
+  --z-glass: #2F7D6D;
+  --z-building: #7E858F;
+  --z-lot: #F2B705;
+  --z-showroom: #EF4523;
+  --z-lounge: #EE4D9A;
+  --z-service: #1B2A4A;
+  --z-vehicles: #6A4FB3;
+  --font-display: "Red Hat Display", "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-ui: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 8px;
+  --topbar: 56px;
+  --rail: 400px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --floor: #0E1218;
+    --sheet: #121820;
+    --well: #1A212A;
+    --ink: #F2EFEE;
+    --ink-2: #A8AEB7;
+    --ink-3: #7D838D;
+    --rule: #252C36;
+    --hover: #1A212A;
+    --accent: #FF5A27;
+    --accent-wash: #3A1C12;
+    --stage: #0B0F14;
+    --logo-fox: #A2A6AC;
+    --logo-ink: #F2EFEE;
+    --z-service: #6F8BC7;
+    --z-vehicles: #9C86E0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --floor: #0E1218;
+  --sheet: #121820;
+  --well: #1A212A;
+  --ink: #F2EFEE;
+  --ink-2: #A8AEB7;
+  --ink-3: #7D838D;
+  --rule: #252C36;
+  --hover: #1A212A;
+  --accent: #FF5A27;
+  --accent-wash: #3A1C12;
+  --stage: #0B0F14;
+  --logo-fox: #A2A6AC;
+  --logo-ink: #F2EFEE;
+  --z-service: #6F8BC7;
+  --z-vehicles: #9C86E0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--floor);
+  color: var(--ink);
+  font: 400 14px/1.45 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+img { max-width: none; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Top bar */
+.topbar {
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-inline: 24px;
+  background: var(--sheet);
+  border-bottom: 1px solid var(--rule);
+}
+.brand { display: flex; align-items: center; }
+.logo { height: 26px; width: auto; display: block; }
+.logo .lf { fill: var(--logo-fox); }
+.logo .li { fill: var(--logo-ink); }
+.topbar .divider { width: 1px; height: 24px; background: var(--rule); }
+.topbar h1 { margin: 0; font: 700 17px/1.2 var(--font-display); letter-spacing: -.005em; }
+
+/* App: the stage and the rail, edge to edge */
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail);
+  height: calc(100dvh - var(--topbar));
+}
+.showroom { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--stage); }
+
+/* Outside or inside: the zone names along the top of the stage, as the vehicle names are in the vehicle builder */
+.zone-tabs {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  left: 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  padding: 4px 14px 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .86);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+}
+.zone-tab {
+  position: relative;
+  padding: 4px 0 9px;
+  border: 0;
+  background: none;
+  color: #6B727C;
+  font: 800 22px/1.1 var(--font-display);
+  letter-spacing: -.012em;
+  cursor: pointer;
+  transition: color .15s;
+}
+.zone-tab:hover, .zone-tab[aria-pressed="true"] { color: var(--on-stage); }
+.zone-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform .25s ease;
+}
+.zone-tab[aria-pressed="true"]::after { transform: scaleX(1); }
+
+/* The views of the chosen zone, along the bottom of the stage */
+.view-tabs {
+  position: absolute;
+  z-index: 4;
+  bottom: 16px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: 2px;
+  max-width: calc(100% - 180px);
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid #E3E6EA;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.view-tabs::-webkit-scrollbar { display: none; }
+.view-tab {
+  flex: 0 0 auto;
+  height: 32px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: #6B727C;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.view-tab:hover { color: var(--on-stage); background: rgba(27, 42, 74, .06); }
+.view-tab[aria-pressed="true"] { background: var(--navy); color: #FFFFFF; }
+.view-tab .n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(27, 42, 74, .1);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.view-tab[aria-pressed="true"] .n { background: rgba(255, 255, 255, .2); }
+
+/* Stage */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 300px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stage.zoomed { cursor: grab; }
+.stage.dragging { cursor: grabbing; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.frame { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease; }
+.frame.active { opacity: 1; }
+.frame img { position: absolute; display: block; pointer-events: none; -webkit-user-drag: none; }
+.frame .base { inset: 0; width: 100%; height: 100%; }
+.layer { opacity: 0; transition: opacity .3s ease; }
+.layer.on { opacity: 1; }
+.stage.plain .layer.on { opacity: 0; }
+/* A graphic goes on the way vinyl does: one squeegee stroke crosses it, left to right. */
+.layer.appear {
+  transition: none;
+  -webkit-mask-image: linear-gradient(100deg, #000 49%, transparent 51%);
+          mask-image: linear-gradient(100deg, #000 49%, transparent 51%);
+  -webkit-mask-size: 300% 100%;
+          mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  animation: squeegee var(--t, .7s) cubic-bezier(.45, .05, .25, 1) both;
+}
+@keyframes squeegee {
+  from { -webkit-mask-position: 80% 0; mask-position: 80% 0; }
+  to { -webkit-mask-position: 20% 0; mask-position: 20% 0; }
+}
+/* Where a graphic is: an outline around its part of the view, while its card is hovered or just after it goes on. */
+.mark {
+  position: absolute;
+  border: calc(2px / var(--sc, 1)) dashed #FD410D;
+  border-radius: calc(6px / var(--sc, 1));
+  background: rgba(253, 65, 13, .06);
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+.mark.show { opacity: 1; }
+
+/* Controls on the stage (over the renders, so they use fixed colors) */
+.stage-top { position: absolute; z-index: 4; top: 16px; right: 18px; display: flex; gap: 6px; }
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  border: 1px solid #DADEE4;
+  background: rgba(255, 255, 255, .95);
+  color: var(--on-stage);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip-btn:hover { border-color: #B8BEC7; }
+.chip-btn svg { width: 16px; height: 16px; }
+.chip-btn[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #FFFFFF; }
+.chip-btn.icon-only { width: 34px; padding: 0; justify-content: center; }
+.zoom { position: absolute; z-index: 4; right: 18px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+.hint {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 64px;
+  translate: -50% 0;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(27, 42, 74, .82);
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity .4s ease;
+}
+.hint.gone { opacity: 0; }
+.toast {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 70px;
+  translate: -50% 0;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--navy);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(14, 18, 24, .25);
+  opacity: 0;
+  translate: -50% -6px;
+  transition: opacity .2s ease, translate .2s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; translate: -50% 0; }
+.empty-note {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 22px;
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, .94);
+  color: var(--on-stage);
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(14, 18, 24, .18);
+}
+.empty-note p { margin: 0; font-weight: 600; }
+
+/* Rail */
+.picker { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--sheet); border-left: 1px solid var(--rule); }
+.rail-title { margin: 0; padding: 22px 24px 4px; font: 800 19px/1.2 var(--font-display); letter-spacing: -.01em; }
+.rail-sub { margin: 0; padding: 0 24px 12px; color: var(--ink-2); font-size: 13px; text-wrap: pretty; border-bottom: 1px solid var(--rule); }
+.rail-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 24px 20px; scrollbar-width: thin; }
+.grp { display: flex; align-items: center; gap: 8px; margin: 18px 0 2px; font-size: 13px; font-weight: 700; }
+.grp::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.grp-blurb { margin: 0 0 10px 16px; color: var(--ink-2); font-size: 12px; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.card:disabled { cursor: default; opacity: .5; }
+.card-art {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 6px;
+  border-radius: var(--r-md);
+  background: #F1F3F5;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  overflow: hidden;
+}
+.card-art img {
+  position: absolute;
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .2));
+}
+.card:hover:not(:disabled) .card-art { box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.card[aria-pressed="true"] .card-art { box-shadow: inset 0 0 0 2px var(--accent); }
+.card-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: none;
+  place-items: center;
+}
+.card-check svg { width: 12px; height: 12px; }
+.card[aria-pressed="true"] .card-check { display: grid; }
+.card.just .card-check { animation: pop .26s cubic-bezier(.3, 1.5, .55, 1); }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+.card-name { font-size: 12.5px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.card-dealer { color: var(--ink-2); font-size: 12px; line-height: 1.3; }
+.card:focus-visible { outline: none; }
+.card:focus-visible .card-art { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The graphic in hand: what it is, where it goes, its size and the views that show it */
+.detail { padding: 14px 24px 12px; border-top: 1px solid var(--rule); background: var(--sheet); }
+.d-name { margin: 0; font: 700 15px/1.25 var(--font-display); }
+.d-job { margin: 2px 0 8px; color: var(--ink-2); font-size: 12.5px; }
+.d-facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 12.5px; }
+.d-facts dt { color: var(--ink-2); }
+.d-facts dd { margin: 0; }
+.d-views { display: flex; flex-wrap: wrap; gap: 6px; }
+.d-views button, .btn-quiet {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.d-views button:hover, .btn-quiet:hover { border-color: var(--ink-3); }
+.d-views button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash); }
+
+.tally { display: flex; flex-direction: column; gap: 10px; padding: 14px 24px 18px; border-top: 1px solid var(--rule); }
+.tally-row { display: flex; gap: 8px; }
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-block { width: 100%; }
+.btn-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .22);
+  display: inline-grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Review: the chosen graphics as a list */
+.sheet-dlg {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: 0 24px 64px rgba(14, 18, 24, .35);
+}
+.sheet-dlg::backdrop { background: rgba(14, 18, 24, .5); }
+.dlg-head { display: flex; align-items: flex-start; gap: 16px; padding: 20px 24px 12px; border-bottom: 1px solid var(--rule); }
+.dlg-head h2 { margin: 0; font: 800 20px/1.2 var(--font-display); }
+.dlg-head p { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; }
+.dlg-x { margin-left: auto; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--hover); cursor: pointer; display: grid; place-items: center; }
+.dlg-x svg { width: 16px; height: 16px; }
+.dlg-body { padding: 4px 24px 8px; overflow: auto; max-height: 56dvh; }
+.dlg-body table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dlg-body th { padding: 10px 10px 6px 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); font-size: 12px; font-weight: 600; text-align: left; }
+.dlg-body td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.r-graphic { display: flex; align-items: center; gap: 10px; }
+.r-thumb { flex: 0 0 auto; width: 52px; height: 40px; padding: 3px; border-radius: 6px; object-fit: contain; background: #F1F3F5; }
+.r-name { display: block; font-weight: 700; }
+.r-dealer { display: block; color: var(--ink-2); font-size: 12px; }
+.dlg-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 24px 20px; }
+.dlg-foot .btn-primary { height: 40px; }
+.dlg-note { margin: 0 0 0 auto; color: var(--ink-2); font-size: 12.5px; }
+
+@media (max-width: 999px) {
+  .app { display: block; height: auto; }
+  .showroom { height: auto; }
+  .stage { flex: none; aspect-ratio: 16 / 9; min-height: 0; }
+  .zone-tabs { top: 8px; left: 8px; gap: 14px; padding: 2px 10px 0; }
+  .zone-tab { font-size: 17px; padding-bottom: 7px; }
+  .view-tabs { position: static; translate: none; max-width: none; margin: 8px 12px 10px; border-radius: 999px; }
+  .stage-top { top: 8px; right: 8px; }
+  .stage-top .label { display: none; }
+  .zoom { right: 8px; bottom: 8px; }
+  .zoom .fit-only { display: none; }
+  .hint { display: none; }
+  .picker { border-left: 0; border-top: 1px solid var(--rule); }
+  .rail-body { overflow: visible; padding-inline: 16px; }
+  .rail-title, .rail-sub, .detail, .tally { padding-inline: 16px; }
+  .tally { position: sticky; bottom: 0; background: var(--sheet); }
+  .topbar { padding-inline: 16px; }
+  .topbar h1 { font-size: 15px; }
+}
+@media (max-width: 480px) {
+  .logo { height: 20px; }
+  .cards { gap: 12px 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .frame, .layer, .toast, .hint, .mark, .zone-tab::after { transition: none; }
+  .layer.appear, .card.just .card-check { animation: none; }
+  .layer.appear { -webkit-mask-image: none; mask-image: none; }
+}
+
+/* The walk-around stage: a 3D canvas instead of the photo frames */
+.stage { cursor: grab; }
+.stage.looking { cursor: grabbing; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+.loader { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; background: var(--stage); transition: opacity .4s ease; }
+.loader.done { opacity: 0; pointer-events: none; }
+.loader-card { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--ink-2); font-size: 13px; font-weight: 600; text-align: center; }
+.loader-card a { color: var(--accent); }
+.loader-bar { display: block; width: 220px; height: 6px; border-radius: 999px; background: rgba(27, 42, 74, .12); overflow: hidden; }
+.loader-bar span { display: block; height: 100%; width: 4%; background: var(--accent); transition: width .2s ease; }
+.photo-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.photo-link:hover { border-color: var(--ink-3); }
+.stage .hint { white-space: normal; text-align: center; max-width: calc(100% - 40px); }
+@media (max-width: 999px) {
+  .stage .hint { display: block; bottom: 12px; font-size: 12px; }
+  .photo-link { height: 28px; padding: 0 10px; font-size: 12px; }
+}
+
+/* Themes and places: the rail's tabs, the theme cards, and an action in the toast */
+.rail-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 12px 24px 14px; border-bottom: 1px solid var(--rule); }
+.rail-tab {
+  position: relative;
+  min-height: 36px;
+  padding: 4px 6px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.rail-tab:hover { border-color: var(--ink-3); color: var(--ink); }
+.rail-tab[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash); color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.rail-tab .n {
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 0 0 0 2px var(--sheet);
+}
+.rail-body.fresh { animation: settle .22s ease-out; }
+@keyframes settle { from { opacity: 0; translate: 0 6px; } }
+.spot-sec + .spot-sec { margin-top: 6px; }
+.tgrp { margin: 18px 0 10px; font-size: 13px; font-weight: 700; }
+.themes-note { margin: 14px 0 0; color: var(--ink-2); font-size: 12.5px; }
+.theme-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+.theme-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.theme-shot {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  aspect-ratio: 4 / 3;
+  padding: 8px;
+  border-radius: var(--r-md);
+  background: #F1F3F5;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  overflow: hidden;
+}
+.theme-shot img { width: 100%; height: 100%; min-height: 0; object-fit: contain; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .2)); }
+.theme-shot.one { grid-template-columns: 1fr; }
+.theme-card:hover .theme-shot { box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.theme-card[aria-pressed="true"] .theme-shot { box-shadow: inset 0 0 0 2px var(--accent); }
+.theme-card[aria-pressed="true"] .card-check { display: grid; }
+.theme-when {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(27, 42, 74, .86);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 600;
+}
+.theme-name { font-size: 13px; font-weight: 700; line-height: 1.25; }
+.theme-count { color: var(--ink-2); font-size: 12px; }
+.theme-card[aria-pressed="true"] .theme-count { color: var(--accent); }
+.theme-blurb { color: var(--ink-2); font-size: 12px; line-height: 1.35; }
+.theme-card:focus-visible { outline: none; }
+.theme-card:focus-visible .theme-shot { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toast { display: flex; align-items: center; gap: 12px; }
+.toast.show:has(.toast-act:not([hidden])) { pointer-events: auto; }
+.toast-act { padding: 3px 10px; border: 1px solid rgba(255, 255, 255, .45); border-radius: 999px; background: none; color: #FFFFFF; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.toast-act:hover { background: rgba(255, 255, 255, .12); }
+@media (max-width: 999px) { .rail-tabs { padding-inline: 16px; } }
+@media (max-width: 520px) {
+  .topbar { gap: 10px; }
+  .topbar .divider { display: none; }
+  .topbar h1 { font-size: 13px; white-space: nowrap; }
+}
+@media (max-width: 440px) {
+  .topbar h1 { display: none; }
+  .photo-link { padding: 0 9px; font-size: 11.5px; white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) { .loader { transition: none; } }
+
+/* Pins: a dot on each kind of graphic, numbered as on the placement sheet, its name on hover. Picking one flies to it
+   and opens the panel that says what it is. */
+.pins { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.pin {
+  position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px;
+  padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; will-change: transform;
+}
+.pin.off { display: none; }
+.pin-dot {
+  display: grid; place-items: center; flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--c); color: #FFFFFF; border: 2px solid #FFFFFF; font: 700 11px/1 var(--font-ui);
+  box-shadow: 0 1px 5px rgba(20, 24, 30, .35); transition: transform .15s ease, box-shadow .15s ease;
+}
+.pin-label {
+  padding: 4px 9px; border-radius: 999px; background: rgba(20, 24, 30, .88); color: #FFFFFF;
+  font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none;
+  opacity: 0; translate: -4px 0; transition: opacity .15s ease, translate .15s ease;
+}
+.pin:hover .pin-dot, .pin:focus-visible .pin-dot, .pin.on .pin-dot { transform: scale(1.15); }
+.pin:hover .pin-label, .pin:focus-visible .pin-label, .pin.on .pin-label { opacity: 1; translate: 0 0; }
+.pin.on .pin-dot { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 35%, transparent), 0 1px 5px rgba(20, 24, 30, .35); }
+.pin:focus-visible { outline: none; }
+.pin:focus-visible .pin-dot { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pin { margin: -12px 0 0 -12px; }                       /* placePins() puts the dot's center on the graphic */
+/* At a stop the dots are small and quiet, growing to their number on hover; up close they're out of the way. */
+.pins[data-mode="hidden"] { display: none; }
+.pins[data-mode="small"] .pin { margin: -6px 0 0 -6px; }
+.pins[data-mode="small"] .pin-dot { width: 12px; height: 12px; border-width: 1.5px; font-size: 0; }
+.pins[data-mode="small"] .pin:hover, .pins[data-mode="small"] .pin:focus-visible { margin: -12px 0 0 -12px; }
+.pins[data-mode="small"] .pin:hover .pin-dot, .pins[data-mode="small"] .pin:focus-visible .pin-dot {
+  width: 24px; height: 24px; border-width: 2px; font-size: 11px; transform: none;
+}
+@media (pointer: coarse) {                              /* a bigger target to tap than the dot looks */
+  .pin { padding: 8px; margin: -20px 0 0 -20px; }
+  .pins[data-mode="small"] .pin { margin: -14px 0 0 -14px; }
+}
+/* Before and after: the dealership bare, then dressed */
+.seg { display: flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .92); border: 1px solid #DDE1E6; }
+.seg button {
+  height: 28px; padding: 0 12px; border: 0; border-radius: 999px; background: none; color: #5B6470;
+  font: 600 12.5px/1 var(--font-ui); cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--navy); color: #FFFFFF; }
+/* Day and night: the lot after dark, its lights on */
+.day-night button { display: inline-flex; align-items: center; gap: 5px; }
+.day-night svg { width: 14px; height: 14px; }
+.phone-only { display: none; }
+#nightToggle span { display: contents; }
+#nightToggle .sun, #nightToggle[aria-pressed="true"] .moon { display: none; }
+#nightToggle[aria-pressed="true"] .sun { display: contents; }
+/* The theme that's on, with arrows to the occasion before and after it */
+.theme-pill {                                          /* under the Outside / Inside tabs: the top's middle is too
+                                                          narrow beside the controls on a laptop */
+  position: absolute; z-index: 4; top: 66px; left: 18px; display: flex; align-items: center;
+  gap: 2px; height: 36px; padding: 0 4px; border-radius: 999px; background: rgba(255, 255, 255, .94);
+  border: 1px solid #DDE1E6; box-shadow: 0 2px 10px rgba(20, 24, 30, .12); color: #23272D;
+}
+.theme-pill button {
+  display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none;
+  color: #5B6470; cursor: pointer;
+}
+.theme-pill button:hover { background: #EEF0F3; color: #23272D; }
+.theme-pill svg { width: 15px; height: 15px; }
+.theme-pill-name { padding: 0 8px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+/* A graphic's name under the pointer */
+.tip {
+  position: absolute; z-index: 6; left: 0; top: 0; display: flex; flex-direction: column; gap: 1px; max-width: 260px;
+  padding: 6px 10px; border-radius: var(--r-sm); background: rgba(20, 24, 30, .9); color: #FFFFFF;
+  font-size: 12px; line-height: 1.3; pointer-events: none;
+}
+.tip b { font-weight: 700; }
+.tip span { color: rgba(255, 255, 255, .78); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The kinds of graphics one by one, from the info card */
+.info-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid var(--rule); }
+.info-nav button {
+  display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; border: 1px solid var(--rule);
+  border-radius: 999px; background: none; color: var(--ink); font: 600 12.5px/1 var(--font-ui); cursor: pointer;
+}
+.info-nav button:hover { border-color: var(--ink-3); }
+.info-nav svg { width: 13px; height: 13px; }
+#infoNext { background: var(--navy); border-color: var(--navy); color: #FFFFFF; }
+#infoStep { color: var(--ink-2); font-size: 12px; font-weight: 600; }
+
+/* The kind of graphic picked: what it is, where it goes and its usual size */
+.info {
+  position: absolute; z-index: 5; left: 16px; bottom: 74px; width: min(340px, calc(100% - 32px));
+  padding: 14px 16px; border-radius: var(--r-lg); background: var(--sheet); color: var(--ink);
+  border-left: 4px solid var(--c); box-shadow: 0 8px 28px rgba(20, 24, 30, .2);
+}
+.info-x {
+  position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 28px; height: 28px;
+  border: 0; border-radius: 50%; background: none; color: var(--ink-2); cursor: pointer;
+}
+.info-x:hover { background: var(--hover); color: var(--ink); }
+.info-x svg { width: 14px; height: 14px; }
+.info-img { display: block; width: 100%; height: auto; margin: 0 0 10px; border-radius: var(--r-sm); }
+.info-kicker { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--ink-2); font-size: 12px; font-weight: 600; }
+.info-kicker::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.info-title { margin: 3px 30px 6px 0; font: 700 17px/1.2 var(--font-display); letter-spacing: -.005em; }
+.info-what { margin: 0 0 10px; font-size: 13px; line-height: 1.45; }
+.info-facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 12px; font-size: 12.5px; }
+.info-facts dt { color: var(--ink-2); }
+.info-facts dd { margin: 0; }
+.grp-btn { padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+/* A place's jobs for occasions, folded under its everyday ones */
+.occ { margin: 12px 0 4px; }
+.occ > summary {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--rule);
+  border-radius: 999px; color: var(--ink-2); font-size: 12.5px; font-weight: 600; cursor: pointer; list-style: none;
+}
+.occ > summary::-webkit-details-marker { display: none; }
+.occ > summary::after {
+  content: ""; width: 6px; height: 6px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+  rotate: 45deg; translate: 0 -2px; transition: rotate .15s ease, translate .15s ease;
+}
+.occ[open] > summary::after { rotate: 225deg; translate: 0 2px; }
+.occ > summary:hover { border-color: var(--ink-3); color: var(--ink); }
+.occ-label { margin: 14px 0 6px; color: var(--ink-2); font-size: 12px; font-weight: 600; }
+.grp-btn:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 999px) {
+  .info { position: relative; left: auto; bottom: auto; width: auto; margin: 10px 12px 0; box-shadow: none;
+    border: 1px solid var(--rule); border-left: 4px solid var(--c); }   /* relative: its close button stays on it */
+  .pin-dot { width: 20px; height: 20px; font-size: 10px; }
+  .pin { margin: -10px 0 0 -10px; }
+  .theme-pill { top: auto; bottom: 8px; left: 50%; translate: -50% 0; height: 32px; }
+  .theme-pill-name { font-size: 12px; padding: 0 4px; }
+  .stage-top .seg button { height: 26px; padding: 0 9px; font-size: 12px; }
+  .stage-top .day-night { display: none; }            /* on a phone it's the round button over the zoom */
+  .zoom .phone-only { display: inline-flex; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="https://www.sfoxmarketing.com/" target="_blank" rel="noopener"><svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="88 34 800 116" role="img" aria-label="Silver Fox Marketing"><g><path class="li" d="m260.13,139.29c1.01,1.85,5.37,3.39,9.04,2.1s5.24-4.91,4.22-6.76c-1.01-1.85-3.09.12-13.26,4.66"/><path class="li" d="m179.57,139.29c-1.01,1.85-5.37,3.39-9.04,2.1-3.67-1.29-5.24-4.91-4.22-6.76s3.09.12,13.26,4.66"/><path class="lf" d="m343.94,99.66l-35.49-24.31-6.71-31.02-44.77,24.63h-.23c-5.19,0-10.36-.39-15.48-1.18-14.18-2.19-28.62-2.19-42.81,0h0c-5.12.78-10.29,1.18-15.48,1.18h-.23l-44.79-24.63-6.71,31.02-35.49,24.31,41.26,33.9s-11.83-41.58,23.66-33.26c35.49,8.33,59.16,44.77,59.16,44.77h0s23.66-36.46,59.16-44.77c35.49-8.33,23.66,33.26,23.66,33.26l41.26-33.9h.02Z"/><path class="li" d="m424.13,98.95c0,4.22-.83,7.06-2.47,8.51-1.64,1.45-4.59,2.19-8.88,2.19h-28.02c-4.64,0-7.68-.83-9.13-2.47s-2.19-4.8-2.19-9.48l9.32-1.94v5.35h32.06v-10.36h-28.28c-4.27,0-7.22-.74-8.83-2.19-1.61-1.45-2.42-4.31-2.42-8.51v-5c0-4.22.81-7.06,2.42-8.51,1.61-1.45,4.54-2.19,8.83-2.19h25.74c4.34,0,7.29.74,8.88,2.24s2.38,4.38,2.38,8.65l-9.32,2.19v-5.19h-29.68v9.76h28.28c4.27,0,7.24.74,8.88,2.19,1.64,1.48,2.47,4.31,2.47,8.51v6.23l-.02.02Z"/><path class="li" d="m452.32,109.65h-10.54v-45.3h10.54v45.32-.02Z"/><path class="li" d="m515.81,109.65h-44.53v-45.3h10.54v36.81h34v8.51-.02Z"/><path class="li" d="m564.82,64.35l-24.93,45.32h-7.29l-26.18-45.32h12.04l18.36,32.75,17.48-32.75h10.54-.02Z"/><path class="li" d="m619.62,109.65h-46.82v-45.3h46.38v7.73h-35.84v10.1h20.9v7.73h-20.9v11.23h36.28s0,8.51,0,8.51Z"/><path class="li" d="m688.64,109.65h-15.11l-18.27-17.14h-10.01v17.14h-10.36v-45.3h38.82c6.78,0,10.19,2.93,10.19,8.79v10.63c0,4.38-1.75,7.1-5.26,8.16-1.34.42-4.98.62-10.89.62l20.9,17.14-.02-.05Zm-14.92-28.46v-5.44c0-1.52-.44-2.51-1.31-2.98-.65-.42-1.78-.62-3.44-.62h-23.71v12.64h23.71c1.64,0,2.79-.21,3.44-.62.88-.46,1.31-1.45,1.31-2.98Z"/><path class="li" d="m746.97,72.24h-35.31v11.95h19.05v8.26h-19.05v17.21h-10.54v-45.3h45.85v7.91-.02Z"/><path class="li" d="m810.72,98.95c0,4.22-.81,7.06-2.42,8.51-1.61,1.45-4.54,2.19-8.83,2.19h-33.37c-4.27,0-7.22-.74-8.83-2.19-1.61-1.45-2.42-4.31-2.42-8.51v-23.89c0-4.22.81-7.06,2.42-8.51,1.61-1.45,4.54-2.19,8.83-2.19h33.37c4.27,0,7.22.74,8.83,2.19,1.61,1.45,2.42,4.31,2.42,8.51v23.89Zm-10.54,2.19v-28.71h-34.78v28.71h34.78Z"/><path class="li" d="m878.78,109.65h-14.32l-16.61-17.57-15.29,17.57h-12.48l21.52-23.27-21.86-22.05h13.98l14.48,15.36,13.79-15.36h12.13l-19.77,20.83,24.42,24.49h0Z"/><path class="lf" d="m542.47,143.53h-3.67v-10.63c0-.37.05-.97.14-1.75-.21.42-.53,1.01-.99,1.78l-6.41,8.53h-.78l-6.41-8.58c-.46-.62-.81-1.2-1.04-1.75.07.69.09,1.25.09,1.68v10.7h-3.21v-17.09h3.21l8.05,10.33,7.89-10.33h3.18v17.09l-.05.02Z"/><path class="lf" d="m569.25,143.53h-4.47l-2.05-3.74h-10.82l-1.98,3.74h-3.97l9.66-17.09h3.85l9.8,17.09h-.02Zm-8.19-6.83l-3.67-6.94-3.81,6.94h7.47,0Z"/><path class="lf" d="m593.42,143.53h-5.7l-6.9-6.46h-3.78v6.46h-3.9v-17.09h14.62c2.56,0,3.85,1.11,3.85,3.32v4.01c0,1.66-.67,2.68-1.98,3.07-.51.16-1.87.23-4.11.23l7.89,6.46h0Zm-5.63-10.72v-2.05c0-.58-.16-.95-.51-1.13-.25-.16-.67-.23-1.29-.23h-8.95v4.77h8.95c.62,0,1.04-.07,1.29-.23.32-.18.51-.55.51-1.13Z"/><path class="lf" d="m618.74,143.53h-6.39l-10.22-7.52v7.52h-4.01v-17.09h4.01v7.13l9.48-7.13h5.77l-11.32,8.05,12.71,9.04h-.02Z"/><path class="lf" d="m640.47,143.53h-17.64v-17.09h17.48v2.91h-13.52v3.81h7.89v2.91h-7.89v4.24h13.68v3.23Z"/><path class="lf" d="m662.03,129.51h-7.89v14.05h-3.97v-14.05h-7.84v-3.04h19.7v3.04Z"/><path class="lf" d="m669.29,143.53h-3.97v-17.09h3.97v17.09Z"/><path class="lf" d="m696.51,143.53h-2.72l-12.55-10.56c-.53-.44-1.01-.9-1.43-1.38.12,1.11.16,1.98.16,2.61v9.34h-3.57v-17.09h2.72l12.02,10.06c.85.74,1.52,1.34,1.96,1.85-.12-1.59-.16-2.56-.16-2.95v-8.97h3.57v17.11Z"/><path class="lf" d="m723.52,139.49c0,1.59-.3,2.65-.9,3.21-.6.55-1.71.83-3.32.83h-11.79c-1.61,0-2.72-.28-3.32-.83s-.9-1.61-.9-3.21v-8.99c0-1.59.3-2.65.9-3.21.6-.55,1.71-.83,3.32-.83h11.79c1.71,0,2.84.3,3.39.88s.85,1.71.85,3.39l-3.87.69v-1.91h-12.41v10.82h12.41v-3.81h-6.48v-2.91h10.36v5.88h-.02Z"/></g></svg></a>
+  <span class="divider" aria-hidden="true"></span>
+  <h1>Dealership Graphics Builder</h1>
+</header>
+<main class="app">
+  <section class="showroom" aria-label="The dealership in 3D">
+    <nav class="zone-tabs" id="zoneTabs" aria-label="Outside or inside"></nav>
+    <div class="stage" id="stage" tabindex="0" aria-label="The dealership in 3D. Drag to look around, click the ground to walk there, or use W, A, S and D.">
+      <div class="stage-top">
+        <button class="chip-btn" id="tour" type="button">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.2-4.8c.4-.3.4-.8 0-1L5.9 2.7c-.4-.3-.9 0-.9.5Z"/></svg>
+          <span class="label">Take the tour</span>
+        </button>
+        <div class="seg day-night" role="group" aria-label="Day or night">
+          <button type="button" id="dayBtn" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg><span class="label">Day</span></button>
+          <button type="button" id="nightBtn" aria-pressed="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg><span class="label">Night</span></button>
+        </div>
+        <div class="seg" role="group" aria-label="The dealership before and after its graphics">
+          <button type="button" id="before" aria-pressed="false">Before</button>
+          <button type="button" id="after" aria-pressed="true">After</button>
+        </div>
+      </div>
+      <div class="theme-pill" id="themePill" hidden>
+        <button type="button" id="themePrev" aria-label="The occasion before">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>
+        </button>
+        <span class="theme-pill-name" id="themeName"></span>
+        <button type="button" id="themeNext" aria-label="The next occasion">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg>
+        </button>
+        <button type="button" id="themeOff" aria-label="Take the theme off">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>
+        </button>
+      </div>
+      <div class="tip" id="tip" hidden><b id="tipName"></b><span id="tipMsg"></span></div>
+      <div class="zoom">
+        <button class="chip-btn icon-only phone-only" id="nightToggle" type="button" aria-label="Night view" aria-pressed="false">
+          <span class="moon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg></span><span class="sun"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg></span>
+        </button>
+        <button class="chip-btn icon-only" id="zoomIn" type="button" aria-label="Zoom in">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 8h9M8 3.5v9"/></svg>
+        </button>
+        <button class="chip-btn icon-only" id="zoomOut" type="button" aria-label="Zoom out">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 8h9"/></svg>
+        </button>
+        <button class="chip-btn icon-only" id="reset" type="button" aria-label="Back to the start of this view">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v3h3"/></svg>
+        </button>
+      </div>
+      <div class="pins" id="pins" role="group" aria-label="Kinds of graphics on the dealership"></div>
+      <p class="hint" id="hint">Click a numbered dot, or take the tour. Drag to look around; click the ground to walk.</p>
+      <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button class="toast-act" id="toastAct" type="button" hidden></button></div>
+      <div class="loader" id="loader">
+        <div class="loader-card">
+          <span id="loaderText">Loading the dealership</span>
+          <span class="loader-bar"><span id="loaderBar"></span></span>
+        </div>
+      </div>
+    </div>
+    <aside class="info" id="info" hidden aria-labelledby="infoTitle">
+      <button class="info-x" id="infoClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
+      </button>
+      <img class="info-img" id="infoImg" alt="" hidden>
+      <p class="info-kicker" id="infoGroup"></p>
+      <h3 class="info-title" id="infoTitle"></h3>
+      <p class="info-what" id="infoWhat"></p>
+      <dl class="info-facts">
+        <dt>Where</dt><dd id="infoWhere"></dd>
+        <dt id="infoSizeT">Size</dt><dd id="infoSize"></dd>
+      </dl>
+      <button class="btn-quiet" id="infoJobs" type="button"></button>
+      <div class="info-nav" role="group" aria-label="The kinds of graphics, one by one">
+        <button type="button" id="infoPrev"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>Back</button>
+        <span id="infoStep"></span>
+        <button type="button" id="infoNext">Next<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button>
+      </div>
+    </aside>
+    <div class="view-tabs" id="viewTabs" role="group" aria-label="Stops"></div>
+  </section>
+  <aside class="picker" aria-label="Pick graphics">
+    <h2 class="rail-title">Build a graphics package</h2>
+    <p class="rail-sub">Every graphic is a real Silver Fox job, sized and placed the way the team installed it. Start with a theme, or pick a place and click a graphic to see it up close.</p>
+    <div class="rail-tabs" id="railTabs" role="group" aria-label="Themes and places"></div>
+    <div class="rail-body" id="railBody"></div>
+    <div class="detail" id="detail" hidden>
+      <p class="d-name" id="dName"></p>
+      <p class="d-job" id="dJob"></p>
+      <dl class="d-facts">
+        <dt>Shows</dt><dd id="dMsg"></dd>
+        <dt>Goes</dt><dd id="dWhere"></dd>
+        <dt>Size</dt><dd id="dSize"></dd>
+      </dl>
+      <div class="d-views" id="dViews" role="group" aria-label="Go to it"></div>
+    </div>
+    <div class="tally">
+      <div class="tally-row">
+        <button class="btn-quiet" id="everyday" type="button">Everyday set</button>
+        <button class="btn-quiet" id="allOff" type="button">Clear all</button>
+      </div>
+      <button class="btn-primary btn-block" id="review" type="button"><span>Review your package</span><span class="btn-count" id="count">0</span><span class="sr"> graphics chosen</span></button>
+    </div>
+  </aside>
+</main>
+<dialog class="sheet-dlg" id="sheet" aria-labelledby="sheetTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="sheetTitle">Your dealership graphics</h2>
+      <p>Shown on a generic dealership, using real Silver Fox jobs as examples.</p>
+    </div>
+    <button class="dlg-x" id="sheetClose" type="button" aria-label="Close">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
+    </button>
+  </div>
+  <div class="dlg-body">
+    <table>
+      <thead><tr><th scope="col">Graphic</th><th scope="col">Where it goes</th><th scope="col">Printed size</th></tr></thead>
+      <tbody id="sheetRows"></tbody>
+    </table>
+    <p id="sheetEmpty" hidden>No graphics chosen yet.</p>
+  </div>
+  <div class="dlg-foot">
+    <a class="btn-primary" id="quote" href="#">Get a quote</a>
+    <button class="btn-quiet" id="copyLink" type="button">Copy link</button>
+    <button class="btn-quiet" id="copyList" type="button">Copy list</button>
+    <p class="dlg-note" id="sheetNote" role="status"></p>
+  </div>
+</dialog>
+<script src="assets/3d/catalog.js?v=fac060c172"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// The dealership as a real-time 3D scene: the Blender model exported by dealership_blender.py --web
+// (assets/3d/dealership.glb and scene.json), the graphics' art from assets/3d/art/, and the catalog of places, jobs and
+// themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
+// builder; a theme puts a whole set on.
+const C = window.DSB_CATALOG;
+const ASSET_V = 'fac060c172';
+const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coarse = matchMedia('(pointer: coarse)').matches;
+const QUOTE_TO = 'silverfox@sfoxmarketing.com';
+const EYE = 1.68;                                   // standing eye height, meters
+const ZONES = ['Outside', 'Inside'];
+const SHORT = { overview: 'Whole store', street: 'Street', storefront: 'Storefront', showroom: 'Showroom',
+  sales: 'Sales and offices', lounge: 'Lounge', servicedrive: 'Service drive' };
+const COLOR = { 'Storefront glass': 'var(--z-glass)', Building: 'var(--z-building)', Lot: 'var(--z-lot)',
+  Showroom: 'var(--z-showroom)', Lounge: 'var(--z-lounge)', 'Service drive': 'var(--z-service)',
+  Vehicles: 'var(--z-vehicles)' };
+// Lighting: outside, the sky and the sun; inside, the ceiling lights, with the sky turned down (the roof is in the way)
+// and the exposure up, the way eyes adjust walking in.
+const EXPO = { out: 0.47, in: 0.6 }, ENV = { out: 0.78, in: 0.22 }, ROOM_LIGHT = 1.7, BOUNCE = 1.1;
+// How each kind of print looks: roughness, the color of an unprinted back, film share, and whether it lies flat on
+// a surface (flat prints are drawn just in front of it).
+const KIND = {
+  perf: { r: 0.35, back: 0x050505, opacity: 0.72, flat: true }, cling: { r: 0.22, back: 0xdcdcd6, flat: true },
+  vinyl: { r: 0.28, back: 0xdcdcd6, flat: true }, cut: { r: 0.35, flat: true }, wall: { r: 0.55, flat: true },
+  fabric: { r: 0.85, flat: true }, banner: { r: 0.6, back: 0xcfcfca }, board: { r: 0.14, flat: true }, sign: { r: 0.4 },
+  frost: { r: 0.5, opacity: 0.8, flat: true, tint: 0xc3cad1 }, flag: { r: 0.7, both: true }, floor: { r: 0.3, flat: true },
+};
+const VIEW = Object.fromEntries(C.stops.map((v) => [v.id, v]));
+const opts = C.options, byKey = Object.fromEntries(opts.map((o) => [o.key, o]));
+const SPOTS = C.spots, SPOT = Object.fromEntries(SPOTS.map((x) => [x.id, x]));
+const THEMES = C.themes.filter((t) => t.keys.length);
+const SEASONS = new Set(THEMES.filter((t) => t.months).map((t) => t.id));
+const seasonal = (o) => o.themes.some((t) => SEASONS.has(t));
+// A place's jobs for an occasion or an event fold away under its everyday ones: the seasons, and the events a store runs
+// now and then (Pre-Owned, Service and EV graphics stay in view: they're up all year).
+const EVENTS = new Set(['grandopening', 'anniversary', 'salesevent', 'truckmonth']);
+const occasionOf = (o) => THEMES.filter((t) => o.themes.includes(t.id) && (SEASONS.has(t.id) || EVENTS.has(t.id)))
+  .sort((a, b) => monthsAway(a) - monthsAway(b))[0];
+const EVERYDAY = Object.fromEntries(C.everyday.map((k) => [byKey[k].spot, k]));
+const stage = $('#stage');
+const state = { chosen: new Map(Object.entries(EVERYDAY)), plain: false, view: 'overview', focus: null, hover: null, tab: 'themes' };
+const lastStop = { Outside: 'overview', Inside: 'showroom' };
+const isOn = (key) => state.chosen.get(byKey[key].spot) === key;
+let night = false, nightBy = null, kit = null;          // the night view (see "day and night"): on, who turned it on
+
+const p = new URLSearchParams(location.hash.slice(1));
+if (p.has('g')) {
+  state.chosen = new Map();
+  for (const k of p.get('g').split(',')) if (byKey[k]) state.chosen.set(byKey[k].spot, k);
+}
+const updateUrl = () => history.replaceState(null, '', `#g=${[...state.chosen.values()].join(',')}${night ? '&n=1' : ''}`);
+
+// ---- renderer, sky and light ----------------------------------------------------------------------------------------
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: !coarse, powerPreference: 'high-performance' });
+} catch (err) {
+  $('#loaderText').innerHTML = 'This browser can’t show 3D. Try a recent Chrome, Safari or Edge.';
+  throw err;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, coarse ? 1.5 : 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = EXPO.out;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;                // the scene stands still: shadows only when graphics change
+stage.prepend(renderer.domElement);
+const canvas = renderer.domElement;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.05, 4000);
+
+const S = await fetch(av('assets/3d/scene.json')).then((r) => r.json());
+const PRESET = Object.fromEntries(S.presets.map((s) => [s.id, s]));
+// The sun stands in the south-west so the storefront is in sunlight.
+const sunToward = new THREE.Vector3(-0.5, 0.62, 0.6).normalize();
+function makeSky(scale) {
+  const sky = new Sky();
+  sky.scale.setScalar(scale);
+  const u = sky.material.uniforms;
+  u.turbidity.value = 3.2;
+  u.rayleigh.value = 1.05;
+  u.mieCoefficient.value = 0.004;
+  u.mieDirectionalG.value = 0.82;
+  u.sunPosition.value.copy(sunToward);
+  return sky;
+}
+const skyDome = makeSky(3000), envSky = makeSky(50);
+scene.add(skyDome);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.add(envSky);
+scene.environment = pmrem.fromScene(envScene, 0.02).texture;
+scene.environmentIntensity = ENV.out;
+const lo = new THREE.Vector3(...S.site.min), hi = new THREE.Vector3(...S.site.max);
+const site = new THREE.Box3().setFromPoints([lo, hi]);
+const center = site.getCenter(new THREE.Vector3()).setY(0);
+const sun = new THREE.DirectionalLight(0xfff3e2, 2.5);
+sun.position.copy(center).addScaledVector(sunToward, 160);
+sun.target.position.copy(center);
+sun.castShadow = true;
+sun.shadow.mapSize.set(coarse ? 2048 : 4096, coarse ? 2048 : 4096);
+Object.assign(sun.shadow.camera, { left: -80, right: 80, top: 80, bottom: -80, near: 10, far: 400 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+// Inside, light bounces off the floor and walls onto the ceiling; there's no bounce light here, so a soft fill from
+// below stands in for it (it fades in as you walk inside).
+const bounce = new THREE.HemisphereLight(0xdcdad4, 0xc2bbae, 0);
+scene.add(bounce);
+RectAreaLightUniformsLib.init();
+const roomLights = [];
+for (const l of S.lights) {
+  const r = new THREE.RectAreaLight(0xfff2e2, ROOM_LIGHT, l.w, l.d);
+  roomLights.push(r);
+  r.position.set(...l.at);
+  r.rotation.x = -Math.PI / 2;                       // shining straight down
+  scene.add(r);
+}
+
+// ---- the model -------------------------------------------------------------------------------------------------------
+const texLoader = new THREE.TextureLoader();
+const glass = new THREE.MeshPhysicalMaterial({ color: 0xe6f0ef, metalness: 0, roughness: 0.03, transparent: true,
+  opacity: 0.16, envMapIntensity: 1.4, depthWrite: false, side: THREE.DoubleSide });
+const artCache = {}, artOf = {};
+function artMaterial(art, kind, back) {
+  const id = `${art}:${kind}:${back}`;
+  if (artCache[id]) return artCache[id];
+  const k = KIND[kind] || KIND.sign;
+  // The art loads when its graphic first goes on (see loadArt()); until then the piece isn't drawn.
+  const m = new THREE.MeshStandardMaterial({ roughness: k.r, metalness: 0, visible: false });
+  m.userData.art = art;
+  if (k.opacity) Object.assign(m, { transparent: true, opacity: k.opacity, depthWrite: false });
+  else m.alphaTest = 0.5;
+  if (k.flat) Object.assign(m, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  if (k.both) m.side = THREE.DoubleSide;              // one ply: a flag's print shows through from behind
+  if (k.tint !== undefined) {
+    // Frost film: the art gives only the shape (a cut file draws it in any color); the film itself is etched white.
+    const tc = new THREE.Color(k.tint);
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.tintColor = { value: tc };
+      sh.fragmentShader = 'uniform vec3 tintColor;\n' + sh.fragmentShader.replace('#include <map_fragment>',
+        '#include <map_fragment>\n\tdiffuseColor.rgb = tintColor;');
+    };
+    m.customProgramCacheKey = () => 'frost-tint';
+  }
+  if (back && k.back !== undefined) {
+    // One-sided print: its unprinted back shows from behind (white cling, banner backing, perforated film's black).
+    m.side = THREE.DoubleSide;
+    const bc = new THREE.Color(k.back);
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.backColor = { value: bc };
+      sh.fragmentShader = 'uniform vec3 backColor;\n' + sh.fragmentShader.replace('#include <map_fragment>',
+        '#include <map_fragment>\n\tif ( ! gl_FrontFacing ) diffuseColor.rgb = backColor;');
+    };
+    m.customProgramCacheKey = () => 'printed-back';
+  }
+  return (artCache[id] = m);
+}
+const groups = {}, pickStatic = [], pickGfx = [];
+const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift']);
+// The cutaway: from above the roofline the roofs, ceilings and their lights come off, so the overview looks down into
+// every room, the way Silver Fox's isometric art shows a dealership.
+const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist']), cutaway = [];
+const gltf = await new GLTFLoader().loadAsync(av('assets/3d/dealership.glb'),
+  (e) => { $('#loaderBar').style.width = `${Math.round(100 * e.loaded / (e.total || 3.4e6))}%`; });
+const model = gltf.scene;
+model.traverse((o) => {
+  const ud = o.userData;
+  if (ud.gfx && !byKey[ud.gfx]) {                    // a graphic the catalog leaves out (the published copy withholds
+    o.visible = false;                               // a few): never shown
+    return;
+  }
+  if (!o.isMesh) {
+    if (ud.gfx) groups[ud.gfx] = o;                  // the group node of a graphic (glTF loading drops the ':' from names)
+    return;
+  }
+  if (ud.art) {
+    o.material = artMaterial(ud.art, ud.kind, ud.back);
+    (artOf[ud.gfx] ||= new Set()).add(o.material);
+    o.castShadow = !(KIND[ud.kind] || {}).flat;
+    o.receiveShadow = true;
+    if (ud.kind === 'perf') o.renderOrder = 3;
+    pickGfx.push(o);
+    return;
+  }
+  if (ud.gfx) {                                       // a graphic's hardware: poles' arms, frames, stands, cables
+    o.castShadow = o.receiveShadow = true;
+    pickGfx.push(o);
+    return;
+  }
+  const name = o.material.name;
+  if (CUTAWAY.has(name)) cutaway.push(o);
+  if (name === 'glass') {
+    o.material = glass;
+    o.renderOrder = 2;
+    return;
+  }
+  if (name === 'light' || name === 'strip-light') {
+    o.material.emissiveIntensity = 2.4;
+    pickStatic.push(o);
+    return;
+  }
+  if (name === 'tile') o.material.roughness = 0.3;    // softer than the render's, since only the sky reflects here
+  if (INDOOR.has(name)) {
+    // Sky light has no shadows, so it would reach every room as if there were no roof. Surfaces that are only ever
+    // indoors take a little of it; their light comes from the ceiling lights.
+    o.material.envMap = scene.environment;
+    o.material.envMapIntensity = 0.28;
+  }
+  o.castShadow = o.receiveShadow = true;
+  pickStatic.push(o);
+});
+scene.add(model);
+renderer.shadowMap.needsUpdate = true;
+
+// ---- camera: a standing viewer who looks around and walks -------------------------------------------------------------
+const cam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, hfov: 60 };
+const deg = THREE.MathUtils.degToRad;
+function applyCamera() {
+  camera.position.copy(cam.pos);
+  camera.rotation.set(cam.pitch, cam.yaw, 0, 'YXZ');
+  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(deg(cam.hfov) / 2) / camera.aspect));
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (shift > 0.5) camera.setViewOffset(w, h, -shift, 0, w, h);     // the info card's side: the picture moves over
+  else if (camera.view && camera.view.enabled) camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+// While the info card covers the left of a wide view, the frame's center moves right by half its width, so the
+// graphic it describes stays clear of it.
+let shift = 0;
+const narrow = matchMedia('(max-width: 999px)');
+function updateShift(dt) {
+  const target = !$('#info').hidden && !narrow.matches ? (16 + Math.min(340, stage.clientWidth - 32)) / 2 : 0;
+  if (Math.abs(target - shift) < 0.5) {
+    if (shift === target) return false;
+    shift = target;
+    return true;
+  }
+  shift += (target - shift) * Math.min(1, dt * 9);
+  return true;
+}
+function aim(eye, target) {
+  const d = new THREE.Vector3().subVectors(target, eye);
+  return { pos: eye.clone(), yaw: Math.atan2(-d.x, -d.z), pitch: Math.atan2(d.y, Math.hypot(d.x, d.z)) };
+}
+let fly = null;
+let upClose = false;            // flown up to one graphic: the dots step out of the way until the view moves on
+function flyTo(to, ms = 1100) {
+  fly = { from: { pos: cam.pos.clone(), yaw: cam.yaw, pitch: cam.pitch, hfov: cam.hfov }, to, t0: performance.now(),
+    ms: reduced ? 1 : ms };
+  dirty();
+}
+function updateFly(now) {
+  if (!fly) return false;
+  const t = clamp((now - fly.t0) / fly.ms, 0, 1);
+  const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const { from, to } = fly;
+  cam.pos.lerpVectors(from.pos, to.pos, e);
+  const dy = Math.atan2(Math.sin(to.yaw - from.yaw), Math.cos(to.yaw - from.yaw));
+  cam.yaw = from.yaw + dy * e;
+  cam.pitch = from.pitch + (to.pitch - from.pitch) * e;
+  cam.hfov = from.hfov + ((to.hfov ?? from.hfov) - from.hfov) * e;
+  if (t >= 1) fly = null;
+  return true;
+}
+const ray = new THREE.Raycaster();
+const shown = (o) => { for (let a = o; a; a = a.parent) if (!a.visible) return false; return true; };
+function cast(from, dir, far, list = pickStatic) {
+  ray.set(from, dir);
+  ray.far = far;
+  return ray.intersectObjects(list, false).filter((h) => shown(h.object))[0];
+}
+const DOWN = new THREE.Vector3(0, -1, 0);
+function floorAt(p) {
+  const h = cast(new THREE.Vector3(p.x, Math.min(p.y, 3.2), p.z), DOWN, 40);
+  return h ? h.point.y : 0;
+}
+
+// ---- stops: the mockup's views ----------------------------------------------------------------------------------------
+function goStop(id, ms = 1300) {
+  const s = PRESET[id];
+  upClose = false;
+  state.view = id;
+  lastStop[s.zone] = id;
+  flyTo({ ...aim(new THREE.Vector3(...s.eye), new THREE.Vector3(...s.target)), hfov: s.hfov }, ms);
+  renderTabs();
+}
+const zoneNow = () => (state.view ? PRESET[state.view].zone : insideAmount > 0.5 ? 'Inside' : 'Outside');
+function renderTabs() {
+  const z = zoneNow();
+  $('#zoneTabs').replaceChildren(...ZONES.map((name) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'zone-tab';
+    b.textContent = name;
+    b.setAttribute('aria-pressed', z === name);
+    b.addEventListener('click', () => goStop(lastStop[name]));
+    return b;
+  }));
+  $('#viewTabs').replaceChildren(...S.presets.filter((s) => s.zone === z).map((s) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'view-tab';
+    b.textContent = SHORT[s.id] || s.id;
+    b.title = (VIEW[s.id] || {}).label || '';
+    b.setAttribute('aria-pressed', state.view === s.id);
+    b.addEventListener('click', () => goStop(s.id));
+    return b;
+  }));
+}
+function leaveStop() {
+  if (state.view) { state.view = null; renderTabs(); }
+}
+function stepStop(d) {
+  // The stop before or after this one, in the view's own row of stops (a phone's flick).
+  const z = zoneNow();
+  const list = S.presets.filter((s) => s.zone === z).map((s) => s.id);
+  const cur = state.view && list.includes(state.view) ? state.view : lastStop[z];
+  goStop(list[(list.indexOf(cur) + d + list.length) % list.length]);
+}
+
+// ---- looking and walking ----------------------------------------------------------------------------------------------
+const ndc = new THREE.Vector2();
+const pointers = new Map();
+let drag = null, pinch = null;
+function hideHint() { $('#hint').classList.add('gone'); }
+canvas.addEventListener('pointerdown', (e) => {
+  try { canvas.setPointerCapture(e.pointerId); } catch { /* a pointer the browser doesn't track */ }
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  fly = null;
+  if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: false,
+    t0: performance.now(), yaw0: cam.yaw, pitch0: cam.pitch, touch: e.pointerType === 'touch' };
+  else {
+    drag = null;
+    const [a, b] = [...pointers.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), hfov: cam.hfov };
+  }
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    cam.hfov = clamp(pinch.hfov * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), 18, 100);
+    dirty();
+    return;
+  }
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX;
+  drag.y = e.clientY;
+  if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 5) drag.moved = true;
+  if (!drag.moved) return;
+  upClose = false;
+  cam.yaw += dx * deg(cam.hfov) / canvas.clientWidth;
+  cam.pitch = clamp(cam.pitch + dy * deg(camera.fov) / canvas.clientHeight, -1.45, 1.45);
+  stage.classList.add('looking');
+  hideHint();
+  dirty();
+});
+function release(e) {
+  if (drag && drag.moved && drag.touch && e.type === 'pointerup') {
+    // On a phone, a quick sideways flick moves to the next stop (or back); a slow drag looks around.
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (performance.now() - drag.t0 < 350 && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) {
+      cam.yaw = drag.yaw0;
+      cam.pitch = drag.pitch0;
+      stepStop(dx < 0 ? 1 : -1);
+    }
+  }
+  if (drag && !drag.moved && e.type === 'pointerup') pick(e);
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  drag = null;
+  stage.classList.remove('looking');
+}
+canvas.addEventListener('pointerup', release);
+canvas.addEventListener('pointercancel', release);
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  cam.hfov = clamp(cam.hfov * Math.exp(e.deltaY * 0.0012), 18, 100);
+  hideHint();
+  dirty();
+}, { passive: false });
+function pick(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  ray.far = 2000;
+  const h = ray.intersectObjects([...pickGfx, ...pickStatic], false).filter((x) => shown(x.object))[0];
+  if (!h) return;
+  hideHint();
+  if (h.object.userData.gfx) { select(h.object.userData.gfx); return; }
+  const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+  if (n.y > 0.7 && h.point.y < 1.0) walkTo(h.point);
+}
+function walkTo(p) {
+  upClose = false;
+  const high = cam.pos.y > 6;
+  const to = new THREE.Vector3(p.x, p.y + EYE, p.z);
+  leaveStop();
+  flyTo({ pos: to, yaw: cam.yaw, pitch: high ? -0.06 : cam.pitch, hfov: high ? 64 : cam.hfov },
+    clamp(cam.pos.distanceTo(to) * 45, 500, 1800));
+}
+const keys = new Set();
+const MOVE_KEYS = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+addEventListener('keydown', (e) => {
+  if ((e.target instanceof Element && e.target.closest('input, textarea, dialog')) || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (MOVE_KEYS.includes(k) || k === 'shift') {
+    keys.add(k);
+    fly = null;
+    if (MOVE_KEYS.includes(k)) { e.preventDefault(); hideHint(); leaveStop(); }
+    dirty();
+  } else if (k === '+' || k === '=') zoom(1 / 1.3);
+  else if (k === '-') zoom(1.3);
+  else if (k === 'h') setPlain(!state.plain);
+  else if (k === 'n') setNight(!night);
+  else if (k === 'escape') hideInfo();
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('blur', () => keys.clear());
+const fwd = new THREE.Vector3(), side = new THREE.Vector3(), step = new THREE.Vector3();
+function blocked(dir, dist) {
+  for (const drop of [0, EYE - 0.45]) {
+    const from = cam.pos.clone();
+    from.y -= drop;
+    if (cast(from, dir, dist + 0.35)) return true;
+  }
+  return false;
+}
+function updateKeys(dt) {
+  if (!keys.size) return false;
+  upClose = false;
+  const f = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
+  const s = (keys.has('d') ? 1 : 0) - (keys.has('a') ? 1 : 0);
+  const turn = (keys.has('arrowleft') ? 1 : 0) - (keys.has('arrowright') ? 1 : 0);
+  cam.yaw += turn * dt * 1.4;
+  fwd.set(-Math.sin(cam.yaw), 0, -Math.cos(cam.yaw));
+  side.set(Math.cos(cam.yaw), 0, -Math.sin(cam.yaw));
+  step.copy(fwd).multiplyScalar(f).addScaledVector(side, s);
+  if (step.lengthSq() > 0) {
+    const dist = (keys.has('shift') ? 9 : 3.5) * dt * (cam.pos.y > 6 ? 5 : 1);
+    step.normalize();
+    if (!blocked(step, dist)) {
+      cam.pos.addScaledVector(step, dist);
+      if (cam.pos.y < 6) cam.pos.y += (floorAt(cam.pos) + EYE - cam.pos.y) * Math.min(1, dt * 8);
+    }
+  }
+  return true;
+}
+function zoom(k) {
+  cam.hfov = clamp(cam.hfov * k, 18, 100);
+  hideHint();
+  dirty();
+}
+$('#zoomIn').addEventListener('click', () => zoom(1 / 1.3));
+$('#zoomOut').addEventListener('click', () => zoom(1.3));
+$('#reset').addEventListener('click', () => goStop(state.view || lastStop[zoneNow()]));
+
+// ---- inside or out: the light adjusts -----------------------------------------------------------------------------------
+const rooms = Object.values(S.rooms).map(([a, b]) => new THREE.Box3().setFromPoints([new THREE.Vector3(...a), new THREE.Vector3(...b)]));
+let insideAmount = 0;
+function updateLight(dt) {
+  const target = rooms.some((b) => b.containsPoint(cam.pos)) ? 1 : 0;
+  if (Math.abs(target - insideAmount) < 0.002) {
+    if (insideAmount !== target) {
+      insideAmount = target;
+      bounce.intensity = BOUNCE * insideAmount;
+      renderTabs();
+    }
+    return false;
+  }
+  const before = insideAmount > 0.5;
+  insideAmount += (target - insideAmount) * Math.min(1, dt * 3);
+  renderer.toneMappingExposure = EXPO.out + (EXPO.in - EXPO.out) * insideAmount;
+  scene.environmentIntensity = ENV.out + (ENV.in - ENV.out) * insideAmount;
+  bounce.intensity = BOUNCE * insideAmount;
+  if (before !== insideAmount > 0.5 && !state.view) renderTabs();
+  return true;
+}
+
+// ---- graphics: on and off, up close, a glow when they go on --------------------------------------------------------------
+const ACCENT = new THREE.Color(0xfd410d), WHITE = new THREE.Color(0xffffff);
+let glow = null;
+function setEmit(m, v) {
+  // A print's own light: the flash when it goes on and the pointer's tint (ACCENT), over the evening's floodlight on
+  // the signs outside (m.userData.lit, in the print's own colors).
+  const lit = m.userData.lit || 0;
+  if (v > lit) { m.emissive.copy(ACCENT); m.emissiveIntensity = v; } else { m.emissive.copy(WHITE); m.emissiveIntensity = lit; }
+}
+function updateGlow(now) {
+  if (!glow) return false;
+  const t = (now - glow.t0) / 1500;
+  const v = t <= 0 || t >= 1 ? 0 : Math.sin(t * Math.PI) * 0.5;
+  for (const key of glow.keys) {
+    for (const m of artOf[key] || []) setEmit(m, Math.max(v, key === hoverKey ? 0.16 : 0));
+  }
+  if (t >= 1) glow = null;
+  return true;
+}
+// What's on the dealership: one job per place.
+function showChosen() {
+  for (const [key, g] of Object.entries(groups)) {
+    g.visible = isOn(key) && !state.plain;
+    if (g.visible) loadArt(key);
+  }
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+function loadArt(key) {
+  // A graphic's art, fetched the first time it's shown: with dozens of jobs in the catalog, loading every one up front
+  // would hold the page up for tens of megabytes.
+  for (const m of artOf[key] || []) {
+    if (m.userData.loading) continue;
+    m.userData.loading = true;
+    texLoader.load(av(`assets/3d/art/${m.userData.art}.webp`), (map) => {
+      map.colorSpace = THREE.SRGBColorSpace;
+      map.flipY = false;                                 // glTF texture coordinates
+      map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      Object.assign(m, { map, visible: true });
+      if (m.userData.nightMap) m.emissiveMap = map;      // a sign lit after dark (see "day and night")
+      m.needsUpdate = true;
+      renderer.shadowMap.needsUpdate = true;
+      dirty();
+    });
+  }
+}
+const choose = (key) => state.chosen.set(byKey[key].spot, key);
+const restore = (before) => { state.chosen = new Map(before); showChosen(); syncAll(); };
+// A graphic's printed faces, grouped into what's seen together: faces that look the same way and stand close
+// (a pole's banner pair, the two drive banners, one side of a hanging banner).
+const UP = new THREE.Vector3(0, 1, 0);
+function clustersOf(key, merge = true) {
+  // A graphic's printed faces, grouped into what can be framed together (faces side by side, facing the same way);
+  // without merge, each face alone.
+  // A vehicle graphic's faces group by car (the cars stand closer than a pole's banner pair), each with the view
+  // graphics.car_view gives its car.
+  const faces = (S.faces[key] || []).map((f) => ({ at: new THREE.Vector3(...f.at), n: new THREE.Vector3(...f.normal), w: f.w, h: f.h,
+    car: f.car, view: f.view }));
+  const out = [];
+  for (const f of faces) {
+    const c = merge && out.find((c) => c.car === f.car && c.n.dot(f.n) > 0.95 && c.faces.some((g) => g.at.distanceTo(f.at) < Math.max(4, (g.w + f.w) * 0.75)));
+    if (c) c.faces.push(f); else out.push({ n: f.n, faces: [f], car: f.car, view: f.view });
+  }
+  for (const c of out) {
+    // A graphic on a wall reads left to right and up; one on the floor reads toward the back of the building (the
+    // model's +Y, which is -Z here), for someone walking in.
+    c.flat = Math.abs(c.n.y) > 0.9;
+    const right = c.flat ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3().crossVectors(UP, c.n).normalize();
+    c.up = c.flat ? new THREE.Vector3(0, 0, -1) : UP.clone();
+    c.center = c.faces.reduce((a, f) => a.add(f.at), new THREE.Vector3()).divideScalar(c.faces.length);
+    let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity;
+    for (const f of c.faces) {
+      const d = new THREE.Vector3().subVectors(f.at, c.center);
+      r0 = Math.min(r0, d.dot(right) - f.w / 2); r1 = Math.max(r1, d.dot(right) + f.w / 2);
+      u0 = Math.min(u0, d.dot(c.up) - f.h / 2); u1 = Math.max(u1, d.dot(c.up) + f.h / 2);
+    }
+    c.center.addScaledVector(right, (r0 + r1) / 2).addScaledVector(c.up, (u0 + u1) / 2);
+    c.across = r1 - r0;
+    c.tall = u1 - u0;
+    // The widest gap between neighboring pieces: banners hung end to end read as one, three office fronts don't.
+    const spans = c.faces.map((f) => { const d = new THREE.Vector3().subVectors(f.at, c.center).dot(right); return [d - f.w / 2, d + f.w / 2]; })
+      .sort((a, b) => a[0] - b[0]);
+    c.gap = Math.max(0, ...spans.slice(1).map((s, i) => s[0] - spans[i][1]));
+    c.samples = [];
+    for (const a of [-0.3, 0, 0.3]) for (const b of [-0.3, 0, 0.3]) {
+      c.samples.push(c.center.clone().addScaledVector(right, a * c.across).addScaledVector(c.up, b * c.tall));
+    }
+  }
+  return out;
+}
+function clearFrom(eye, c) {
+  // Nothing solid between the eye and most of the graphic (glass and other graphics don't count).
+  let seen = 0;
+  for (const q of c.samples) {
+    const d = new THREE.Vector3().subVectors(q, eye);
+    const len = d.length();
+    if (!cast(eye, d.normalize(), len - 0.15)) seen++;
+  }
+  return seen >= 7;
+}
+function roomRoom(dir, from, room) {
+  // How far from a point inside a room one can go along dir before reaching its walls.
+  const r = new THREE.Ray(from, dir);
+  const back = r.at(500, new THREE.Vector3());
+  const out = new THREE.Ray(back, dir.clone().negate()).intersectBox(room, new THREE.Vector3());
+  return out ? from.distanceTo(out) : Infinity;
+}
+// How much of the view a graphic up close fills: 70%, or less when the info card will cover the view's left side.
+let framing = 0.7;
+const roomOf = (c) => rooms.find((b) => b.containsPoint(c.center.clone().addScaledVector(c.n, 0.3)));   // the side it faces
+function viewOf(c) {
+  // A standing viewpoint in front of the graphic: close and straight on if the way is clear, otherwise farther back or
+  // to one side; the lens then frames the graphic to about 70% of the view. A graphic that faces into a room is seen
+  // from inside it, with a wider lens when the room is too shallow to stand back; one that faces out (a cling inside
+  // the storefront glass) from outside, where it's read. Outside, if nothing is clear at eye level (lettering above the
+  // canopy), the viewpoint rises a few feet. A windshield banner or a 3D bow is seen on its whole car, from the view
+  // its car gives (graphics.car_view), widened when the info card takes part of the stage.
+  if (c.view) {
+    const eye = new THREE.Vector3(...c.view.eye);
+    if (clearFrom(eye, c)) {
+      const t = Math.tan(deg(c.view.hfov / 2)) * 0.7 / framing;
+      return { ...aim(eye, new THREE.Vector3(...c.view.at)), hfov: THREE.MathUtils.radToDeg(2 * Math.atan(t)) };
+    }
+  }
+  if (c.flat) {
+    // A floor graphic: stand at its foot and look down along it, the way it's read walking in.
+    for (const k of [0.8, 1.2, 1.8, 2.4]) {
+      const eye = c.center.clone().addScaledVector(c.up, -(c.tall / 2 + Math.max(1.2, Math.max(c.across, c.tall) * k)));
+      eye.y = floorAt(eye) + EYE;
+      if (!clearFrom(eye, c)) continue;
+      const dist = eye.distanceTo(c.center);
+      const fit = 2 * Math.atan(Math.max(c.across, c.tall) / framing / 2 / dist);
+      return { ...aim(eye, c.center), hfov: clamp(THREE.MathUtils.radToDeg(fit), 30, 95) };
+    }
+    return null;
+  }
+  const base = Math.max(2.4, Math.max(c.across, c.tall * 1.4) / framing / (2 * Math.tan(deg(30))));
+  const room = roomOf(c);
+  for (const lift of room ? [0] : [0, 2.5, 5]) for (const k of [1, 1.35, 1.8, 2.4, 3.2]) {
+    for (const turn of [0, 25, -25, 45, -45]) {
+      const dir = c.n.clone().applyAxisAngle(UP, deg(turn));
+      const reach = room ? roomRoom(dir, c.center, room) - 1.0 : Infinity;
+      if (reach < 2.0) continue;
+      const eye = c.center.clone().addScaledVector(dir, Math.min(base * k, reach));
+      eye.y = floorAt(eye) + EYE + lift;
+      if (!clearFrom(eye, c)) continue;
+      const dist = eye.distanceTo(c.center);
+      const aspect = camera.aspect || 16 / 9;
+      const h1 = 2 * Math.atan(c.across / framing / 2 / dist);
+      const v1 = 2 * Math.atan(c.tall / framing / 2 / dist);
+      const h2 = 2 * Math.atan(Math.tan(v1 / 2) * aspect);
+      return { ...aim(eye, c.center), hfov: clamp(THREE.MathUtils.radToDeg(Math.max(h1, h2)), 24, 95) };
+    }
+  }
+  return null;
+}
+function goUpClose(key, withCard = !$('#info').hidden) {
+  framing = 0.7 * (withCard && !narrow.matches ? Math.max(0.55, 1 - 356 / stage.clientWidth) : 1);
+  // The whole graphic if it can be framed (pieces that read as one: banners end to end, a door's two leaves; outside,
+  // a whole row), else its nearest piece alone (separate pieces indoors, with room between them: the three office
+  // fronts), else its place's stop.
+  const here = cam.pos;
+  for (const merge of [true, false]) {
+    const list = clustersOf(key, merge).filter((c) => !merge || c.gap <= 1.0 || !roomOf(c)).map((c) => ({ c, d: c.center.distanceTo(here),
+      facing: c.n.dot(new THREE.Vector3().subVectors(here, c.center)) > 0 }));
+    list.sort((a, b) => (a.facing === b.facing ? a.d - b.d : a.facing ? -1 : 1));
+    for (const { c } of list) {
+      const v = viewOf(c);
+      if (v) {
+        leaveStop();
+        flyTo(v, clamp(cam.pos.distanceTo(v.pos) * 30, 700, 1800));
+        upClose = true;
+        glow = { keys: [key], t0: performance.now() + (reduced ? 0 : 700) };
+        return;
+      }
+    }
+  }
+  goStop(SPOT[byKey[key].spot].view);
+}
+function pop(sel) {
+  const el = document.querySelector(sel);
+  if (el && !reduced) { el.classList.remove('just'); void el.offsetWidth; el.classList.add('just'); }
+}
+function toggle(key) {
+  // A job goes in its place, in place of whatever was there; clicked again, it comes off.
+  const o = byKey[key];
+  const on = !isOn(key);
+  if (on) choose(key); else state.chosen.delete(o.spot);
+  showChosen();
+  state.focus = key;
+  if (on) { goUpClose(key, true); pop(`.card[data-key="${key}"]`); showInfo(o.spot); }
+  syncAll();
+}
+function select(key) {
+  // A graphic clicked on the dealership: its card comes up in the rail.
+  state.focus = key;
+  const group = SPOT[byKey[key].spot].group;
+  if (state.tab !== group) { state.tab = group; renderRail(); }
+  showInfo(byKey[key].spot);
+  syncDetail();
+  glow = { keys: [key], t0: performance.now() };
+  dirty();
+  const card = document.querySelector(`.card[data-key="${key}"]`);
+  if (card) {
+    const fold = card.closest('details');
+    if (fold) fold.open = true;
+    card.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+  }
+}
+function setChosen(map, note) {
+  const before = new Map(state.chosen);
+  state.chosen = map;
+  showChosen();
+  syncAll();
+  if (note) toast(note, { label: 'Undo', run: () => restore(before) });
+}
+
+// ---- themes: one click dresses the dealership for an occasion -------------------------------------------------------------
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function monthsAway(t) {
+  const now = new Date().getMonth() + 1;
+  return t.months ? Math.min(...t.months.map((m) => (m - now + 12) % 12)) : Infinity;
+}
+const monthText = (ms) => (ms.length === 2 && ms[1] === ms[0] + 1 ? `${MONTHS[ms[0] - 1]}–${MONTHS[ms[1] - 1]}`
+  : ms.map((m) => MONTHS[m - 1]).join(', '));
+const themeOn = (t) => t.keys.every(isOn);
+function applyTheme(t) {
+  // A theme puts its graphics in their places and takes any other occasion's graphics off (back to the everyday ones);
+  // clicked again, its graphics come off. Undo puts back what was there.
+  const next = new Map(state.chosen);
+  state.theme = themeOn(t) ? null : t.id;
+  if (themeOn(t)) {
+    for (const k of t.keys) {
+      const sp = byKey[k].spot;
+      if (EVERYDAY[sp] && EVERYDAY[sp] !== k) next.set(sp, EVERYDAY[sp]); else next.delete(sp);
+    }
+    setChosen(next, `Took off the ${t.title} set.`);
+    return;
+  }
+  const mine = new Set(t.keys.map((k) => byKey[k].spot));
+  for (const [sp, k] of [...next]) {
+    if (!mine.has(sp) && seasonal(byKey[k]) && !byKey[k].themes.includes(t.id)) {
+      if (EVERYDAY[sp]) next.set(sp, EVERYDAY[sp]); else next.delete(sp);
+    }
+  }
+  for (const k of t.keys) next.set(byKey[k].spot, k);
+  setChosen(next, `Put on the ${t.title} set: ${t.keys.length} ${t.keys.length === 1 ? 'graphic' : 'graphics'}.`);
+  // A theme that dresses the store inside and out is shown from above with the roof off, all of it in view; one that
+  // stays on one side, from the stop that sees most of it.
+  const zones = new Set(t.keys.map((k) => PRESET[SPOT[byKey[k].spot].view].zone));
+  if (zones.size > 1) { goStop('overview'); return; }
+  const votes = {};
+  for (const k of t.keys) { const v = SPOT[byKey[k].spot].view; votes[v] = (votes[v] || 0) + 1; }
+  goStop(Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0]);
+  glow = { keys: t.keys, t0: performance.now() + (reduced ? 0 : 900) };
+  pop(`.theme-card[data-theme="${t.id}"]`);
+}
+
+// ---- rail ---------------------------------------------------------------------------------------------------------------
+const CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.3 5 8.6l4.5-5"/></svg>';
+function load(img, src) {
+  let tries = 0;
+  img.addEventListener('error', () => {
+    if (++tries > 2) return;
+    setTimeout(() => { img.src = `${src}&retry=${tries}`; }, 250 + Math.random() * 900 * tries);
+  });
+  img.src = src;
+}
+const GROUP_TAB = { 'Storefront glass': 'Storefront', 'Service drive': 'Service' };
+function card(o) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'card';
+  b.dataset.key = o.key;
+  b.setAttribute('aria-pressed', isOn(o.key));
+  b.innerHTML = `<span class="card-art"><img alt="" loading="lazy"><span class="card-check">${CHECK}</span></span>`
+    + '<span class="card-name"></span><span class="card-dealer"></span>';
+  load(b.querySelector('img'), av(o.thumb));
+  b.querySelector('.card-name').textContent = o.message;
+  b.querySelector('.card-dealer').textContent = o.dealer;
+  b.addEventListener('click', () => toggle(o.key));
+  const enter = () => { state.hover = o.key; syncDetail(); };
+  const leave = () => { if (state.hover === o.key) { state.hover = null; syncDetail(); } };
+  b.addEventListener('mouseenter', enter);
+  b.addEventListener('mouseleave', leave);
+  b.addEventListener('focus', enter);
+  b.addEventListener('blur', leave);
+  return b;
+}
+function renderRailTabs() {
+  const tabs = [['themes', 'Themes'], ...C.groups.filter((g) => SPOTS.some((x) => x.group === g.id))
+    .map((g) => [g.id, GROUP_TAB[g.id] || g.title])];
+  $('#railTabs').replaceChildren(...tabs.map(([id, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rail-tab';
+    b.dataset.tab = id;
+    b.textContent = label;
+    const n = document.createElement('span');
+    n.className = 'n';
+    b.append(n);
+    b.addEventListener('click', () => { state.tab = id; renderRail(); });
+    return b;
+  }));
+}
+function renderThemes(body) {
+  const note = document.createElement('p');
+  note.className = 'themes-note';
+  note.textContent = 'One click dresses the dealership for the occasion; everyday graphics stay on.';
+  body.append(note);
+  const away = monthsAway;
+  const ahead = THEMES.filter((t) => t.months && away(t) > 0).sort((a, b) => away(a) - away(b));
+  const sets = [                        // the next three months in view; the rest of the year folded away
+    ['In season now', THEMES.filter((t) => away(t) === 0)],
+    ['Coming up', ahead.filter((t) => away(t) <= 3)],
+    ['Later in the year', ahead.filter((t) => away(t) > 3), true],
+    ['Dealer programs', THEMES.filter((t) => !t.months)],
+  ];
+  for (const [title, list, fold] of sets) {
+    if (!list.length) continue;
+    const h = document.createElement('h3');
+    h.className = 'tgrp';
+    h.textContent = title;
+    const grid = document.createElement('div');
+    grid.className = 'theme-list';
+    for (const t of list) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'theme-card';
+      b.dataset.theme = t.id;
+      const shots = t.keys.slice(0, 4);
+      b.innerHTML = `<span class="theme-shot${shots.length === 1 ? ' one' : ''}">${shots.map(() => '<img alt="" loading="lazy">').join('')}`
+        + `${t.months ? '<span class="theme-when"></span>' : ''}<span class="card-check">${CHECK}</span></span>`
+        + '<span class="theme-name"></span><span class="theme-count"></span><span class="theme-blurb"></span>';
+      shots.forEach((k, i) => load(b.querySelectorAll('.theme-shot img')[i], av(byKey[k].thumb)));
+      if (t.months) b.querySelector('.theme-when').textContent = monthText(t.months);
+      b.querySelector('.theme-name').textContent = t.title;
+      b.querySelector('.theme-blurb').textContent = t.blurb;
+      b.addEventListener('click', () => applyTheme(t));
+      grid.append(b);
+    }
+    if (fold) {
+      const box = document.createElement('details');
+      box.className = 'occ';
+      box.open = list.some(themeOn);
+      const sum = document.createElement('summary');
+      sum.textContent = `${title} · ${list.length} ${list.length === 1 ? 'theme' : 'themes'}`;
+      box.append(sum, grid);
+      body.append(box);
+    } else body.append(h, grid);
+  }
+}
+function occasionCards(list, open) {
+  // A place's jobs for occasions, grouped by occasion (the soonest first, events after the seasons), folded away until
+  // wanted.
+  const by = new Map();
+  for (const o of list) {
+    const t = occasionOf(o);
+    if (!by.has(t.id)) by.set(t.id, { t, list: [] });
+    by.get(t.id).list.push(o);
+  }
+  const box = document.createElement('details');
+  box.className = 'occ';
+  box.open = open;
+  const sum = document.createElement('summary');
+  sum.textContent = `For an occasion or event · ${list.length} ${list.length === 1 ? 'job' : 'jobs'}`;
+  box.append(sum);
+  for (const { t, list: l } of [...by.values()].sort((a, b) => monthsAway(a.t) - monthsAway(b.t))) {
+    const lab = document.createElement('p');
+    lab.className = 'occ-label';
+    lab.textContent = t.months ? `${t.title} · ${monthText(t.months)}` : t.title;
+    const g = document.createElement('div');
+    g.className = 'cards';
+    for (const o of l) g.append(card(o));
+    box.append(lab, g);
+  }
+  return box;
+}
+function renderRail() {
+  renderRailTabs();
+  const body = $('#railBody');
+  body.replaceChildren();
+  if (state.tab === 'themes' && THEMES.length) renderThemes(body);
+  else {
+    if (state.tab === 'themes') state.tab = C.groups[0].id;
+    for (const sp of SPOTS.filter((x) => x.group === state.tab)) {
+      const sec = document.createElement('section');
+      sec.className = 'spot-sec';
+      sec.dataset.spot = sp.id;
+      const h = document.createElement('h3');
+      h.className = 'grp';
+      h.style.setProperty('--c', COLOR[sp.group] || 'var(--ink-3)');
+      const hb = document.createElement('button');
+      hb.type = 'button';
+      hb.className = 'grp-btn';
+      hb.textContent = sp.label;
+      hb.addEventListener('click', () => pickProduct(sp.id));
+      h.append(hb);
+      const where = document.createElement('p');
+      where.className = 'grp-blurb';
+      where.textContent = sp.where;
+      const mine = opts.filter((x) => x.spot === sp.id);
+      const folds = (o) => occasionOf(o) && EVERYDAY[o.spot] !== o.key;   // the place's starting job stays in view
+      const now = mine.filter((o) => !folds(o)), later = mine.filter(folds);
+      sec.append(h, where);
+      if (now.length) {
+        const grid = document.createElement('div');
+        grid.className = 'cards';
+        for (const o of now) grid.append(card(o));
+        sec.append(grid);
+      }
+      if (later.length) sec.append(occasionCards(later, !now.length || later.some((o) => isOn(o.key))));
+      body.append(sec);
+    }
+  }
+  body.classList.remove('fresh');
+  void body.offsetWidth;
+  body.classList.add('fresh');
+  syncAll();
+}
+const num = (x) => String(Math.round(x * 10) / 10);
+function sizeText(o) {
+  if (o.size_note) return o.size_note;                 // a stock product shown by a picture of it (the 3D bow)
+  const [w, h] = o.size;
+  const one = Math.max(w, h) >= 120 ? `${num(w / 12)} × ${num(h / 12)} ft` : `${num(w)} × ${num(h)} in`;
+  if (o.spot.startsWith('car-')) return o.spot === 'car-bodyside' ? `${one}, one on each side of a car` : `${one}, one a car`;
+  return o.count > 1 ? `${o.count} pieces, ${one} each` : one;
+}
+// A job number, a SKU, or nothing (a dealer's undated folder; a stock product carries its part number).
+const jobText = (o) => (!o.job ? '' : /^\d+$/.test(o.job) ? `, job ${o.job}` : `, ${o.job}`);
+function syncDetail() {
+  const o = byKey[state.hover || state.focus];
+  $('#detail').hidden = !o;
+  if (!o) return;
+  $('#dName').textContent = o.product;
+  // A job borrowed to fill a theme's place says where it was really installed.
+  $('#dJob').textContent = `${o.dealer}${jobText(o)}${o.installed ? ` · installed as: ${o.installed}` : ''}`;
+  $('#dMsg').textContent = o.message;
+  $('#dWhere').textContent = SPOT[o.spot].where;
+  $('#dSize').textContent = sizeText(o);
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = isOn(o.key) ? 'Go up close' : 'Put it on';
+  close.addEventListener('click', () => {
+    if (!isOn(o.key)) { choose(o.key); showChosen(); }
+    syncAll();
+    goUpClose(o.key);
+  });
+  const stop = SPOT[o.spot].view;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = SHORT[stop] || stop;
+  b.title = (VIEW[stop] || {}).label || '';
+  b.setAttribute('aria-pressed', stop === state.view);
+  b.addEventListener('click', () => goStop(stop));
+  $('#dViews').replaceChildren(close, b);
+}
+function syncAll() {
+  for (const c of document.querySelectorAll('.card')) c.setAttribute('aria-pressed', isOn(c.dataset.key));
+  for (const c of document.querySelectorAll('.theme-card')) {
+    const t = THEMES.find((x) => x.id === c.dataset.theme);
+    const on = themeOn(t);
+    c.setAttribute('aria-pressed', on);
+    c.querySelector('.theme-count').textContent = on ? 'On the dealership' : `${t.keys.length} ${t.keys.length === 1 ? 'graphic' : 'graphics'}`;
+  }
+  for (const b of document.querySelectorAll('.rail-tab')) {
+    const id = b.dataset.tab;
+    b.setAttribute('aria-pressed', state.tab === id);
+    const n = id === 'themes' ? THEMES.filter(themeOn).length
+      : [...state.chosen.keys()].filter((sp) => SPOT[sp] && SPOT[sp].group === id).length;
+    const badge = b.querySelector('.n');
+    badge.textContent = n;
+    badge.hidden = !n;
+  }
+  $('#count').textContent = state.chosen.size;
+  syncDetail();
+  syncThemePill();
+  updateUrl();
+}
+
+// ---- review ---------------------------------------------------------------------------------------------------------------
+const chosen = () => [...state.chosen.values()].map((k) => byKey[k]);
+const listText = () => chosen().map((o) => `- ${o.product}, ${sizeText(o)}. ${SPOT[o.spot].where} Example job: ${o.dealer}`
+  + `${o.installed ? ` (installed as: ${o.installed})` : ''}.`).join('\n');
+let toastTimer;
+function toast(text, action) {
+  const t = $('#toast'), act = $('#toastAct');
+  $('#toastText').textContent = text;
+  act.hidden = !action;
+  act.onclick = action ? () => { action.run(); t.classList.remove('show'); } : null;
+  if (action) act.textContent = action.label;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), action ? 5200 : 2200);
+}
+function openSheet() {
+  const rows = chosen().map((o) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><span class="r-graphic"><img class="r-thumb" alt=""><span><span class="r-name"></span>'
+      + '<span class="r-dealer"></span></span></span></td><td class="r-where"></td><td class="r-size"></td>';
+    load(tr.querySelector('img'), av(o.thumb));
+    tr.querySelector('.r-name').textContent = o.product;
+    tr.querySelector('.r-dealer').textContent = `As made for ${o.dealer}${o.installed ? ` (installed as: ${o.installed})` : ''}`;
+    tr.querySelector('.r-where').textContent = SPOT[o.spot].where;
+    tr.querySelector('.r-size').textContent = sizeText(o);
+    return tr;
+  });
+  $('#sheetRows').replaceChildren(...rows);
+  $('#sheetEmpty').hidden = rows.length > 0;
+  const body = `I'd like a quote on these dealership graphics:\n\n${listText()}\n\nSee them on the dealership: ${location.href}\n`;
+  $('#quote').href = `mailto:${QUOTE_TO}?subject=${encodeURIComponent('Dealership graphics quote')}&body=${encodeURIComponent(body)}`;
+  $('#sheetNote').textContent = '';
+  $('#sheet').showModal();
+}
+async function copy(text, done) {
+  try { await navigator.clipboard.writeText(text); $('#sheetNote').textContent = done; }
+  catch { $('#sheetNote').textContent = 'Copying is blocked here. Select the text and copy it instead.'; }
+}
+$('#review').addEventListener('click', openSheet);
+$('#sheetClose').addEventListener('click', () => $('#sheet').close());
+$('#copyLink').addEventListener('click', () => copy(location.href, 'Link copied.'));
+$('#copyList').addEventListener('click', () => copy(listText(), 'List copied.'));
+// ---- before and after: the dealership bare, then its graphics going up one by one --------------------------------------
+function setPlain(plain) {
+  if (plain === state.plain) return;
+  state.plain = plain;
+  $('#before').setAttribute('aria-pressed', plain);
+  $('#after').setAttribute('aria-pressed', !plain);
+  syncWeather();
+  if (plain) { showChosen(); return; }
+  // After: nearest first, a beat apart, then they all light up together, like a quick install.
+  const keys = [...state.chosen.values()].filter((k) => groups[k]);
+  const away = (k) => new THREE.Box3().setFromObject(groups[k]).getCenter(new THREE.Vector3()).distanceTo(cam.pos);
+  const order = keys.map((k) => [k, away(k)]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+  for (const k of order) loadArt(k);
+  const gap = reduced ? 0 : Math.min(90, 1800 / Math.max(1, order.length));
+  order.forEach((k, i) => setTimeout(() => {
+    if (state.plain || !isOn(k)) return;
+    groups[k].visible = true;
+    renderer.shadowMap.needsUpdate = true;
+    if (i === order.length - 1 && !reduced) glow = { keys: order, t0: performance.now() };
+    dirty();
+  }, i * gap));
+}
+$('#before').addEventListener('click', () => setPlain(true));
+$('#after').addEventListener('click', () => setPlain(false));
+$('#everyday').addEventListener('click', () => setChosen(new Map(Object.entries(EVERYDAY)), 'Back to the everyday set.'));
+$('#allOff').addEventListener('click', () => setChosen(new Map(), 'Took every graphic off.'));
+
+// ---- pins: a dot on each kind of graphic, numbered as on the placement sheet ----------------------------------------------
+const PIN_SPOTS = SPOTS.filter((x) => x.pin);
+const pinEl = {}, pinSeen = {};
+function buildPins() {
+  $('#pins').replaceChildren(...PIN_SPOTS.map((x) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pin off';
+    b.style.setProperty('--c', COLOR[x.group] || 'var(--ink-3)');
+    b.innerHTML = '<span class="pin-dot" aria-hidden="true"></span><span class="pin-label"></span>';
+    b.querySelector('.pin-dot').textContent = x.n;
+    b.querySelector('.pin-label').textContent = x.label;
+    b.addEventListener('pointerdown', (e) => e.stopPropagation());      // not the start of a look-around drag
+    b.addEventListener('click', (e) => { e.stopPropagation(); pickProduct(x.id); });
+    return (pinEl[x.id] = b);
+  }));
+}
+const pinAt = new THREE.Vector3(), pinDir = new THREE.Vector3();
+let pinCastAt = 0, pinsStale = false;
+// The overview shows every dot with its number; a stop shows small dots that grow on hover; up close, and before the
+// graphics go up, there are none.
+const pinMode = () => (state.plain || upClose ? 'hidden' : cut || state.view === 'overview' ? 'full' : 'small');
+function placePins(now, settle = false) {
+  // Where each pin sits on the screen, every frame; whether a wall hides it (a ray to it), every 150 ms while the view
+  // moves and once when it stops. Glass and graphics don't hide a pin; in the overview nothing does.
+  const mode = pinMode(), box = $('#pins');
+  if (box.dataset.mode !== mode) box.dataset.mode = mode;
+  if (mode === 'hidden') return;
+  const recast = settle || now - pinCastAt > 150;
+  if (recast) pinCastAt = now;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const x of PIN_SPOTS) {
+    pinAt.set(...x.pin);
+    const dist = pinAt.distanceTo(camera.position);
+    if (recast) {
+      pinDir.subVectors(pinAt, camera.position).normalize();
+      pinSeen[x.id] = dist > 0.8 && (cut || !cast(camera.position, pinDir, dist - 0.4));     // the overview is the map
+    }
+    pinAt.project(camera);
+    const show = pinSeen[x.id] && pinAt.z < 1 && Math.abs(pinAt.x) < 1.02 && Math.abs(pinAt.y) < 1.02;
+    const el = pinEl[x.id];
+    el.classList.toggle('off', !show);
+    if (show) el.style.transform = `translate(${((pinAt.x + 1) / 2) * w}px, ${((1 - pinAt.y) / 2) * h}px)`;
+  }
+}
+
+// The kinds of graphics in the placement sheet's order: the tour's order, from the lot to the service drive.
+const ORDER = PIN_SPOTS.slice().sort((a, b) => a.n - b.n).map((x) => x.id);
+function stepProduct(d) {
+  const i = ORDER.indexOf(state.product);
+  pickProduct(ORDER[i < 0 ? 0 : (i + d + ORDER.length) % ORDER.length]);
+}
+
+// ---- picking a kind of graphic: fly to it, mark it, say what it is -----------------------------------------------------
+function pickProduct(id) {
+  const sp = SPOT[id];
+  hideHint();
+  if (!state.chosen.get(id)) {                         // an empty place gets its everyday job, to have something to show
+    const k = EVERYDAY[id] || (opts.find((o) => o.spot === id) || {}).key;
+    if (k) { choose(k); showChosen(); }
+  }
+  const key = state.chosen.get(id);
+  if (key) { state.focus = key; goUpClose(key, true); }
+  if (state.tab !== sp.group) { state.tab = sp.group; renderRail(); }
+  showInfo(id);
+  syncAll();
+  const sec = document.querySelector(`.spot-sec[data-spot="${id}"]`);
+  if (sec && !coarse) sec.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+}
+function showInfo(id) {
+  const sp = SPOT[id], info = sp.info || {};
+  const box = $('#info');
+  box.style.setProperty('--c', COLOR[sp.group] || 'var(--ink-3)');
+  $('#infoGroup').textContent = sp.group;
+  $('#infoTitle').textContent = sp.label;
+  $('#infoWhat').textContent = info.what || '';
+  $('#infoWhat').hidden = !info.what;
+  $('#infoWhere').textContent = info.where || sp.where;
+  $('#infoSize').textContent = info.size || '';
+  $('#infoSize').hidden = $('#infoSizeT').hidden = !info.size;
+  const img = $('#infoImg');
+  img.hidden = !info.image;
+  if (info.image) load(img, av(info.image));
+  const n = opts.filter((o) => o.spot === id).length;
+  $('#infoJobs').textContent = `See the ${n} real ${n === 1 ? 'job' : 'jobs'}`;
+  $('#infoJobs').onclick = () => {
+    if (state.tab !== sp.group) { state.tab = sp.group; renderRail(); }
+    const sec = document.querySelector(`.spot-sec[data-spot="${id}"]`);
+    if (sec) sec.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+  };
+  $('#infoStep').textContent = `${ORDER.indexOf(id) + 1} of ${ORDER.length}`;
+  box.hidden = false;
+  state.product = id;
+  for (const [k, el] of Object.entries(pinEl)) el.classList.toggle('on', k === id);
+  dirty();
+}
+function hideInfo() {
+  $('#info').hidden = true;
+  state.product = null;
+  upClose = false;
+  for (const el of Object.values(pinEl)) el.classList.remove('on');
+  dirty();
+}
+$('#infoClose').addEventListener('click', hideInfo);
+$('#infoPrev').addEventListener('click', () => stepProduct(-1));
+$('#infoNext').addEventListener('click', () => stepProduct(1));
+$('#tour').addEventListener('click', () => pickProduct(ORDER[0]));
+
+// ---- hovering a graphic: it lights up a little, and its name shows by the pointer -----------------------------------------
+let hoverKey = null, hoverAt = 0;
+function setHover(key, e) {
+  if (key !== hoverKey) {
+    for (const m of artOf[hoverKey] || []) setEmit(m, 0);
+    hoverKey = key;
+    for (const m of artOf[key] || []) setEmit(m, 0.16);
+    canvas.style.cursor = key ? 'pointer' : '';
+    dirty();
+  }
+  const tip = $('#tip');
+  tip.hidden = !key;
+  if (!key) return;
+  const o = byKey[key];
+  $('#tipName').textContent = SPOT[o.spot].label;
+  $('#tipMsg').textContent = o.message;
+  const r = stage.getBoundingClientRect();
+  tip.style.transform = `translate(${Math.min(e.clientX - r.left + 14, r.width - 270)}px, ${e.clientY - r.top + 16}px)`;
+}
+canvas.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || (drag && drag.moved) || fly) { if (hoverKey) setHover(null); return; }
+  const now = performance.now();
+  if (now - hoverAt < 50) return;
+  hoverAt = now;
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  ray.far = 2000;
+  const h = ray.intersectObjects([...pickGfx, ...pickStatic], false).filter((x) => shown(x.object))[0];
+  setHover(h && h.object.userData.gfx ? h.object.userData.gfx : null, e);
+});
+canvas.addEventListener('pointerleave', () => { if (hoverKey) setHover(null); });
+
+// ---- the theme that's on: step to the occasion before or after it -------------------------------------------------------
+function syncThemePill() {
+  const t = THEMES.find((x) => x.id === state.theme);
+  const on = !!t && themeOn(t);
+  $('#themePill').hidden = !on;
+  if (on) hideHint();                                  // on a phone the pill sits where the hint is
+  if (on) $('#themeName').textContent = t.months ? `${t.title} · ${monthText(t.months)}` : t.title;
+  syncWeather();
+}
+function flipTheme(d) {
+  const i = THEMES.findIndex((x) => x.id === state.theme);
+  applyTheme(THEMES[(i + d + THEMES.length) % THEMES.length]);
+}
+$('#themePrev').addEventListener('click', () => flipTheme(-1));
+$('#themeNext').addEventListener('click', () => flipTheme(1));
+$('#themeOff').addEventListener('click', () => {
+  const t = THEMES.find((x) => x.id === state.theme);
+  if (t && themeOn(t)) applyTheme(t);
+});
+
+// ---- the season's weather: snow and falling leaves ---------------------------------------------------------------------
+// Barrett, 2026-10-19 ("clearer and more fun"): the theme that's on brings its season: snow for the winter ones and
+// falling leaves for the fall ones. They fall outside only (the vertex shader drops any inside the showroom or the
+// service wing), at about 30 frames a second, and hold still for anyone who asks for less motion. 'Before' (the bare
+// store) has no weather. Black Friday brings the night instead (see "day and night").
+const WEATHER = { holiday: 'snow', yearend: 'snow', newyear: 'snow', fall: 'leaves', halloween: 'leaves',
+  thanksgiving: 'leaves' };
+const GROUND = { snow: { grass: 0xd9dee4, roof: 0xe6e9ed }, leaves: { grass: 0x4d4718 } };   // snow on the grass and roofs
+const FALL_VS = `
+uniform float time, scale;
+uniform vec3 lo0, hi0, lo1, hi1;
+attribute vec4 seed;
+varying vec4 vSeed;
+varying float vSpin;
+bool within(vec3 p, vec3 a, vec3 b) { return all(greaterThan(p, a)) && all(lessThan(p, b)); }
+void main() {
+#ifdef LEAVES
+  float fall = 0.8 + 0.7 * seed.x, sway = 1.3, size = 0.19;      // leaves drawn larger than life, to read from the street
+#else
+  float fall = 0.6 + 0.5 * seed.x, sway = 0.3, size = 0.05;
+#endif
+  vec3 p = position;
+  p.y = mod(position.y - time * fall, 18.0);
+  p.x += sway * sin(time * (0.5 + 0.6 * seed.y) + 6.283 * seed.z);
+  p.z += sway * cos(time * (0.4 + 0.5 * seed.w) + 6.283 * seed.y);
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  gl_Position = within(p, lo0, hi0) || within(p, lo1, hi1) ? vec4(2.0, 2.0, 2.0, 1.0) : projectionMatrix * mv;
+  gl_PointSize = clamp(size * (0.7 + 0.6 * seed.w) * scale / -mv.z, 1.0, 48.0);
+  vSeed = seed;
+  vSpin = time * (0.8 + 2.0 * seed.z) + 6.283 * seed.w;
+}`;
+const FALL_FS = `
+uniform float glow;
+varying vec4 vSeed;
+varying float vSpin;
+void main() {
+  vec2 c = gl_PointCoord - 0.5;
+#ifdef LEAVES
+  float s = sin(vSpin), k = cos(vSpin);
+  c = mat2(k, -s, s, k) * c;
+  c.y *= 1.0 + 0.8 * abs(sin(vSpin * 0.7));            // tumbling: thinner as it turns edge on
+  if (length(c * vec2(2.0, 1.0)) > 0.48) discard;      // a leaf, twice as long as it is wide
+  vec3 col = vSeed.x < 0.3 ? vec3(0.62, 0.15, 0.03) : vSeed.x < 0.6 ? vec3(0.78, 0.33, 0.04)
+    : vSeed.x < 0.85 ? vec3(0.74, 0.52, 0.07) : vec3(0.33, 0.17, 0.05);
+  gl_FragColor = vec4(col * (1.2 + 0.6 * vSeed.y) * glow, 1.0);
+#else
+  float d = length(c);
+  if (d > 0.5) discard;
+  gl_FragColor = vec4(vec3(1.9 * glow), 1.0 - smoothstep(0.15, 0.5, d));
+#endif
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+function fallers(n, leaves) {
+  const H = 18, x0 = site.min.x - 6, x1 = site.max.x + 6, z0 = site.min.z - 6, z1 = site.max.z;
+  const pos = new Float32Array(n * 3), seed = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    pos.set([x0 + Math.random() * (x1 - x0), Math.random() * H, z0 + Math.random() * (z1 - z0)], i * 3);
+    seed.set([Math.random(), Math.random(), Math.random(), Math.random()], i * 4);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('seed', new THREE.BufferAttribute(seed, 4));
+  const m = new THREE.ShaderMaterial({
+    uniforms: { time: { value: 0 }, scale: { value: 800 }, glow: { value: 1 }, lo0: { value: rooms[0].min },
+      hi0: { value: rooms[0].max }, lo1: { value: rooms[1].min }, hi1: { value: rooms[1].max } },
+    defines: leaves ? { LEAVES: '' } : {}, vertexShader: FALL_VS, fragmentShader: FALL_FS,
+    transparent: !leaves, depthWrite: leaves,
+  });
+  const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
+  pts.visible = false;
+  scene.add(pts);
+  return pts;
+}
+const named = {};
+model.traverse((o) => { if (o.isMesh && !o.userData.gfx && o.material && o.material.name) named[o.material.name] ||= o.material; });
+const groundDay = Object.fromEntries(['grass', 'roof'].filter((k) => named[k]).map((k) => [k, named[k].color.clone()]));
+let weather = null, falling = null, weatherT0 = 0, weatherAt = 0;
+const fallen = {};
+function setWeather(w) {
+  for (const [k, c] of Object.entries(groundDay)) named[k].color.copy(c);
+  for (const pts of Object.values(fallen)) pts.visible = false;
+  weather = w;
+  for (const [k, hex] of Object.entries(GROUND[w] || {})) if (named[k]) named[k].color.set(hex);
+  if (w) {
+    falling = fallen[w] ||= fallers(w === 'snow' ? (coarse ? 6000 : 12000) : (coarse ? 400 : 750), w === 'leaves');
+    falling.material.uniforms.glow.value = night ? NIGHT.fall : 1;
+    falling.visible = true;
+    weatherT0 = performance.now();
+  } else falling = null;
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+let themeWas = null;
+function syncWeather() {
+  const t = THEMES.find((x) => x.id === state.theme);
+  const id = t && themeOn(t) ? t.id : null;
+  if (id !== themeWas) {
+    // Black Friday brings the night (its sale runs into the evening) and takes it back when it goes, unless the night
+    // was picked by hand.
+    if (nightBy === 'theme') setNight(false);
+    if (id && NIGHT_THEMES.has(id) && !night) setNight(true, 'theme');
+    themeWas = id;
+  }
+  const w = id && !state.plain ? WEATHER[id] || null : null;
+  if (w !== weather) setWeather(w);
+}
+function updateWeather(now) {
+  if (!falling || (reduced && now - weatherT0 > 100) || now - weatherAt < 33) return false;
+  weatherAt = now;
+  const u = falling.material.uniforms;
+  u.time.value = reduced ? 0 : (now - weatherT0) / 1000;
+  u.scale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+  return true;
+}
+
+// ---- day and night ----------------------------------------------------------------------------------------------------
+// Barrett, 2026-10-20: "a daytime/nightime toggle ... so that the dealership can get an idea of how their lot will look
+// with any of these graphics at night vs during the day". Night is the hour after dusk: a deep blue sky with stars and a
+// little moonlight; the lot's lights on (the two banner poles and three plain ones, each a real light, with shadows on a
+// computer), the canopy's downlights over the front walk and a wall pack on the service wing; the showroom lit inside.
+// Signs a store lights after dark glow in their own colors: the fascia lettering and building banner (floodlit), and
+// clings, door vinyl and bows (lit from the showroom behind them). Perforated film doesn't: at night the lit showroom
+// shows through it, as it does on a real storefront. Everything else outside is lit only by the lot's lights, so a
+// dealer sees which graphics carry after dark. The night's lights are made the first time it's asked for, compiled in
+// the background, and then kept (off by day), so switching back and forth never recompiles the materials again.
+// The night sky is a gradient of its own (the day's sky model turns brown with the sun under the horizon): deep navy
+// overhead, a lighter blue at the horizon, and the last light low in the west (before the exposure).
+const NIGHT = { zenith: 0x121a30, horizon: 0x303852, glow: 0x453028, west: new THREE.Vector3(-0.86, 0, 0.5).normalize(),
+  moon: new THREE.Vector3(0.3, 0.8, 0.52).normalize(), moonLight: 0.12, moonColor: 0x9fb6e6, expo: 0.72, env: 1.4,
+  pole: 100, canopy: 22, wallpack: 26, fall: 0.35 };
+const NIGHT_SKY_VS = `
+varying vec3 vDir;
+void main() {
+  vDir = normalize(position);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const NIGHT_SKY_FS = `
+uniform vec3 zenith, horizon, glow, west;
+varying vec3 vDir;
+void main() {
+  vec3 d = normalize(vDir);
+  float up = max(d.y, 0.0);
+  vec3 c = mix(horizon, zenith, pow(up, 0.45));
+  float w = max(dot(normalize(vec3(d.x, 0.0, d.z) + 1e-5), west), 0.0);
+  c += glow * pow(w, 3.0) * exp(-up * 8.0);
+  gl_FragColor = vec4(c, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+function nightSky(r) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { zenith: { value: new THREE.Color(NIGHT.zenith) }, horizon: { value: new THREE.Color(NIGHT.horizon) },
+      glow: { value: new THREE.Color(NIGHT.glow) }, west: { value: NIGHT.west } },
+    vertexShader: NIGHT_SKY_VS, fragmentShader: NIGHT_SKY_FS, side: THREE.BackSide, depthWrite: false,
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 24), m);
+  sky.visible = false;
+  return sky;
+}
+const nightDome = nightSky(1400), nightEnvSky = nightSky(40);
+nightDome.position.copy(center);
+nightDome.renderOrder = -1;
+scene.add(nightDome);
+envScene.add(nightEnvSky);
+const NIGHT_LIT = { fascia: 0.55, bldg: 0.55, clings: 0.3, door: 0.3, bow: 0.3, letters: 0.2 };   // lit after dark
+const NIGHT_THEMES = new Set(['blackfriday']);
+const dayLight = { expo: EXPO.out, env: ENV.out, sun: sun.intensity, color: sun.color.clone() };
+function setSky(dark, lightToward) {
+  // The day's sky or the night's, for the view and for the light it gives (the environment map).
+  skyDome.visible = envSky.visible = !dark;
+  nightDome.visible = nightEnvSky.visible = dark;
+  const old = scene.environment;
+  scene.environment = pmrem.fromScene(envScene, 0.02).texture;
+  old.dispose();
+  for (const m of Object.values(named)) if (m.envMap === old) m.envMap = scene.environment;
+  sun.position.copy(center).addScaledVector(lightToward, 160);
+  renderer.shadowMap.needsUpdate = true;
+}
+function nightKit() {
+  // The night's lights, lamps and stars. The lights stay in the scene from now on, off by day: adding or removing a
+  // light makes every material recompile.
+  const g = new THREE.Group(), lights = [], shows = [];
+  const lamp = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffe6c4).multiplyScalar(5) });
+  const add = (at, dir, on, angle, shadow) => {
+    const l = new THREE.SpotLight(0xffe2c2, 0, 0, angle, 0.7, 2);   // LED, about 4000 K
+    l.position.set(...at);
+    l.target.position.set(at[0] + dir[0], at[1] + dir[1], at[2] + dir[2]);
+    if (shadow && !coarse) {
+      l.castShadow = true;
+      l.shadow.mapSize.set(1024, 1024);
+      l.shadow.bias = -0.0006;
+      Object.assign(l.shadow.camera, { near: 0.5, far: 34 });
+    }
+    l.userData.on = on;
+    g.add(l, l.target);
+    lights.push(l);
+  };
+  const glowAt = (geo, at, dir) => {
+    const m = new THREE.Mesh(geo, lamp);
+    m.position.set(at[0] + dir[0] * 0.02, at[1] + dir[1] * 0.02, at[2] + dir[2] * 0.02);
+    m.lookAt(at[0] + dir[0], at[1] + dir[1], at[2] + dir[2]);
+    g.add(m);
+    shows.push(m);
+  };
+  for (const at of S.poles || []) {
+    add(at, [0, -1, 0], NIGHT.pole, 1.15, true);
+    glowAt(new THREE.PlaneGeometry(0.9, 0.36), at, [0, -1, 0]);
+  }
+  for (const f of S.fixtures || []) {
+    const canopy = f.kind === 'canopy';
+    add(f.at, f.dir, canopy ? NIGHT.canopy : NIGHT.wallpack, canopy ? 1.0 : 1.1, false);
+    glowAt(canopy ? new THREE.CircleGeometry(0.2, 20) : new THREE.PlaneGeometry(0.32, 0.18), f.at, f.dir);
+  }
+  // Stars on a dome inside the sky, above about 7 degrees, as many on each patch of sky.
+  const n = coarse ? 900 : 1800, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const up = 0.12 + 0.88 * Math.random(), a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - up * up) * 1300;
+    pos.set([center.x + Math.cos(a) * r, up * 1300, center.z + Math.sin(a) * r], i * 3);
+  }
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: new THREE.Color(0xdfe6ff).multiplyScalar(2.2),
+    size: coarse ? 1.3 : 1.6, sizeAttenuation: false, transparent: true, opacity: 0.8, depthWrite: false }));
+  stars.frustumCulled = false;
+  g.add(stars);
+  shows.push(stars);
+  for (const m of shows) m.visible = false;
+  scene.add(g);
+  // The signs lit after dark keep their art as their own light from now on (dark by day, at no strength), so their
+  // shader is the same by day and by night.
+  for (const [key, ms] of Object.entries(artOf)) {
+    if (!NIGHT_LIT[byKey[key].spot]) continue;
+    for (const m of ms) {
+      m.userData.nightMap = true;
+      if (m.map && m.emissiveMap !== m.map) { m.emissiveMap = m.map; m.needsUpdate = true; }
+    }
+  }
+  return { lights, shows };
+}
+function syncNightButtons() {
+  $('#dayBtn').setAttribute('aria-pressed', !night);
+  $('#nightBtn').setAttribute('aria-pressed', night);
+  const t = $('#nightToggle');
+  t.setAttribute('aria-pressed', night);
+  t.setAttribute('aria-label', night ? 'Day view' : 'Night view');
+}
+function setNight(on, by = 'user') {
+  nightBy = on ? by : null;
+  if (on === night) { syncNightButtons(); return; }
+  night = on;
+  syncNightButtons();
+  updateUrl();
+  if (on && !kit) {
+    // The first night adds its lights, and every material has to compile again: that happens in the background, and
+    // the view turns to night when it's done (the buttons already show it).
+    kit = nightKit();
+    let said = false;                                  // a slow phone gets a word while it compiles
+    const slow = setTimeout(() => { said = true; toast('Turning on the lot lights…'); }, 400);
+    const go = () => {
+      clearTimeout(slow);
+      if (said) $('#toast').classList.remove('show');
+      if (night) showNight(true);
+    };
+    if (renderer.compileAsync) renderer.compileAsync(scene, camera).then(go, go); else go();
+    return;
+  }
+  showNight(on);
+}
+function showNight(on) {
+  setSky(on, on ? NIGHT.moon : sunToward);
+  sun.intensity = on ? NIGHT.moonLight : dayLight.sun;
+  sun.color.set(on ? NIGHT.moonColor : dayLight.color);
+  relight({ expo: { out: on ? NIGHT.expo : dayLight.expo }, env: { out: on ? NIGHT.env : dayLight.env } });
+  for (const l of kit ? kit.lights : []) l.intensity = on ? l.userData.on : 0;
+  for (const m of kit ? kit.shows : []) m.visible = on;
+  // The signs lit after dark. A print's material can serve a borrowed copy too: it takes the brighter of its places.
+  const want = new Map();
+  for (const [key, ms] of Object.entries(artOf)) {
+    const lit = on ? NIGHT_LIT[byKey[key].spot] || 0 : 0;
+    for (const m of ms) want.set(m, Math.max(want.get(m) || 0, lit));
+  }
+  for (const [m, lit] of want) {
+    m.userData.lit = lit;
+    setEmit(m, 0);
+  }
+  if (falling) falling.material.uniforms.glow.value = on ? NIGHT.fall : 1;
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+$('#dayBtn').addEventListener('click', () => setNight(false));
+$('#nightBtn').addEventListener('click', () => setNight(true));
+$('#nightToggle').addEventListener('click', () => setNight(!night));
+
+// ---- the cutaway: roofs off above the roofline ------------------------------------------------------------------------------
+const ROOFLINE = Math.max(...Object.values(S.rooms).map(([a, b]) => Math.max(a[1], b[1]))) + 1.0;
+let cut = null;
+function updateCutaway() {
+  const on = cam.pos.y > ROOFLINE;
+  if (on === cut) return false;
+  cut = on;
+  for (const o of cutaway) o.visible = !on;
+  renderer.shadowMap.needsUpdate = true;               // the sun now reaches the floors, or doesn't
+  return true;
+}
+// ---- drawing: only when something changes ------------------------------------------------------------------------------
+let composer = null;
+if (!coarse) {
+  const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+  composer = new EffectComposer(renderer, rt);
+  composer.addPass(new RenderPass(scene, camera));
+  const ao = new GTAOPass(scene, camera, 1, 1);
+  ao.blendIntensity = 0.85;
+  ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0 });
+  composer.addPass(ao);
+  composer.addPass(new OutputPass());
+}
+let needs = true;
+function dirty() { needs = true; }
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  if (composer) composer.setSize(w, h);
+  dirty();
+}
+new ResizeObserver(resize).observe(stage);
+let last = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
+    | updateWeather(now);
+  if (!busy && !needs) {
+    if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
+    return;
+  }
+  needs = false;
+  applyCamera();
+  if (composer) composer.render(); else renderer.render(scene, camera);
+  placePins(now);
+  pinsStale = true;
+}
+
+showChosen();
+buildPins();
+if (coarse) $('#hint').textContent = 'Tap a numbered dot to see a kind of graphic. Drag to look around, pinch to zoom.';
+renderRail();
+resize();
+const first = PRESET.overview;
+Object.assign(cam, aim(new THREE.Vector3(...first.eye), new THREE.Vector3(...first.target)), { hfov: first.hfov });
+renderTabs();
+requestAnimationFrame(loop);
+if (p.get('n') === '1') setNight(true);               // a link to the night view
+$('#loader').classList.add('done');
+setTimeout(() => $('#loader').remove(), 500);
+// For checks in the browser: the scene, the camera, the stops, and the light settings (relight() applies them).
+function relight(v = {}) {
+  Object.assign(EXPO, v.expo || {});
+  Object.assign(ENV, v.env || {});
+  if (v.sun !== undefined) sun.intensity = v.sun;
+  if (v.room !== undefined) for (const r of roomLights) r.intensity = v.room;
+  renderer.toneMappingExposure = EXPO.out + (EXPO.in - EXPO.out) * insideAmount;
+  scene.environmentIntensity = ENV.out + (ENV.in - ENV.out) * insideAmount;
+  if (v.bounce !== undefined) bounce.intensity = v.bounce * insideAmount;
+  dirty();
+}
+window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state,
+  NIGHT, setNight, pickProduct };
+</script>
+</body>
+</html>
