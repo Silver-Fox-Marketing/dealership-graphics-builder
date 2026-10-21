@@ -984,7 +984,7 @@ img { max-width: none; }
     <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
   </div>
 </dialog>
-<script src="assets/3d/catalog.js?v=20261021a"></script>
+<script src="assets/3d/catalog.js?v=20261021e"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
@@ -1006,7 +1006,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = '74983b88b6';
+const ASSET_V = 'a68bd91421';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1030,6 +1030,7 @@ const KIND = {
   vinyl: { r: 0.28, back: 0xdcdcd6, flat: true }, cut: { r: 0.35, flat: true }, wall: { r: 0.55, flat: true },
   fabric: { r: 0.85, flat: true }, banner: { r: 0.6, back: 0xcfcfca }, board: { r: 0.14, flat: true }, sign: { r: 0.4 },
   frost: { r: 0.5, opacity: 0.8, flat: true, tint: 0xc3cad1 }, flag: { r: 0.7, both: true }, floor: { r: 0.3, flat: true },
+  screen: { r: 0.15, flat: true },                    // the digital screens (their slides: slideMaterial)
 };
 const VIEW = Object.fromEntries(C.stops.map((v) => [v.id, v]));
 const opts = C.options, byKey = Object.fromEntries(opts.map((o) => [o.key, o]));
@@ -1442,6 +1443,509 @@ function artMaterial(art, kind, back, lit) {
   if (lit) bakeLight(m, true);
   return (artCache[id] = m);
 }
+// ---- the digital screens' slides ------------------------------------------------------------------------------------------
+// Barrett, 2026-10-21: "We offer digital screen display graphics for some dealerships so lets add this as well". A job is
+// a month of a store's slides (build/slides.py): the column plays its tall ones, each for SLIDE_MS, and the TV shows
+// the store's split screen (below). While someone's using the page a slide eases into the next; after that they cut,
+// so a still page doesn't keep the GPU busy. Lit from within, as bright as a white wall whatever the eye has adjusted
+// to (as the desks' screens).
+const SLIDE_MS = 7000, FADE_MS = 900;
+const SLIDE_VS = `varying vec2 vUv;
+void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const SLIDE_FS = `uniform sampler2D a, b;
+uniform float k, gain;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = vec4(mix(texture2D(a, vUv).rgb, texture2D(b, vUv).rgb, k) * gain, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+const playing = [];
+function slideMaterial(art, key) {
+  const id = `${art}:screen`;
+  if (artCache[id]) return artCache[id];
+  const m = new THREE.ShaderMaterial({ uniforms: { a: { value: null }, b: { value: null }, k: { value: 0 }, gain: { value: 1 } },
+    vertexShader: SLIDE_VS, fragmentShader: SLIDE_FS, visible: false });
+  m.userData.art = art;
+  m.userData.slides = { key, fmt: art.endsWith('-sk') ? 'sk' : 'tv', frames: [], i: 0, next: 0, at: 0, fade: 0 };
+  m.onBeforeRender = (r) => { m.uniforms.gain.value = SCREEN_WHITE / r.toneMappingExposure; };
+  return (artCache[id] = m);
+}
+const frameSets = {};
+function framesOf(key, fmt, first) {
+  // A month's slides of one shape, the first and then the rest, loaded once for every screen that shows them (the
+  // column's tall slides are the TV's side panel too). first(texture) runs when the first one is in.
+  const o = byKey[key].slides, id = `${o.dir}/${fmt}`;
+  let set = frameSets[id];
+  if (!set) {
+    set = frameSets[id] = { frames: [], waiting: [] };
+    const load = (i) => texLoader.load(av(`${o.dir}/${fmt}-${String(i + 1).padStart(2, '0')}.webp`), (t) => {
+      Object.assign(t, { colorSpace: THREE.SRGBColorSpace, flipY: false, anisotropy: ANISO });
+      set.frames[i] = t;
+      if (i) return;
+      for (const f of set.waiting) f(t);
+      set.waiting = null;
+      for (let j = 1; j < o[fmt]; j++) load(j);
+    });
+    load(0);
+  }
+  if (set.waiting) set.waiting.push(first);
+  else first(set.frames[0]);
+  return set.frames;
+}
+function loadSlides(m) {
+  // A screen's slides: it shows from the first one on.
+  const sl = m.userData.slides;
+  sl.frames = framesOf(sl.key, sl.fmt, (t) => {
+    m.uniforms.a.value = m.uniforms.b.value = t;
+    m.visible = true;
+    sl.at = performance.now() + SLIDE_MS * (sl.fmt === 'sk' ? 1.5 : 1);
+    playing.push(m);
+    staleProbes();
+    dirty();
+  });
+}
+function updateSlides(now) {
+  let busy = false;
+  const live = hq && !reduced && now - lastInput < 20000;
+  for (const m of playing) {
+    const sl = m.userData.slides, u = m.uniforms;
+    if (!groups[sl.key] || !groups[sl.key].visible || studioOpen) continue;
+    if (sl.fade) {                                      // easing into the next slide
+      u.k.value = Math.min(1, (now - sl.fade) / FADE_MS);
+      if (u.k.value >= 1) {
+        u.a.value = u.b.value;
+        u.k.value = 0;
+        sl.i = sl.next;
+        sl.fade = 0;
+        sl.at = now + SLIDE_MS;
+      }
+      busy = true;
+      continue;
+    }
+    if (now < sl.at) continue;
+    let next = (sl.i + 1) % sl.frames.length;
+    while (!sl.frames[next] && next !== sl.i) next = (next + 1) % sl.frames.length;
+    sl.at = now + SLIDE_MS;
+    if (next === sl.i) continue;                        // the rest still loading
+    sl.next = next;
+    u.b.value = sl.frames[next];
+    if (live) sl.fade = now;
+    else {
+      u.a.value = u.b.value;
+      sl.i = next;
+    }
+    busy = true;
+  }
+  return busy;
+}
+// ---- the showroom TV: the store's split screen ---------------------------------------------------------------------------
+// Barrett, 2026-10-21: "I have downloaded some of the video clips that are meant to be displayed on the digital display
+// ... relate this to the account folder". South County CDJR's TV guide (job 38811, the card that sits by its TV) shows
+// the TV as it runs: a bar with the store's logo, the weather and the time; a red ticker of service messages; live TV
+// in the big area; and the month's tall slide in a panel on the right. Here his videos (Stellantis's commercials,
+// build/videos.py) take the live TV's place, one loop for every month, and the month's landscape slides go full screen
+// between them (his picks). A video plays only while the TV is in view and near, and then the page draws as its frames
+// come (about 24 a second), the ticker moving with them. Left alone, the TV finishes the video it's on and waits, so a
+// still page goes quiet. The published copy has no videos (they're Stellantis's ads): a still stands in the big area,
+// as it does for anyone who asks their browser for less motion.
+const TVL = { bar: 0.121, tick: 0.069, side: 0.174, breakSlides: 2, stillMs: 12000, near: 25, tickPx: 110 };
+const TV_BODY = 1 - TVL.bar - TVL.tick, TV_SPLIT = 1 - TVL.side;
+const TV_CROP = (16 / 9) / (TV_SPLIT * 16 / (TV_BODY * 9));        // how much of a video's height the big area shows
+const TV_FIT = (TVL.side * 16 / (TV_BODY * 9)) / (442 / 1109);    // how much of the panel's height a tall slide fills
+const glf = (v) => v.toFixed(5);
+const TV_FS = `uniform sampler2D bar, ticker, video, sideA, sideB, fullA, fullB;
+uniform float sideK, fullK, full, tickX, tickW, gain;
+uniform vec3 sideBg;
+varying vec2 vUv;
+void main() {
+  // glTF's UVs run from the picture's top left. Every part is read, then the one under this pixel kept.
+  float y = (vUv.y - ${glf(TVL.bar + TVL.tick)}) / ${glf(TV_BODY)};
+  vec3 b = texture2D(bar, vec2(vUv.x, vUv.y / ${glf(TVL.bar)})).rgb;
+  vec3 t = texture2D(ticker, vec2(fract(tickX + vUv.x * tickW), (vUv.y - ${glf(TVL.bar)}) / ${glf(TVL.tick)})).rgb;
+  vec3 v = texture2D(video, vec2(vUv.x / ${glf(TV_SPLIT)}, 0.5 + (y - 0.5) * ${glf(TV_CROP)})).rgb;
+  vec2 s = vec2((vUv.x - ${glf(TV_SPLIT)}) / ${glf(TVL.side)}, 0.5 + (y - 0.5) / ${glf(TV_FIT)});
+  vec3 p = mix(sideBg, mix(texture2D(sideA, s).rgb, texture2D(sideB, s).rgb, sideK), step(0.0, s.y) * step(s.y, 1.0));
+  vec3 c = vUv.y < ${glf(TVL.bar)} ? b : y < 0.0 ? t : vUv.x < ${glf(TV_SPLIT)} ? v : p;
+  c = mix(c, mix(texture2D(fullA, vUv).rgb, texture2D(fullB, vUv).rgb, fullK), full);
+  gl_FragColor = vec4(c * gain, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+const tvMats = [], tvStills = {};
+const tv = { list: null, m: null, mode: 'start', vi: 0, at: 0, left: 0, fi: -1, si: -1, sideAt: 0, minute: -1, ready: false,
+  starting: false, fullFade: 0, fullFrom: 1, fullTo: 1, slideFade: 0, sideFade: 0, tickX: 0, lastFrame: 0 };
+let tvEl = null, tvVidTex = null, tvBar = null, tvTick = null, tvTickWide = 1, tvLogo = null, tvKit = null;
+function tvMaterial(art, key, mesh) {
+  const id = `${art}:tv`;
+  if (artCache[id]) return artCache[id];
+  const u = { bar: null, ticker: null, video: null, sideA: null, sideB: null, fullA: null, fullB: null, sideK: 0, fullK: 0,
+    full: 1, tickX: 0, tickW: 1, gain: 1, sideBg: new THREE.Color(0x4fc2e6) };
+  const m = new THREE.ShaderMaterial({ uniforms: Object.fromEntries(Object.entries(u).map(([k, v]) => [k, { value: v }])),
+    vertexShader: SLIDE_VS, fragmentShader: TV_FS, visible: false });
+  m.userData.art = art;
+  m.userData.tv = { key, mesh, tv: [], sk: [] };
+  m.onBeforeRender = (r) => { m.uniforms.gain.value = SCREEN_WHITE / r.toneMappingExposure; };
+  tvMats.push(m);
+  return (artCache[id] = m);
+}
+function loadTV(m) {
+  // A month's TV: its landscape slides (it shows from the first one on) and its tall ones for the panel, then the
+  // playlist and what's drawn from it.
+  const d = m.userData.tv, u = m.uniforms;
+  d.sk = framesOf(d.key, 'sk', (t) => { u.sideA.value = u.sideB.value = t; dirty(); });
+  d.tv = framesOf(d.key, 'tv', (t) => {
+    u.fullA.value = u.fullB.value = t;
+    m.visible = true;
+    staleProbes();
+    dirty();
+  });
+  loadTVKit();
+}
+function tvCanvasTex(c, mips) {
+  const t = new THREE.CanvasTexture(c);
+  Object.assign(t, { colorSpace: THREE.SRGBColorSpace, flipY: false, anisotropy: ANISO });
+  if (!mips) Object.assign(t, { generateMipmaps: false, minFilter: THREE.LinearFilter });   // the ticker wraps round
+  return t;
+}
+function stillTex(src) {
+  if (!tvStills[src]) {
+    tvStills[src] = texLoader.load(av(src), () => dirty());
+    Object.assign(tvStills[src], { colorSpace: THREE.SRGBColorSpace, flipY: false });
+  }
+  return tvStills[src];
+}
+function loadTVKit() {
+  // The playlist (assets/3d/tv/playlist.json), the logo, the bar and the ticker, once for every month's TV. Without a
+  // playlist the TV stays on the month's landscape slides, full screen.
+  return (tvKit ||= (async () => {
+    const r = await fetch(av('assets/3d/tv/playlist.json')).catch(() => null);
+    if (!r || !r.ok) return;
+    const list = await r.json();
+    try { await document.fonts.load('600 32px Montserrat'); } catch { /* the fallback face */ }
+    tvLogo = await new Promise((ok) => {
+      const im = new Image();
+      im.onload = () => ok(im);
+      im.onerror = () => ok(null);
+      im.src = av(list.logo);
+    });
+    tv.list = list;
+    const bar = document.createElement('canvas');
+    Object.assign(bar, { width: 1600, height: 109 });
+    tvBar = tvCanvasTex(bar, true);
+    drawTVBar();
+    const tick = drawTVTicker();
+    tvTick = tvCanvasTex(tick, false);
+    tvTickWide = tick.width;
+    if (list.videos.length && !reduced) makeTVVideo();
+    dirty();
+  })());
+}
+// St. Louis's usual high and low (°F) by month: the bar's weather is a sample of what the store's TV shows live.
+const STL_NORMALS = [[40, 24], [45, 28], [56, 37], [68, 48], [77, 58], [86, 67], [90, 72], [88, 70], [81, 62], [69, 50],
+  [55, 38], [44, 29]];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function drawTVBar() {
+  // The bar across the top, as on the guide's screen: the store's logo on white, then three days' weather and the date
+  // and time on grey, drawn again as the minute turns.
+  const c = tvBar.image, x = c.getContext('2d'), w = c.width, h = c.height, now = new Date(), list = tv.list;
+  tv.minute = Math.floor(now.getTime() / 60000);
+  x.fillStyle = list.colors.bar;
+  x.fillRect(0, 0, w, h);
+  const lw = Math.round(w * 0.193);
+  x.fillStyle = '#ffffff';
+  x.fillRect(0, 0, lw, h);
+  if (tvLogo) {
+    const k = Math.min((lw - 28) / tvLogo.width, (h - 18) / tvLogo.height);
+    x.drawImage(tvLogo, (lw - tvLogo.width * k) / 2, (h - tvLogo.height * k) / 2, tvLogo.width * k, tvLogo.height * k);
+  }
+  const [hi, lo] = STL_NORMALS[now.getMonth()], r = h * 0.17, two = (v) => String(v).padStart(2, '0');
+  const time = `${two(now.getMonth() + 1)}/${two(now.getDate())} ${now.toLocaleTimeString('en-US',
+    { hour: '2-digit', minute: '2-digit' })}`;
+  const days = [0, 1, 2].map((i) => ({ label: i ? `${WEEKDAYS[(now.getDay() + i) % 7]}:` : '',
+    temps: `${hi + [0, -3, 2][i]}°F - ${lo + [0, -2, 1][i]}°F`, icon: ['sun', 'cloud', 'rain'][(now.getDate() + i) % 3] }));
+  // The three days spread evenly between the logo and the time, the type a little smaller where they wouldn't fit.
+  let size = Math.round(h * 0.28), widths, room;
+  for (;;) {
+    x.font = `500 ${size}px Montserrat, system-ui, sans-serif`;
+    widths = days.map((d) => (d.label ? x.measureText(d.label).width + r * 0.9 : 0) + r * 2.7 + x.measureText(d.temps).width);
+    room = w - 28 - x.measureText(time).width - (lw + 36) - 36 - widths.reduce((a, b) => a + b, 0);
+    if (room >= 80 || size <= 18) break;
+    size -= 1;
+  }
+  Object.assign(x, { fillStyle: '#ffffff', strokeStyle: '#ffffff', textBaseline: 'middle', textAlign: 'left' });
+  let px = lw + 36;
+  days.forEach((d, i) => {
+    let at = px;
+    if (d.label) {
+      x.fillText(d.label, at, h / 2);
+      at += x.measureText(d.label).width + r * 0.9;
+    }
+    weatherIcon(x, at + r, h / 2, r, d.icon, list.colors.bar);
+    x.fillText(d.temps, at + r * 2.7, h / 2);
+    px += widths[i] + room / 2;
+  });
+  x.textAlign = 'right';
+  x.fillText(time, w - 28, h / 2);
+  tvBar.needsUpdate = true;
+}
+function weatherIcon(x, cx, cy, r, kind, back) {
+  // A line icon: a sun, a cloud over a sun, or a cloud with rain.
+  x.save();
+  Object.assign(x, { lineWidth: r * 0.16, lineCap: 'round', fillStyle: back });
+  if (kind !== 'rain') {
+    const s = kind === 'sun' ? 1 : 0.6, sx = cx - (1 - s) * r * 0.7, sy = cy - (1 - s) * r * 0.7;
+    x.beginPath();
+    x.arc(sx, sy, r * 0.5 * s, 0, Math.PI * 2);
+    x.stroke();
+    for (let a = 0; a < 8; a++) {
+      const t = a * Math.PI / 4;
+      x.beginPath();
+      x.moveTo(sx + Math.cos(t) * r * 0.75 * s, sy + Math.sin(t) * r * 0.75 * s);
+      x.lineTo(sx + Math.cos(t) * r * s, sy + Math.sin(t) * r * s);
+      x.stroke();
+    }
+  }
+  if (kind !== 'sun') {
+    const y = cy + (kind === 'rain' ? -r * 0.25 : r * 0.2);
+    x.beginPath();
+    x.arc(cx - r * 0.42, y + r * 0.1, r * 0.32, Math.PI * 0.5, Math.PI * 1.5);
+    x.arc(cx, y - r * 0.15, r * 0.45, Math.PI, Math.PI * 2);
+    x.arc(cx + r * 0.45, y + r * 0.1, r * 0.32, Math.PI * 1.5, Math.PI * 0.5);
+    x.closePath();
+    x.fill();
+    x.stroke();
+    if (kind === 'rain') {
+      for (const dx of [-0.4, 0, 0.4]) {
+        x.beginPath();
+        x.moveTo(cx + dx * r, y + r * 0.6);
+        x.lineTo(cx + dx * r - r * 0.18, y + r);
+        x.stroke();
+      }
+    }
+  }
+  x.restore();
+}
+function drawTVTicker() {
+  // The red ticker's messages in one strip, its end running into its start.
+  const list = tv.list, h = 62, font = `600 ${Math.round(h * 0.45)}px Montserrat, system-ui, sans-serif`;
+  const c = document.createElement('canvas'), x = c.getContext('2d'), gap = '          |          ';
+  x.font = font;
+  const text = list.ticker.join(gap) + gap;
+  Object.assign(c, { width: Math.ceil(x.measureText(text).width), height: h });
+  Object.assign(x, { font, fillStyle: list.colors.ticker, textBaseline: 'middle' });
+  x.fillRect(0, 0, c.width, h);
+  x.fillStyle = '#ffffff';
+  x.fillText(text, 0, h / 2 + 1);
+  return c;
+}
+function makeTVVideo() {
+  // One video element for every month's TV: muted (a page can't start one with sound) and inline. The next video
+  // loads during the slides between them.
+  tvEl = document.createElement('video');
+  Object.assign(tvEl, { muted: true, playsInline: true, preload: 'auto', crossOrigin: 'anonymous' });
+  tvVidTex = new THREE.VideoTexture(tvEl);
+  Object.assign(tvVidTex, { colorSpace: THREE.SRGBColorSpace, flipY: false });
+  tvEl.addEventListener('loadeddata', () => { tv.ready = true; tvVidTex.needsUpdate = true; dirty(); });
+  const done = () => {                                 // a video's over (or won't play): the slides, then the next
+    const m = tvActive(), now = performance.now();
+    if (m) tvBreak(m, now, hq && !reduced && now - lastInput < 20000);
+    else {
+      tv.vi = (tv.vi + 1) % tv.list.videos.length;
+      tvCue();
+    }
+    dirty();
+  };
+  tvEl.addEventListener('ended', done);
+  tvEl.addEventListener('error', done);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) tvEl.pause(); });
+  const onFrame = (t) => {                             // a new frame: draw it, the ticker a step on
+    const m = tvActive();
+    if (m) {
+      const dt = tv.lastFrame ? Math.min(0.2, (t - tv.lastFrame) / 1000) : 0;
+      tv.tickX = (tv.tickX + dt * TVL.tickPx / tvTickWide) % 1;
+      m.uniforms.tickX.value = tv.tickX;
+      dirty();
+    }
+    tv.lastFrame = t;
+    tvEl.requestVideoFrameCallback(onFrame);
+  };
+  if ('requestVideoFrameCallback' in tvEl) tvEl.requestVideoFrameCallback(onFrame);
+  tvCue();
+}
+function tvCue() {
+  // The playlist's current video, loading; its still stands in until its first frame is in.
+  tv.ready = false;
+  tvEl.src = av(tv.list.videos[tv.vi].src);
+  tvEl.load();
+}
+function tvActive() {
+  // The month's TV that's on, if any.
+  for (const m of tvMats) {
+    const g = groups[m.userData.tv.key];
+    if (m.visible && g && g.visible) return m;
+  }
+  return null;
+}
+const tvFrustum = new THREE.Frustum(), tvM4 = new THREE.Matrix4(), tvAt = new THREE.Vector3();
+function tvInView(m) {
+  // On screen and near enough to watch: otherwise a video waits.
+  const mesh = m.userData.tv.mesh;
+  mesh.getWorldPosition(tvAt);
+  if (camera.position.distanceTo(tvAt) > TVL.near) return false;
+  tvFrustum.setFromProjectionMatrix(tvM4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+  return tvFrustum.intersectsObject(mesh);
+}
+function tvFade(m, to, now, ease) {
+  // Between the split screen (0) and a full-screen slide (1).
+  if (ease) Object.assign(tv, { fullFade: now, fullFrom: m.uniforms.full.value, fullTo: to });
+  else {
+    m.uniforms.full.value = to;
+    tv.fullFade = 0;
+  }
+}
+function tvNext(frames, i) {
+  // The next slide that's in, after slide i (i itself when none is).
+  for (let k = 1; k <= frames.length; k++) if (frames[(i + k) % frames.length]) return (i + k) % frames.length;
+  return i;
+}
+function tvSlide(m, now, ease, fresh) {
+  // The next landscape slide, full screen: straight in as a break begins, eased in after.
+  const d = m.userData.tv, u = m.uniforms, i = tvNext(d.tv, tv.fi);
+  tv.at = now + SLIDE_MS;
+  if (!d.tv[i]) return;
+  tv.fi = i;
+  u.fullB.value = d.tv[i];
+  if (ease && !fresh) tv.slideFade = now;
+  else {
+    u.fullA.value = d.tv[i];
+    u.fullK.value = 0;
+    tv.slideFade = 0;
+  }
+}
+function tvSide(m, now, ease) {
+  // The panel's next tall slide.
+  const d = m.userData.tv, u = m.uniforms, i = tvNext(d.sk, tv.si);
+  tv.sideAt = now + SLIDE_MS;
+  if (!d.sk[i]) return;
+  tv.si = i;
+  u.sideB.value = d.sk[i];
+  if (ease) tv.sideFade = now;
+  else {
+    u.sideA.value = d.sk[i];
+    u.sideK.value = 0;
+  }
+}
+function tvBreak(m, now, ease) {
+  // A video's over: the month's landscape slides, full screen, the next video loading meanwhile.
+  Object.assign(tv, { mode: 'full', left: TVL.breakSlides });
+  tvSlide(m, now, ease, true);
+  tvFade(m, 1, now, ease);
+  if (tv.list.videos.length) {
+    tv.vi = (tv.vi + 1) % tv.list.videos.length;
+    if (tvEl) tvCue();
+  }
+}
+function tvSplit(m, now, ease) {
+  // Back to the split screen: the next video (or a still, a while) in the big area, the panel's slides going on.
+  Object.assign(tv, { mode: 'split', sideAt: now + SLIDE_MS, at: now + TVL.stillMs });
+  tvFade(m, 0, now, ease);
+}
+function updateTV(now) {
+  const m = tvActive();
+  if (!m || studioOpen) {
+    if (tvEl && !tvEl.paused) tvEl.pause();
+    return false;
+  }
+  const u = m.uniforms, list = tv.list, inUse = now - lastInput < 20000, ease = hq && !reduced && inUse;
+  let busy = false;
+  if (tv.m !== m) {                                    // another month's TV: it takes up where the last one was
+    tv.m = m;
+    u.full.value = tv.mode === 'split' ? 0 : 1;
+    u.bar.value = null;
+  }
+  // Fades: the split screen to a full-screen slide and back, slide to slide, and the panel's slides.
+  if (tv.fullFade) {
+    const k = Math.min(1, (now - tv.fullFade) / FADE_MS);
+    u.full.value = tv.fullFrom + (tv.fullTo - tv.fullFrom) * k;
+    if (k >= 1) tv.fullFade = 0;
+    busy = true;
+  }
+  if (tv.slideFade) {
+    u.fullK.value = Math.min(1, (now - tv.slideFade) / FADE_MS);
+    if (u.fullK.value >= 1) {
+      u.fullA.value = u.fullB.value;
+      u.fullK.value = 0;
+      tv.slideFade = 0;
+    }
+    busy = true;
+  }
+  if (tv.sideFade) {
+    u.sideK.value = Math.min(1, (now - tv.sideFade) / FADE_MS);
+    if (u.sideK.value >= 1) {
+      u.sideA.value = u.sideB.value;
+      u.sideK.value = 0;
+      tv.sideFade = 0;
+    }
+    busy = true;
+  }
+  if (!list || !(list.videos.length || list.still)) {      // no playlist (yet): the landscape slides, full screen
+    if (now >= tv.at) {
+      tvSlide(m, now, ease, tv.fi < 0);
+      busy = true;
+    }
+    return busy;
+  }
+  if (u.bar.value !== tvBar) {                         // the bar, the ticker and the panel's color on this TV
+    u.bar.value = tvBar;
+    u.ticker.value = tvTick;
+    u.tickW.value = 1600 / tvTickWide;
+    u.sideBg.value.set(list.colors.side);
+    busy = true;
+  }
+  if (tv.minute !== Math.floor(Date.now() / 60000)) {
+    drawTVBar();
+    busy = true;
+  }
+  const v = list.videos[tv.vi], pic = tvEl && tv.ready ? tvVidTex : stillTex(v ? v.still : list.still);
+  if (u.video.value !== pic) {
+    u.video.value = pic;
+    busy = true;
+  }
+  if (tv.mode === 'start') {
+    tvSplit(m, now, false);
+    busy = true;
+  }
+  if (tv.mode === 'full') {
+    if (now >= tv.at) {
+      if (--tv.left > 0) tvSlide(m, now, ease, false);
+      else tvSplit(m, now, ease);
+      busy = true;
+    }
+    return busy;
+  }
+  if (now >= tv.sideAt) {
+    tvSide(m, now, ease);
+    busy = true;
+  }
+  if (!tvEl) {                                         // no videos to play: a still, a while, then the slides
+    if (now >= tv.at) {
+      tvBreak(m, now, ease);
+      busy = true;
+    }
+    return busy;
+  }
+  // A video plays while the TV's in view. Left alone, the TV finishes the one it's on and waits before the next.
+  if (document.hidden || !tvInView(m) || (!inUse && tvEl.currentTime === 0)) {
+    if (!tvEl.paused) tvEl.pause();
+    tv.lastFrame = 0;
+  } else if (tvEl.paused && !tvEl.ended && !tv.starting) {   // (an ended one would start over: 'ended' moves on)
+    tv.starting = true;
+    tvEl.play().catch(() => {}).finally(() => { tv.starting = false; });
+  }
+  if (!tvEl.paused && !('requestVideoFrameCallback' in tvEl)) busy = true;   // no frame callbacks: draw every frame
+  return busy;
+}
 const groups = {}, pickStatic = [], pickGfx = [];
 const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
   'rug', 'carpet', 'baseboard', 'screen', 'track', 'platform', 'paper']);
@@ -1459,6 +1963,12 @@ model.traverse((o) => {
   }
   if (!o.isMesh) {
     if (ud.gfx) groups[ud.gfx] = o;                  // the group node of a graphic (glTF loading drops the ':' from names)
+    return;
+  }
+  if (ud.art && ud.kind === 'screen') {               // a digital screen: its month's slides, lit from within
+    o.material = ud.art.endsWith('-tv') ? tvMaterial(ud.art, ud.gfx, o) : slideMaterial(ud.art, ud.gfx);
+    (artOf[ud.gfx] ||= new Set()).add(o.material);
+    pickGfx.push(o);
     return;
   }
   if (ud.art) {
@@ -2109,6 +2619,7 @@ let glow = null;
 function setEmit(m, v) {
   // A print's own light: the flash when it goes on and the pointer's tint (ACCENT), over the evening's floodlight on
   // the signs outside (m.userData.lit, in the print's own colors).
+  if (!m.emissive) return;                             // a digital screen: lit from within already
   const lit = m.userData.lit || 0;
   if (v > lit) { m.emissive.copy(ACCENT); m.emissiveIntensity = v; } else { m.emissive.copy(WHITE); m.emissiveIntensity = lit; }
 }
@@ -2139,6 +2650,8 @@ function loadArt(key) {
   for (const m of artOf[key] || []) {
     if (m.userData.loading) continue;
     m.userData.loading = true;
+    if (m.userData.tv) { loadTV(m); continue; }
+    if (m.userData.slides) { loadSlides(m); continue; }
     texLoader.load(av(`assets/3d/art/${m.userData.art}.webp`), (map) => {
       map.colorSpace = THREE.SRGBColorSpace;
       map.flipY = false;                                 // glTF texture coordinates
@@ -3750,6 +4263,8 @@ function nightKit() {
     add(at, [0, -1, 0], NIGHT.pole, 1.15, true);
     glowAt(new THREE.PlaneGeometry(0.9, 0.36), at, [0, -1, 0]);
   }
+  // The street lights' lenses (2026-10-21): their light on the street is baked, so no live light.
+  for (const at of S.streetLights || []) glowAt(new THREE.CircleGeometry(0.28, 20), at, [0, -1, 0]);
   for (const f of S.fixtures || []) {
     const canopy = f.kind === 'canopy';
     add(f.at, f.dir, canopy ? NIGHT.canopy : NIGHT.wallpack, canopy ? 1.0 : 1.1, false);
@@ -3942,7 +4457,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
-    | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt);
+    | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt) | updateSlides(now) | updateTV(now);
   if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
   if (!busy && !needs) {
     if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
@@ -3996,7 +4511,10 @@ function relight(v = {}) {
 }
 window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state,
   NIGHT, setNight, setTime, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES,
-  setQuality, baked, probes, body };
+  setQuality, baked, probes, body,
+  tv: () => ({ mode: tv.mode, vi: tv.vi, ready: tv.ready, full: tv.m && tv.m.uniforms.full.value,
+    playing: !!tvEl && !tvEl.paused, t: tvEl ? +tvEl.currentTime.toFixed(1) : null, video: tv.list && tv.list.videos[tv.vi] && tv.list.videos[tv.vi].slug }),
+  tvVideo: () => tvEl };
 </script>
 </body>
 </html>

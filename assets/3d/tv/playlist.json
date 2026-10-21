@@ -1,0 +1,15 @@
+{
+ "store": "South County CDJR",
+ "logo": "assets/3d/tv/logo.webp",
+ "colors": {
+  "bar": "#343434",
+  "ticker": "#b40100",
+  "side": "#4fc2e6"
+ },
+ "ticker": [
+  "Stop by our service center and check out our Express Lane.",
+  "We want to help you keep your car in top condition for a reasonable price."
+ ],
+ "videos": [],
+ "still": "assets/3d/tv/videos/jeep-cherokee-billy-bass.webp"
+}
