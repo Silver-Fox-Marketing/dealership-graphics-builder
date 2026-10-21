@@ -726,9 +726,8 @@ img { max-width: none; }
 .day-night button { display: inline-flex; align-items: center; gap: 5px; }
 .day-night svg { width: 14px; height: 14px; }
 .phone-only { display: none; }
-#nightToggle span { display: contents; }
-#nightToggle .sun, #nightToggle[aria-pressed="true"] .moon { display: none; }
-#nightToggle[aria-pressed="true"] .sun { display: contents; }
+#nightToggle span { display: none; }               /* it shows the time it goes to next */
+#nightToggle[data-next="dusk"] .dusk, #nightToggle[data-next="night"] .moon, #nightToggle[data-next="day"] .sun { display: contents; }
 /* The theme that's on, with arrows to the occasion before and after it */
 .theme-pill {                                          /* under the Outside / Inside tabs: the top's middle is too
                                                           narrow beside the controls on a laptop */
@@ -828,8 +827,9 @@ img { max-width: none; }
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.2-4.8c.4-.3.4-.8 0-1L5.9 2.7c-.4-.3-.9 0-.9.5Z"/></svg>
           <span class="label">Take the tour</span>
         </button>
-        <div class="seg day-night" role="group" aria-label="Day or night">
+        <div class="seg day-night" role="group" aria-label="Time of day">
           <button type="button" id="dayBtn" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg><span class="label">Day</span></button>
+          <button type="button" id="duskBtn" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M1.6 12.6h12.8M4.6 12.6a3.4 3.4 0 0 1 6.8 0M8 4.4v1.6M3.3 6.9l1.1 1.1M12.7 6.9l-1.1 1.1"/></svg><span class="label">Dusk</span></button>
           <button type="button" id="nightBtn" aria-pressed="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg><span class="label">Night</span></button>
         </div>
         <div class="seg" role="group" aria-label="The dealership before and after its graphics">
@@ -853,8 +853,8 @@ img { max-width: none; }
       <div class="zoom">
         <button class="chip-btn icon-only hd" id="hdToggle" type="button" aria-pressed="false"
           title="High quality: glow round lights, soft shadows, flags in the wind">HD</button>
-        <button class="chip-btn icon-only phone-only" id="nightToggle" type="button" aria-label="Night view" aria-pressed="false">
-          <span class="moon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg></span><span class="sun"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg></span>
+        <button class="chip-btn icon-only phone-only" id="nightToggle" type="button" aria-label="Dusk view" data-next="dusk">
+          <span class="dusk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M1.6 12.6h12.8M4.6 12.6a3.4 3.4 0 0 1 6.8 0M8 4.4v1.6M3.3 6.9l1.1 1.1M12.7 6.9l-1.1 1.1"/></svg></span><span class="moon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg></span><span class="sun"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg></span>
         </button>
         <button class="chip-btn icon-only" id="zoomIn" type="button" aria-label="Zoom in">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 8h9M8 3.5v9"/></svg>
@@ -984,7 +984,7 @@ img { max-width: none; }
     <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
   </div>
 </dialog>
-<script src="assets/3d/catalog.js?v=20261020p"></script>
+<script src="assets/3d/catalog.js?v=20261021a"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
@@ -999,13 +999,14 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // The dealership as a real-time 3D scene: the Blender model exported by dealership_blender.py --web
 // (assets/3d/dealership.glb and scene.json), the graphics' art from assets/3d/art/, and the catalog of places, jobs and
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = '614755ba92';
+const ASSET_V = '74983b88b6';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1049,7 +1050,8 @@ const state = { chosen: new Map(Object.entries(EVERYDAY)), plain: false, view: '
   vehicle: null };                                     // the vehicle studio's build: { v, g } (see "one quote for both")
 const lastStop = { Outside: 'overview', Inside: 'showroom' };
 const isOn = (key) => state.chosen.get(byKey[key].spot) === key;
-let night = false, nightBy = null, kit = null;          // the night view (see "day and night"): on, who turned it on
+let night = false, nightBy = null, kit = null;          // the night view (see "day, dusk and night"): on, who turned it on
+let dusk = false;                                       // with night: the lights on under dusk's sky instead
 let signs = null;                                       // the store's name signs (see "your store")
 const storeKeys = new Map();                            // each theme's set for the store in view
 
@@ -1060,7 +1062,7 @@ if (p.has('g')) {
 }
 const updateUrl = () => {
   const q = [`g=${[...state.chosen.values()].join(',')}`];
-  if (night) q.push('n=1');
+  if (night) q.push(dusk ? 'n=d' : 'n=1');
   if (state.store) q.push(`store=${encodeURIComponent(state.store.name)}`, `make=${state.store.make}`);
   if (state.vehicle) q.push(`vv=${state.vehicle.v}`, `vg=${state.vehicle.g.join(',')}`);
   history.replaceState(null, '', `#${q.join('&')}`);
@@ -1188,6 +1190,7 @@ if (!BAKED) {
 const NO_MAP = new Set(['glass', 'light', 'strip-light', 'lamp']);
 const lmDirect = { value: 1 };                        // the live lights' diffuse light on a baked surface (0 at night)
 const lmTex = {};
+const timeNow = () => (!night ? 'day' : dusk ? 'dusk' : 'night');
 function lightTex(name) {
   if (lmTex[name]) return lmTex[name];
   const t = texLoader.load(av(`assets/3d/light/${coarse ? '512/' : ''}${name}.webp`), dirtyLater);
@@ -1204,14 +1207,14 @@ const BAKED_BEGIN = THREE.ShaderChunk.lights_fragment_begin
 const BAKED_MAPS = 'reflectedLight.directDiffuse *= lmDirect;\n' + THREE.ShaderChunk.lights_fragment_maps
   .replace('iblIrradiance += getIBLIrradiance( geometryNormal );', '');
 const baked = new Set();
-function setLightMap(m, dark) {
-  const when = dark ? 'night' : 'day', gfx = m.userData.lmGfx;
+function setLightMap(m, when) {
+  const gfx = m.userData.lmGfx;
   m.lightMap = lightTex(gfx ? `gfx-${when}` : when);
   m.lightMapIntensity = Math.PI * S.light[when][gfx ? 'gfxScale' : 'scale'];   // the maps hold light / pi
 }
 function bakeLight(m, gfx) {
   m.userData.lmGfx = gfx;
-  setLightMap(m, night);
+  setLightMap(m, timeNow());
   const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
   m.onBeforeCompile = (sh, r) => {
     prev.call(m, sh, r);
@@ -1341,7 +1344,7 @@ function gridOf(g, nu, nv) {
 // are taken again when the graphics, the theme or the time of day change.
 const ROOM_TOP = { showroom: 19.0, service: 19.0 };                 // ft: the showroom's ceiling, the drive's joists
 const PROBE_MATS = { tile: 'showroom', wood: 'showroom', chrome: 'showroom', screen: 'showroom', leather: 'showroom',
-  furniture: 'showroom', baseboard: 'showroom', track: 'showroom', epoxy: 'service' };
+  furniture: 'showroom', baseboard: 'showroom', track: 'showroom', platform: 'showroom', epoxy: 'service' };
 const probes = {};
 for (const [id, [a, b]] of Object.entries(S.rooms)) {
   const box = new THREE.Box3().setFromPoints([new THREE.Vector3(...a), new THREE.Vector3(...b)]);
@@ -1379,6 +1382,8 @@ const cubeRT = new THREE.WebGLCubeRenderTarget(coarse ? 128 : 256, { type: THREE
 const cubeCam = new THREE.CubeCamera(0.05, 400, cubeRT);
 let probesStale = 0;                                    // when to take them again (0: they're current)
 function takeProbes() {
+  const seen = body.g.visible;
+  body.g.visible = false;                               // your body isn't part of the room's reflection
   for (const pr of Object.values(probes)) {
     if (!pr.materials.size) continue;
     cubeCam.position.copy(pr.at);
@@ -1392,6 +1397,7 @@ function takeProbes() {
     }
     if (old) old.dispose();
   }
+  body.g.visible = seen;
   probesStale = 0;
   dirty();
 }
@@ -1438,7 +1444,7 @@ function artMaterial(art, kind, back, lit) {
 }
 const groups = {}, pickStatic = [], pickGfx = [];
 const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
-  'rug', 'carpet', 'baseboard', 'screen', 'track']);
+  'rug', 'carpet', 'baseboard', 'screen', 'track', 'platform', 'paper']);
 // The cutaway: from above the roofline the roofs, ceilings and their lights come off, so the overview looks down into
 // every room, the way Silver Fox's isometric art shows a dealership.
 const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist', 'rtu', 'rtu-fan']), cutaway = [];
@@ -1577,14 +1583,16 @@ function syncTrees(themeId) {
   dirty();
 }
 function tintRing() {
-  ringMat.color.setRGB(...RING_TINT[treeSeason]).multiplyScalar(night ? 0.12 : 1);
+  ringMat.color.setRGB(...RING_TINT[treeSeason]).multiplyScalar(night ? (dusk ? 0.45 : 0.12) : 1);
 }
 
 // ---- camera: a standing viewer who looks around and walks -------------------------------------------------------------
 const cam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, hfov: 60 };
 const deg = THREE.MathUtils.degToRad;
 function applyCamera() {
-  camera.position.copy(cam.pos);
+  // Looking down, the head comes forward over the feet, as a person's does (and the body's shoes come into view).
+  const lean = 0.14 * Math.max(0, -Math.sin(cam.pitch));
+  camera.position.set(cam.pos.x - Math.sin(cam.yaw) * lean, cam.pos.y - lean * 0.3, cam.pos.z - Math.cos(cam.yaw) * lean);
   skyDome.position.copy(cam.pos);                      // the sky is always as far away
   nightDome.position.copy(cam.pos);
   camera.rotation.set(cam.pitch, cam.yaw, 0, 'YXZ');
@@ -1791,7 +1799,7 @@ addEventListener('keydown', (e) => {
   } else if (k === '+' || k === '=') zoom(1 / 1.3);
   else if (k === '-') zoom(1.3);
   else if (k === 'h') setPlain(!state.plain);
-  else if (k === 'n') setNight(!night);
+  else if (k === 'n') setTime($('#nightToggle').dataset.next);     // day, dusk, night, as the phone's button
   else if (k === ' ') {
     // Space jumps. Someone who tabbed to a button still presses it with Space; a button or card the mouse just clicked
     // lets go of the focus, so Space doesn't click it again (a theme or job card would come off). Chrome counts any key
@@ -1862,6 +1870,203 @@ function updateJump(dt) {
     jumpV = null;
   }
   return true;
+}
+// ---- your body ---------------------------------------------------------------------------------------------------
+// Barrett, 2026-10-21: "if we added a body to the camera (so when the user looks down they see their feet)". A
+// charcoal tee, jeans and white sneakers with a Silver Fox orange heel tab, standing under the eye, feet a little
+// apart and turned out. Looking down, the head comes forward over the toes (applyCamera), so the shirt fills the
+// bottom of the picture and the shoes show past it, the way your own do. They step as you walk (W A S D) and stand
+// still when you stop. They step aside in the overview, up close to a graphic, in the vehicle studio and during a
+// quick glide from place to place (legs walking at that speed would look wrong). A soft shadow under the feet stands
+// in for a real one: the sun's shadow map is only redrawn when the scene changes.
+const BODY = { back: 0.06, hip: 0.92, thigh: 0.43, shin: 0.405, ankle: 0.085, stride: 1.4, walk: 6 };   // m, m/s
+function clothTexture(base, draw, repeat) {
+  // A small tiling cloth texture: the base color, then the weave drawn over it (draw gets a wrap-around painter).
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = base;
+  x.fillRect(0, 0, 128, 128);
+  const tiled = (paint) => { for (const dx of [-128, 0, 128]) for (const dy of [-128, 0, 128]) paint(dx, dy); };
+  draw(x, tiled);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...repeat);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+const along = (pts, t) => {
+  // Piecewise-linear lookup in [[t, value], ...].
+  t = clamp(t, pts[0][0], pts[pts.length - 1][0]);
+  let i = 1;
+  while (i < pts.length - 1 && t > pts[i][0]) i++;
+  const [t0, v0] = pts[i - 1], [t1, v1] = pts[i];
+  return v0 + (v1 - v0) * (t - t0) / (t1 - t0);
+};
+function shoePart(width, top, bottom, len, round) {
+  // A rounded shoe part from a sphere, toe to -Z: across, a rounded square `width(t)` wide; up, from `bottom` to
+  // `top(t)`; along, `len` from the heel (t = 0, at +Z) to the toe (t = 1). `round` sets how boxy each way it is.
+  const g = new THREE.SphereGeometry(1, 36, 24);
+  g.rotateX(Math.PI / 2);                              // the poles to the heel and the toe
+  g.deleteAttribute('uv');
+  g.deleteAttribute('normal');
+  const soft = (a, k) => Math.sign(a) * Math.pow(Math.abs(a), k);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const t = (1 - soft(p.getZ(i), round[2])) / 2;
+    const y = (soft(p.getY(i), round[1]) + 1) / 2;
+    p.setXYZ(i, soft(p.getX(i), round[0]) * width(t) / 2, bottom + y * (top(t) - bottom), -t * len);
+  }
+  const out = mergeVertices(g);                        // one surface, so it shades smoothly around the seam
+  out.computeVertexNormals();
+  return out;
+}
+function sneaker(mats) {
+  // One court sneaker, toe to -Z, its ankle at the origin: the upper (collar high at the heel, the tongue, a low,
+  // round toe box; narrow heel, broad ball) on a footprint-shaped sole, laces where the jeans leave them showing, and
+  // the orange tab on the heel.
+  const LEN = 0.272, HEEL = 0.07, SOLE = 0.024, WIDE = 0.098, FLOOR = -BODY.ankle;
+  const WIDTH = [[0, 0.7], [0.22, 0.8], [0.6, 1], [0.86, 0.97], [1, 0.82]];
+  const TOP = [[0, 0.083], [0.08, 0.088], [0.24, 0.07], [0.36, 0.08], [0.5, 0.068], [0.72, 0.048], [0.9, 0.036], [1, 0.028]];
+  const g = new THREE.Group();
+  const top = (t) => FLOOR + SOLE + along(TOP, t);
+  const upper = new THREE.Mesh(shoePart((t) => WIDE * along(WIDTH, t), top, FLOOR + SOLE - 0.006, LEN, [0.6, 0.85, 0.6]),
+    mats.white);
+  const foot = (t) => (WIDE + 0.012) * along(WIDTH, t);
+  const sole = new THREE.Mesh(shoePart(foot, () => FLOOR + SOLE, FLOOR, LEN + 0.008, [0.35, 0.3, 0.4])
+    .translate(0, 0, 0.004), mats.sole);
+  g.add(upper, sole);
+  // Laces across the instep, following its slope.
+  for (let i = 0; i < 6; i++) {
+    const t = 0.36 + i * 0.06;
+    const slope = (along(TOP, t + 0.02) - along(TOP, t - 0.02)) / (-0.04 * LEN);
+    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.044 * along(WIDTH, t), 0.005, 0.007), mats.lace);
+    lace.position.set(0, top(t) + 0.002, -t * LEN);
+    lace.rotation.x = -Math.atan(slope);
+    g.add(lace);
+  }
+  const tab = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.034, 0.01), mats.tab);
+  tab.position.set(0, FLOOR + SOLE + 0.068, 0.002);
+  g.add(tab);
+  g.position.z = HEEL;
+  return g;
+}
+function makeBody() {
+  const g = new THREE.Group();
+  const m = (o) => new THREE.MeshStandardMaterial(o);
+  // Washed mid-blue denim: soft lighter and darker patches, then a fine diagonal twill.
+  const denim = m({ roughness: 0.92, map: clothTexture('#4b658a', (x, tiled) => {
+    for (let i = 0; i < 70; i++) {
+      const px = Math.random() * 128, py = Math.random() * 128, r = 8 + Math.random() * 22;
+      const tone = Math.random() < 0.5 ? '255,255,255' : '10,20,40', a = 0.04 + Math.random() * 0.05;
+      tiled((dx, dy) => {
+        const grad = x.createRadialGradient(px + dx, py + dy, 0, px + dx, py + dy, r);
+        grad.addColorStop(0, `rgba(${tone},${a})`);
+        grad.addColorStop(1, `rgba(${tone},0)`);
+        x.fillStyle = grad;
+        x.fillRect(px + dx - r, py + dy - r, 2 * r, 2 * r);
+      });
+    }
+    x.lineWidth = 1;
+    for (let i = -128; i < 128; i += 2) {
+      x.strokeStyle = i % 4 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)';
+      x.beginPath();
+      x.moveTo(i, 0);
+      x.lineTo(i + 128, 128);
+      x.stroke();
+    }
+  }, [4, 3]) });
+  // A charcoal heather tee: light and dark flecks in the knit.
+  const tee = m({ roughness: 0.96, map: clothTexture('#575c64', (x) => {
+    for (let i = 0; i < 3000; i++) {
+      x.fillStyle = Math.random() < 0.5 ? 'rgba(150,155,162,0.22)' : 'rgba(45,48,53,0.22)';
+      x.fillRect(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), 1, 1);
+    }
+  }, [14, 10]) });
+  const mats = { white: m({ color: 0xf2f2ee, roughness: 0.5 }), sole: m({ color: 0xd2cfc7, roughness: 0.75 }),
+    lace: m({ color: 0xd9d9d3, roughness: 0.85 }), tab: m({ color: 0xfd410d, roughness: 0.55 }) };   // Silver Fox orange
+  // A turned shape from its profile, bottom to top: [radius, height] (a lathe's faces point out when its profile rises).
+  const lathe = (pts, mat) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 32), mat);
+  // The tee, hips to shoulders, a little deeper at the chest than the waist; it covers the tops of the legs.
+  const shirt = lathe([[0.001, 0.79], [0.176, 0.79], [0.186, 0.82], [0.18, 0.9], [0.167, 1.0], [0.163, 1.08], [0.172, 1.2],
+    [0.18, 1.3], [0.172, 1.38], [0.13, 1.44], [0.07, 1.47], [0.001, 1.48]], tee);
+  shirt.scale.set(1, 1, 0.62);
+  shirt.position.z = 0.015;
+  g.add(shirt);
+  const legs = [];
+  for (const side of [-1, 1]) {
+    const thigh = new THREE.Group();
+    thigh.position.set(0.095 * side, BODY.hip, 0);
+    thigh.rotation.y = -0.14 * side;                  // toes a little out
+    thigh.add(lathe([[0.064, -BODY.thigh], [0.068, -BODY.thigh + 0.04], [0.078, -0.12], [0.08, 0]], denim));
+    const knee = new THREE.Group();
+    knee.position.y = -BODY.thigh;
+    knee.add(lathe([[0.071, -BODY.shin], [0.07, -BODY.shin + 0.008], [0.064, -BODY.shin + 0.05], [0.058, -0.22],
+      [0.06, -0.06], [0.064, 0]], denim),          // straight-leg jeans, the hem resting on the shoe
+      new THREE.Mesh(new THREE.SphereGeometry(0.064, 24, 12), denim));     // the knee, so a bent one has no gap
+    const ankle = new THREE.Group();
+    ankle.position.y = -BODY.shin;
+    ankle.add(sneaker(mats));
+    knee.add(ankle);
+    thigh.add(knee);
+    g.add(thigh);
+    legs.push({ thigh, knee, ankle, side });
+  }
+  // The shadow under the feet: a soft dark oval just above the floor (its alpha from a white-to-black gradient).
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const x = c.getContext('2d'), grad = x.createRadialGradient(32, 32, 2, 32, 32, 31);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(1, '#000000');
+  x.fillStyle = grad;
+  x.fillRect(0, 0, 64, 64);
+  const dark = new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: new THREE.CanvasTexture(c), transparent: true,
+    opacity: 0.4, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const shade = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.8), dark);
+  shade.rotation.x = -Math.PI / 2;
+  shade.position.set(0, 0.004, -0.06);
+  g.add(shade);
+  g.visible = false;
+  scene.add(g);
+  return { g, legs, phase: 0, amp: 0, at: new THREE.Vector3(), seen: false };
+}
+const body = makeBody();
+function updateBody(dt) {
+  // Where the feet are, how fast we're moving, and whether the body shows at all. Nothing to do when nothing moved.
+  const feet = cam.pos.y - EYE;
+  const moved = Math.hypot(cam.pos.x - body.at.x, cam.pos.z - body.at.z), rose = Math.abs(cam.pos.y - body.at.y);
+  const key = `${upClose}|${studioOpen}|${!!fly}`;
+  if (!moved && !rose && cam.yaw === body.yaw && body.amp < 0.01 && key === body.key && body.rest) return false;
+  body.rest = !moved && !rose;                        // a jump or a glide hides it: look again once it stops
+  body.key = key;
+  body.yaw = cam.yaw;
+  body.at.copy(cam.pos);
+  const speed = dt > 0 ? moved / dt : 0;
+  if (moved || rose || body.floor === undefined) body.floor = cam.pos.y < 6 ? floorAt(cam.pos) : -99;
+  const onFoot = cam.pos.y < 6 && (jumpV !== null || Math.abs(feet - body.floor) < 0.6);
+  const show = onFoot && !upClose && !studioOpen && speed < BODY.walk && !(fly && speed > 2.5);
+  const was = body.seen;
+  body.seen = show;
+  body.g.visible = show;
+  if (!show) return was;
+  // Place it under the eye, a little behind, turned with the view.
+  body.g.position.set(cam.pos.x + Math.sin(cam.yaw) * BODY.back, feet, cam.pos.z + Math.cos(cam.yaw) * BODY.back);
+  body.g.rotation.y = cam.yaw;
+  // The gait: the phase runs with the ground covered; the swing and the stride grow with the pace (a stroll to the
+  // keys' brisk 3.5 m/s) and settle when we stop.
+  const pace = clamp(speed / 3.5, 0, 1);
+  body.amp += (pace - body.amp) * Math.min(1, dt * 6);
+  body.phase += (moved / (BODY.stride * (1 + 0.45 * body.amp))) * Math.PI * 2;
+  for (const leg of body.legs) {
+    const ph = body.phase + (leg.side > 0 ? Math.PI : 0);
+    const swing = 0.42 * body.amp * Math.sin(ph);
+    const lift = 0.85 * body.amp * Math.pow(Math.max(0, Math.cos(ph)), 1.5);
+    leg.thigh.rotation.x = swing;
+    leg.knee.rotation.x = -lift;
+    leg.ankle.rotation.x = -(swing - lift) * 0.6;
+  }
+  return was !== show || body.amp > 0.01;
 }
 function zoom(k) {
   cam.hfov = clamp(cam.hfov * k, 18, 100);
@@ -1939,7 +2144,7 @@ function loadArt(key) {
       map.flipY = false;                                 // glTF texture coordinates
       map.anisotropy = renderer.capabilities.getMaxAnisotropy();
       Object.assign(m, { map, visible: true });
-      if (m.userData.nightMap) m.emissiveMap = map;      // a sign lit after dark (see "day and night")
+      if (m.userData.nightMap) m.emissiveMap = map;      // a sign lit after dark (see "day, dusk and night")
       m.needsUpdate = true;
       renderer.shadowMap.needsUpdate = true;
       dirty();
@@ -2409,6 +2614,7 @@ async function drawHouseSigns() {
     const t = canvasTex(c);
     setMaps(house[id].material, t, t);
   }
+  drawTV();
   syncSigns();
 }
 function syncSigns() {
@@ -2421,6 +2627,123 @@ function syncSigns() {
   signs.faceMat.emissiveIntensity = night ? 0.75 : 0;
   renderer.shadowMap.needsUpdate = true;
   dirty();
+}
+// ---- screens --------------------------------------------------------------------------------------------------------
+// Barrett, 2026-10-21 (the second polish round): the screens are on. The desks' monitors show a sales program, the
+// reception's the day's appointments, the write-up podiums a repair order, and the lounge TV a welcome, with the
+// store's name in its view. Each is a picture just off its glass (scene.json's 'screens', from interior.SCREENS),
+// lit from within: as bright as a white wall, whatever the eye has adjusted to.
+const SCREEN_WHITE = 0.8;
+const screenMats = {};
+function drawScreen(kind, c) {
+  const x = c.getContext('2d'), w = c.width, h = c.height;
+  const bar = (px, py, pw, ph, color, r = 3) => {
+    x.fillStyle = color;
+    x.beginPath();
+    x.roundRect(px, py, pw, ph, r);
+    x.fill();
+  };
+  // A program's window: the title bar with its mark and menus, the sidebar, then the page.
+  x.fillStyle = '#eef1f5';
+  x.fillRect(0, 0, w, h);
+  x.fillStyle = '#1d2740';
+  x.fillRect(0, 0, w, h * 0.09);
+  bar(w * 0.015, h * 0.022, h * 0.045, h * 0.045, '#fd410d', 2);
+  for (let i = 0; i < 4; i++) bar(w * (0.07 + i * 0.07), h * 0.035, w * 0.05, h * 0.02, 'rgba(255,255,255,0.45)', 2);
+  x.fillStyle = '#dde3eb';
+  x.fillRect(0, h * 0.09, w * 0.16, h);
+  for (let i = 0; i < 7; i++) bar(w * 0.02, h * (0.14 + i * 0.075), w * 0.12, h * 0.028, i === 1 ? '#1d2740' : '#b9c2ce');
+  const px = w * 0.19, pw = w * 0.78;
+  if (kind === 'podium') {
+    // A repair order: labeled fields in two columns, and the button to sign it.
+    for (let r = 0; r < 5; r++) {
+      for (let col = 0; col < 2; col++) {
+        const fx = px + col * pw * 0.52, fy = h * (0.15 + r * 0.14);
+        bar(fx, fy, pw * 0.2, h * 0.025, '#9aa5b4');
+        bar(fx, fy + h * 0.04, pw * 0.46, h * 0.06, '#ffffff', 3);
+      }
+    }
+    bar(px + pw * 0.7, h * 0.86, pw * 0.3, h * 0.08, '#fd410d', 4);
+  } else if (kind === 'reception') {
+    // The day's appointments: a column for each person, blocks through the day.
+    for (let col = 0; col < 4; col++) {
+      const cx = px + col * pw * 0.25;
+      bar(cx, h * 0.13, pw * 0.23, h * 0.04, '#7d8898');
+      x.fillStyle = '#ffffff';
+      x.fillRect(cx, h * 0.19, pw * 0.23, h * 0.77);
+      for (let r = 0; r < 6; r++) {
+        if ((r * 3 + col * 5) % 4 === 1) continue;
+        bar(cx + pw * 0.01, h * (0.2 + r * 0.125), pw * 0.21, h * 0.1, ['#cfe0fb', '#ffd9c9', '#d3f0e1'][(r + col) % 3], 4);
+      }
+    }
+  } else {
+    // A deal desk: four figures across the top, a chart, and the list of customers with where each one stands.
+    const tone = ['#1d2740', '#2f6fd6', '#fd410d', '#2e9b6a'];
+    for (let i = 0; i < 4; i++) {
+      bar(px + i * pw * 0.255, h * 0.14, pw * 0.235, h * 0.16, '#ffffff', 4);
+      bar(px + i * pw * 0.255 + pw * 0.02, h * 0.17, pw * 0.08, h * 0.025, '#9aa5b4');
+      bar(px + i * pw * 0.255 + pw * 0.02, h * 0.215, pw * 0.13, h * 0.05, tone[i]);
+    }
+    bar(px, h * 0.34, pw * 0.48, h * 0.6, '#ffffff', 4);
+    [0.35, 0.5, 0.42, 0.66, 0.58, 0.8, 0.72].forEach((b, i) =>
+      bar(px + pw * (0.03 + i * 0.063), h * (0.9 - 0.5 * b), pw * 0.04, h * 0.5 * b, i === 5 ? '#fd410d' : '#2f6fd6', 2));
+    bar(px + pw * 0.5, h * 0.34, pw * 0.5, h * 0.6, '#ffffff', 4);
+    for (let r = 0; r < 8; r++) {
+      bar(px + pw * 0.53, h * (0.38 + r * 0.068), pw * 0.18, h * 0.024, '#7d8898');
+      bar(px + pw * 0.75, h * (0.38 + r * 0.068), pw * 0.1, h * 0.024, '#c3cad4');
+      bar(px + pw * 0.88, h * (0.375 + r * 0.068), pw * 0.09, h * 0.034, ['#2e9b6a', '#f0b429', '#2f6fd6'][r % 3], 6);
+    }
+  }
+}
+function drawTV() {
+  // The lounge TV: a welcome on the store's own colors, by its name in its view.
+  const m = screenMats.tv;
+  if (!m) return;
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 568;
+  const x = c.getContext('2d'), w = c.width, h = c.height;
+  const g = x.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, '#1d2740');
+  g.addColorStop(1, '#0b0f1a');
+  x.fillStyle = g;
+  x.fillRect(0, 0, w, h);
+  Object.assign(x, { fillStyle: '#ffffff', textAlign: 'left', textBaseline: 'alphabetic' });
+  x.font = `600 ${Math.round(h * 0.075)}px Montserrat, system-ui, sans-serif`;
+  x.fillText('Welcome to', w * 0.08, h * 0.36);
+  const lines = nameLines(state.store ? state.store.name : 'our showroom', 2), lh = h * 0.16;
+  fitFont(x, lines, w * 0.84, lh * 0.85);
+  lines.forEach((l, i) => x.fillText(l, w * 0.08, h * 0.36 + lh * (i + 1)));
+  const y = h * 0.36 + lh * lines.length + h * 0.07;
+  x.fillStyle = '#fd410d';
+  x.fillRect(w * 0.08, y, w * 0.07, h * 0.012);
+  x.fillStyle = 'rgba(255,255,255,0.75)';
+  x.font = `500 ${Math.round(h * 0.05)}px Montserrat, system-ui, sans-serif`;
+  x.fillText('Make yourself at home.', w * 0.08, y + h * 0.1);
+  if (m.map) m.map.dispose();
+  m.map = canvasTex(c);
+  m.needsUpdate = true;
+  staleProbes();
+  dirty();
+}
+for (const s of S.screens || []) {
+  if (!screenMats[s.kind]) {
+    let map = null;
+    if (s.kind !== 'tv') {
+      const c = document.createElement('canvas');
+      c.width = 640;
+      c.height = Math.round(640 * s.h / s.w);
+      drawScreen(s.kind, c);
+      map = canvasTex(c);
+    }
+    screenMats[s.kind] = new THREE.MeshBasicMaterial({ map, color: 0x000000, polygonOffset: true, polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2 });
+  }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.h), screenMats[s.kind]);
+  m.position.fromArray(s.at);
+  m.lookAt(m.position.clone().add(new THREE.Vector3(...s.facing)));
+  m.onBeforeRender = (r) => m.material.color.setScalar(SCREEN_WHITE / r.toneMappingExposure);
+  scene.add(m);
 }
 function viewName() {
   // Up close to the store's name on the fascia, from the front walk.
@@ -3184,7 +3507,7 @@ $('#themeOff').addEventListener('click', () => {
 // Barrett, 2026-10-19 ("clearer and more fun"): the theme that's on brings its season: snow for the winter ones and
 // falling leaves for the fall ones. They fall outside only (the vertex shader drops any inside the showroom or the
 // service wing), at about 30 frames a second, and hold still for anyone who asks for less motion. 'Before' (the bare
-// store) has no weather. Black Friday brings the night instead (see "day and night").
+// store) has no weather. Black Friday brings the night instead (see "day, dusk and night").
 const WEATHER = { holiday: 'snow', yearend: 'snow', newyear: 'snow', fall: 'leaves', halloween: 'leaves',
   thanksgiving: 'leaves' };
 // Snow covers the grass and roofs (their texture off, so it's white); fallen leaves turn the lawn olive and brown.
@@ -3282,7 +3605,7 @@ function setWeather(w) {
   }
   if (w) {
     falling = fallen[w] ||= fallers(w === 'snow' ? (coarse ? 6000 : 12000) : (coarse ? 400 : 750), w === 'leaves');
-    falling.material.uniforms.glow.value = night ? NIGHT.fall : 1;
+    falling.material.uniforms.glow.value = night && !dusk ? NIGHT.fall : 1;
     falling.visible = true;
     weatherT0 = performance.now();
   } else falling = null;
@@ -3313,7 +3636,7 @@ function updateWeather(now) {
   return true;
 }
 
-// ---- day and night ----------------------------------------------------------------------------------------------------
+// ---- day, dusk and night ----------------------------------------------------------------------------------------------
 // Barrett, 2026-10-20: "a daytime/nightime toggle ... so that the dealership can get an idea of how their lot will look
 // with any of these graphics at night vs during the day". Night is the hour after dusk: a deep blue sky with stars and a
 // little moonlight; the lot's lights on (the two banner poles and three plain ones, each a real light, with shadows on a
@@ -3366,10 +3689,29 @@ if (BAKED) NIGHT.expo = 6.0;                          // the baked lot lights, i
 const NIGHT_LIT = { fascia: 0.55, bldg: 0.55, clings: 0.3, door: 0.3, bow: 0.3, letters: 0.2 };   // lit after dark
 const NIGHT_THEMES = new Set(['blackfriday']);
 const dayLight = { expo: EXPO.out, env: ENV.out, sun: sun.intensity, color: sun.color.clone() };
-function setSky(dark, lightToward) {
-  // The day's sky or the night's, for the view and for the light it gives (the environment map).
+// Dusk (Barrett, 2026-10-21, the second polish round: the polish ideas' "a Dusk setting"): the sun 5 degrees up in the
+// west-south-west, warm and a third of the afternoon's strength, under a sunset sky (bake.dusk_sky: sky-dusk.webp);
+// the lot's lights and the building's on. Its light map holds their light and the sky's and all of it bounced; the
+// sun's own stays live, as by day, so the lot's lights aren't live lights at dusk (their light is in the map).
+const DUSK = BAKED && S.light.dusk && S.skyDusk ? { sun: S.light.dusk.sun,
+  color: new THREE.Color().setRGB(...S.light.dusk.color), toward: new THREE.Vector3(...S.light.dusk.toward).normalize(),
+  expo: 3.0, haze: new THREE.Color(...S.skyDusk.horizon).lerp(new THREE.Color(0.3, 0.34, 0.45), 0.5) } : null;
+let duskTex = null;
+async function loadDuskSky() {
+  if (duskTex) return;
+  const t = await texLoader.loadAsync(av(`assets/3d/${coarse ? '512/' : ''}sky-dusk.webp`));
+  Object.assign(t, { colorSpace: THREE.SRGBColorSpace, generateMipmaps: false, minFilter: THREE.LinearFilter });
+  duskTex = t;
+}
+function setSky(mode, lightToward) {
+  // The day's sky, dusk's or the night's, for the view and for the light it gives (the environment map).
+  const dark = mode === 'night';
   skyDome.visible = envSky.visible = !dark;
   nightDome.visible = nightEnvSky.visible = dark;
+  for (const d of [skyDome, envSky]) {
+    d.material.uniforms.map.value = mode === 'dusk' ? duskTex : skyTex;
+    d.material.uniforms.scale.value = mode === 'dusk' ? S.skyDusk.scale : (S.sky || {}).scale || 1;
+  }
   const old = scene.environment;
   scene.environment = pmrem.fromScene(envScene, 0.02).texture;
   old.dispose();
@@ -3377,6 +3719,7 @@ function setSky(dark, lightToward) {
   sun.position.copy(center).addScaledVector(lightToward, 160);
   renderer.shadowMap.needsUpdate = true;
 }
+let kitStars = null;                                    // not at dusk
 function nightKit() {
   // The night's lights, lamps and stars. The lights stay in the scene from now on, off by day: adding or removing a
   // light makes every material recompile.
@@ -3426,6 +3769,7 @@ function nightKit() {
   g.add(stars);
   shows.push(stars);
   for (const m of shows) m.visible = false;
+  kitStars = stars;
   scene.add(g);
   // The signs lit after dark keep their art as their own light from now on (dark by day, at no strength), so their
   // shader is the same by day and by night.
@@ -3439,11 +3783,28 @@ function nightKit() {
   return { lights, shows };
 }
 function syncNightButtons() {
-  $('#dayBtn').setAttribute('aria-pressed', !night);
-  $('#nightBtn').setAttribute('aria-pressed', night);
-  const t = $('#nightToggle');
-  t.setAttribute('aria-pressed', night);
-  t.setAttribute('aria-label', night ? 'Day view' : 'Night view');
+  const now = timeNow();
+  for (const w of ['day', 'dusk', 'night']) $(`#${w}Btn`).setAttribute('aria-pressed', now === w);
+  // The phone's one button steps through them: it shows the time it goes to.
+  const next = { day: DUSK ? 'dusk' : 'night', dusk: 'night', night: 'day' }[now], t = $('#nightToggle');
+  t.dataset.next = next;
+  t.setAttribute('aria-label', `${next[0].toUpperCase()}${next.slice(1)} view`);
+}
+async function setTime(mode, by = 'user') {
+  // Day, dusk or night. Dusk and night share the lights (night stays on between them); dusk waits for its sky.
+  if (mode === 'dusk' && !DUSK) mode = 'night';
+  if (mode === 'dusk') await loadDuskSky();
+  const on = mode !== 'day', was = timeNow();
+  dusk = mode === 'dusk';
+  if (on && night) {
+    if (was !== mode) {
+      updateUrl();
+      if (kit) showNight(true);
+    }
+    syncNightButtons();
+    return;
+  }
+  setNight(on, by);
 }
 function setNight(on, by = 'user') {
   nightBy = on ? by : null;
@@ -3468,18 +3829,19 @@ function setNight(on, by = 'user') {
   showNight(on);
 }
 function showNight(on) {
-  syncSigns();                                          // a store's signs light up after dark
-  setSky(on, on ? NIGHT.moon : sunToward);
-  lmDirect.value = on ? 0 : 1;                          // the night's map holds the lot's lights and the moon
-  for (const m of baked) setLightMap(m, on);
+  const mode = timeNow(), dark = mode === 'night', at = mode === 'dusk' ? DUSK : null;
+  syncSigns();                                          // a store's signs light up after dark, and at dusk
+  setSky(mode, dark ? NIGHT.moon : at ? at.toward : sunToward);
+  lmDirect.value = dark ? 0 : 1;                        // the night's map holds the lot's lights and the moon
+  for (const m of baked) setLightMap(m, mode);
   staleProbes(600);
-  scene.fog.color.copy(on ? new THREE.Color(NIGHT.horizon) : HAZE);
+  scene.fog.color.copy(dark ? new THREE.Color(NIGHT.horizon) : at ? at.haze : HAZE);
   tintRing();
-  sun.intensity = on ? NIGHT.moonLight : dayLight.sun;
-  sun.color.set(on ? NIGHT.moonColor : dayLight.color);
-  relight({ expo: { out: on ? NIGHT.expo : dayLight.expo }, env: { out: on ? NIGHT.env : dayLight.env } });
-  for (const l of kit ? kit.lights : []) l.intensity = on ? l.userData.on : 0;
-  for (const m of kit ? kit.shows : []) m.visible = on;
+  sun.intensity = dark ? NIGHT.moonLight : at ? at.sun : dayLight.sun;
+  sun.color.copy(dark ? new THREE.Color(NIGHT.moonColor) : at ? at.color : dayLight.color);
+  relight({ expo: { out: dark ? NIGHT.expo : at ? at.expo : dayLight.expo }, env: { out: dark ? NIGHT.env : dayLight.env } });
+  for (const l of kit ? kit.lights : []) l.intensity = dark ? l.userData.on : 0;     // at dusk theirs is in the map
+  for (const m of kit ? kit.shows : []) m.visible = on && !(at && m === kitStars);
   // The signs lit after dark. A print's material can serve a borrowed copy too: it takes the brighter of its places.
   const want = new Map();
   for (const [key, ms] of Object.entries(artOf)) {
@@ -3490,13 +3852,16 @@ function showNight(on) {
     m.userData.lit = lit;
     setEmit(m, 0);
   }
-  if (falling) falling.material.uniforms.glow.value = on ? NIGHT.fall : 1;
+  if (falling) falling.material.uniforms.glow.value = dark ? NIGHT.fall : 1;
   renderer.shadowMap.needsUpdate = true;
   dirty();
 }
-$('#dayBtn').addEventListener('click', () => setNight(false));
-$('#nightBtn').addEventListener('click', () => setNight(true));
-$('#nightToggle').addEventListener('click', () => setNight(!night));
+$('#dayBtn').addEventListener('click', () => setTime('day'));
+$('#duskBtn').addEventListener('click', () => setTime('dusk'));
+$('#nightBtn').addEventListener('click', () => setTime('night'));
+$('#nightToggle').addEventListener('click', () => setTime($('#nightToggle').dataset.next));
+$('#duskBtn').hidden = !DUSK;
+syncNightButtons();
 
 // ---- the cutaway: roofs off above the roofline ------------------------------------------------------------------------------
 const ROOFLINE = Math.max(...Object.values(S.rooms).map(([a, b]) => Math.max(a[1], b[1]))) + 1.0;
@@ -3577,7 +3942,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
-    | updateWeather(now) | updateJump(dt) | updateSway(now);
+    | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt);
   if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
   if (!busy && !needs) {
     if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
@@ -3608,7 +3973,7 @@ renderTabs();
 requestAnimationFrame(loop);
 if (S.trees) plantTrees().catch((err) => console.warn('trees', err));
 drawHouseSigns();
-if (p.get('n') === '1') setNight(true);               // a link to the night view
+if (p.get('n') === '1' || p.get('n') === 'd') setTime(p.get('n') === 'd' ? 'dusk' : 'night');   // a link to either
 if (p.get('vv')) {                                     // a link with a vehicle build in it
   state.vehicle = { v: p.get('vv'), g: (p.get('vg') || '').split(',').filter(Boolean) };
   syncAll();
@@ -3630,8 +3995,8 @@ function relight(v = {}) {
   dirty();
 }
 window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state,
-  NIGHT, setNight, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES, setQuality,
-  baked, probes };
+  NIGHT, setNight, setTime, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES,
+  setQuality, baked, probes, body };
 </script>
 </body>
 </html>
