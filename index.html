@@ -280,6 +280,7 @@ img { max-width: none; }
 .chip-btn[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #FFFFFF; }
 .chip-btn.icon-only { width: 34px; padding: 0; justify-content: center; }
 .zoom { position: absolute; z-index: 4; right: 18px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+.chip-btn.hd { font-size: 11px; font-weight: 800; letter-spacing: 0.02em; }
 .hint {
   position: absolute;
   z-index: 3;
@@ -533,10 +534,57 @@ img { max-width: none; }
   text-decoration: none;
 }
 .photo-link:hover { border-color: var(--ink-3); }
+/* Your store: a dealership's own name on the building */
+.store-btn {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 7px; max-width: 280px; height: 32px; padding: 0 14px;
+  border: 1px solid var(--accent); border-radius: 999px; background: none; color: var(--ink);
+  font: 600 13px/1 var(--font-ui); cursor: pointer;
+}
+.store-btn svg { flex: none; width: 15px; height: 15px; color: var(--accent); }
+.store-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-btn:hover, .store-btn[aria-pressed="true"] { background: var(--accent-wash); }
+.store-btn + .photo-link { margin-left: 8px; }
+.store-dlg { width: min(520px, calc(100vw - 32px)); }
+.store-form { display: grid; gap: 14px; padding-top: 14px; }
+.store-form label { display: grid; gap: 6px; color: var(--ink-2); font-size: 12.5px; font-weight: 600; }
+.store-form input, .store-form select {
+  height: 38px; padding: 0 12px; border: 1px solid var(--rule); border-radius: var(--r-sm); background: var(--sheet);
+  color: var(--ink); font: 500 14px var(--font-ui);
+}
+.logo-drop {
+  display: flex; align-items: center; gap: 12px; padding: 14px; border: 1.5px dashed var(--rule); border-radius: var(--r-md);
+  color: var(--ink-2); font-size: 13px;
+}
+.logo-drop.over { border-color: var(--accent); background: var(--accent-wash); }
+.logo-drop img { flex: none; width: 76px; height: 50px; padding: 4px; object-fit: contain; border-radius: 6px; background: #FFFFFF; }
+.logo-drop span { flex: 1; }
+.linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.store-note { margin: 0; min-height: 1em; overflow-wrap: anywhere; }
+.store-none { margin: 4px 0 10px; color: var(--ink-2); font-size: 12.5px; }
+.card.own .card-dealer::after { content: " · your job"; color: var(--accent); font-weight: 700; }
+.dlg-body tr.r-head td { padding-top: 18px; color: var(--ink-2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+/* The vehicle studio: the Vehicle Graphics Builder over the dealership */
+.studio { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--floor); }
+.studio[hidden] { display: none; }
+.studio-bar {
+  display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 8px 16px; border-bottom: 1px solid var(--rule);
+  background: var(--sheet); color: var(--ink);
+}
+.studio-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 15px/1.2 var(--font-display); }
+.studio-note { margin-left: auto; color: var(--ink-2); font-size: 12.5px; }
+.studio iframe { flex: 1; width: 100%; border: 0; background: var(--floor); }
+.pin.studio-pin .pin-dot svg { width: 14px; height: 14px; }
+.pins[data-mode="small"] .studio-pin .pin-dot svg { display: none; }
+@media (max-width: 999px) { .studio-note { display: none; } }
+@media (max-width: 520px) {
+  .photo-link { display: none; }                       /* the old photo views; the store's name needs the room */
+  .studio-title { display: none; }
+}
 .stage .hint { white-space: normal; text-align: center; max-width: calc(100% - 40px); }
 @media (max-width: 999px) {
   .stage .hint { display: block; bottom: 12px; font-size: 12px; }
   .photo-link { height: 28px; padding: 0 10px; font-size: 12px; }
+  .store-btn { height: 28px; max-width: 170px; padding: 0 10px; font-size: 12px; }
 }
 
 /* Themes and places: the rail's tabs, the theme cards, and an action in the toast */
@@ -623,6 +671,7 @@ img { max-width: none; }
   .topbar { gap: 10px; }
   .topbar .divider { display: none; }
   .topbar h1 { font-size: 13px; white-space: nowrap; }
+  .chip-btn.hd { display: none; }                 /* a phone runs low quality; the column would reach Before / After */
 }
 @media (max-width: 440px) {
   .topbar h1 { display: none; }
@@ -768,6 +817,7 @@ img { max-width: none; }
   <a class="brand" href="https://www.sfoxmarketing.com/" target="_blank" rel="noopener"><svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="88 34 800 116" role="img" aria-label="Silver Fox Marketing"><g><path class="li" d="m260.13,139.29c1.01,1.85,5.37,3.39,9.04,2.1s5.24-4.91,4.22-6.76c-1.01-1.85-3.09.12-13.26,4.66"/><path class="li" d="m179.57,139.29c-1.01,1.85-5.37,3.39-9.04,2.1-3.67-1.29-5.24-4.91-4.22-6.76s3.09.12,13.26,4.66"/><path class="lf" d="m343.94,99.66l-35.49-24.31-6.71-31.02-44.77,24.63h-.23c-5.19,0-10.36-.39-15.48-1.18-14.18-2.19-28.62-2.19-42.81,0h0c-5.12.78-10.29,1.18-15.48,1.18h-.23l-44.79-24.63-6.71,31.02-35.49,24.31,41.26,33.9s-11.83-41.58,23.66-33.26c35.49,8.33,59.16,44.77,59.16,44.77h0s23.66-36.46,59.16-44.77c35.49-8.33,23.66,33.26,23.66,33.26l41.26-33.9h.02Z"/><path class="li" d="m424.13,98.95c0,4.22-.83,7.06-2.47,8.51-1.64,1.45-4.59,2.19-8.88,2.19h-28.02c-4.64,0-7.68-.83-9.13-2.47s-2.19-4.8-2.19-9.48l9.32-1.94v5.35h32.06v-10.36h-28.28c-4.27,0-7.22-.74-8.83-2.19-1.61-1.45-2.42-4.31-2.42-8.51v-5c0-4.22.81-7.06,2.42-8.51,1.61-1.45,4.54-2.19,8.83-2.19h25.74c4.34,0,7.29.74,8.88,2.24s2.38,4.38,2.38,8.65l-9.32,2.19v-5.19h-29.68v9.76h28.28c4.27,0,7.24.74,8.88,2.19,1.64,1.48,2.47,4.31,2.47,8.51v6.23l-.02.02Z"/><path class="li" d="m452.32,109.65h-10.54v-45.3h10.54v45.32-.02Z"/><path class="li" d="m515.81,109.65h-44.53v-45.3h10.54v36.81h34v8.51-.02Z"/><path class="li" d="m564.82,64.35l-24.93,45.32h-7.29l-26.18-45.32h12.04l18.36,32.75,17.48-32.75h10.54-.02Z"/><path class="li" d="m619.62,109.65h-46.82v-45.3h46.38v7.73h-35.84v10.1h20.9v7.73h-20.9v11.23h36.28s0,8.51,0,8.51Z"/><path class="li" d="m688.64,109.65h-15.11l-18.27-17.14h-10.01v17.14h-10.36v-45.3h38.82c6.78,0,10.19,2.93,10.19,8.79v10.63c0,4.38-1.75,7.1-5.26,8.16-1.34.42-4.98.62-10.89.62l20.9,17.14-.02-.05Zm-14.92-28.46v-5.44c0-1.52-.44-2.51-1.31-2.98-.65-.42-1.78-.62-3.44-.62h-23.71v12.64h23.71c1.64,0,2.79-.21,3.44-.62.88-.46,1.31-1.45,1.31-2.98Z"/><path class="li" d="m746.97,72.24h-35.31v11.95h19.05v8.26h-19.05v17.21h-10.54v-45.3h45.85v7.91-.02Z"/><path class="li" d="m810.72,98.95c0,4.22-.81,7.06-2.42,8.51-1.61,1.45-4.54,2.19-8.83,2.19h-33.37c-4.27,0-7.22-.74-8.83-2.19-1.61-1.45-2.42-4.31-2.42-8.51v-23.89c0-4.22.81-7.06,2.42-8.51,1.61-1.45,4.54-2.19,8.83-2.19h33.37c4.27,0,7.22.74,8.83,2.19,1.61,1.45,2.42,4.31,2.42,8.51v23.89Zm-10.54,2.19v-28.71h-34.78v28.71h34.78Z"/><path class="li" d="m878.78,109.65h-14.32l-16.61-17.57-15.29,17.57h-12.48l21.52-23.27-21.86-22.05h13.98l14.48,15.36,13.79-15.36h12.13l-19.77,20.83,24.42,24.49h0Z"/><path class="lf" d="m542.47,143.53h-3.67v-10.63c0-.37.05-.97.14-1.75-.21.42-.53,1.01-.99,1.78l-6.41,8.53h-.78l-6.41-8.58c-.46-.62-.81-1.2-1.04-1.75.07.69.09,1.25.09,1.68v10.7h-3.21v-17.09h3.21l8.05,10.33,7.89-10.33h3.18v17.09l-.05.02Z"/><path class="lf" d="m569.25,143.53h-4.47l-2.05-3.74h-10.82l-1.98,3.74h-3.97l9.66-17.09h3.85l9.8,17.09h-.02Zm-8.19-6.83l-3.67-6.94-3.81,6.94h7.47,0Z"/><path class="lf" d="m593.42,143.53h-5.7l-6.9-6.46h-3.78v6.46h-3.9v-17.09h14.62c2.56,0,3.85,1.11,3.85,3.32v4.01c0,1.66-.67,2.68-1.98,3.07-.51.16-1.87.23-4.11.23l7.89,6.46h0Zm-5.63-10.72v-2.05c0-.58-.16-.95-.51-1.13-.25-.16-.67-.23-1.29-.23h-8.95v4.77h8.95c.62,0,1.04-.07,1.29-.23.32-.18.51-.55.51-1.13Z"/><path class="lf" d="m618.74,143.53h-6.39l-10.22-7.52v7.52h-4.01v-17.09h4.01v7.13l9.48-7.13h5.77l-11.32,8.05,12.71,9.04h-.02Z"/><path class="lf" d="m640.47,143.53h-17.64v-17.09h17.48v2.91h-13.52v3.81h7.89v2.91h-7.89v4.24h13.68v3.23Z"/><path class="lf" d="m662.03,129.51h-7.89v14.05h-3.97v-14.05h-7.84v-3.04h19.7v3.04Z"/><path class="lf" d="m669.29,143.53h-3.97v-17.09h3.97v17.09Z"/><path class="lf" d="m696.51,143.53h-2.72l-12.55-10.56c-.53-.44-1.01-.9-1.43-1.38.12,1.11.16,1.98.16,2.61v9.34h-3.57v-17.09h2.72l12.02,10.06c.85.74,1.52,1.34,1.96,1.85-.12-1.59-.16-2.56-.16-2.95v-8.97h3.57v17.11Z"/><path class="lf" d="m723.52,139.49c0,1.59-.3,2.65-.9,3.21-.6.55-1.71.83-3.32.83h-11.79c-1.61,0-2.72-.28-3.32-.83s-.9-1.61-.9-3.21v-8.99c0-1.59.3-2.65.9-3.21.6-.55,1.71-.83,3.32-.83h11.79c1.71,0,2.84.3,3.39.88s.85,1.71.85,3.39l-3.87.69v-1.91h-12.41v10.82h12.41v-3.81h-6.48v-2.91h10.36v5.88h-.02Z"/></g></svg></a>
   <span class="divider" aria-hidden="true"></span>
   <h1>Dealership Graphics Builder</h1>
+  <button class="store-btn" id="storeBtn" type="button" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 7v6.5h11V7M1.5 7l1.4-4.5h10.2L14.5 7zM6.5 13.5V10h3v3.5"/></svg><span id="storeBtnText">Your store</span></button>
 </header>
 <main class="app">
   <section class="showroom" aria-label="The dealership in 3D">
@@ -801,6 +851,8 @@ img { max-width: none; }
       </div>
       <div class="tip" id="tip" hidden><b id="tipName"></b><span id="tipMsg"></span></div>
       <div class="zoom">
+        <button class="chip-btn icon-only hd" id="hdToggle" type="button" aria-pressed="false"
+          title="High quality: glow round lights, soft shadows, flags in the wind">HD</button>
         <button class="chip-btn icon-only phone-only" id="nightToggle" type="button" aria-label="Night view" aria-pressed="false">
           <span class="moon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.4 10.2A5.7 5.7 0 0 1 5.8 2.6a5.7 5.7 0 1 0 7.6 7.6Z"/></svg></span><span class="sun"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg></span>
         </button>
@@ -873,7 +925,7 @@ img { max-width: none; }
   <div class="dlg-head">
     <div>
       <h2 id="sheetTitle">Your dealership graphics</h2>
-      <p>Shown on a generic dealership, using real Silver Fox jobs as examples.</p>
+      <p id="sheetSub">Shown on a generic dealership, using real Silver Fox jobs as examples.</p>
     </div>
     <button class="dlg-x" id="sheetClose" type="button" aria-label="Close">
       <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
@@ -893,7 +945,46 @@ img { max-width: none; }
     <p class="dlg-note" id="sheetNote" role="status"></p>
   </div>
 </dialog>
-<script src="assets/3d/catalog.js?v=fac060c172"></script>
+<div class="studio" id="studio" hidden>
+  <div class="studio-bar">
+    <button class="chip-btn" id="studioBack" type="button">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>
+      <span>Back to the dealership</span>
+    </button>
+    <span class="studio-title">Vehicle Graphics Builder</span>
+    <span class="studio-note" id="studioNote"></span>
+  </div>
+  <iframe id="studioFrame" title="Vehicle Graphics Builder" allow="clipboard-write; fullscreen"></iframe>
+</div>
+<dialog class="sheet-dlg store-dlg" id="storeDlg" aria-labelledby="storeTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="storeTitle">See your store</h2>
+      <p>Your name on the building, and real Silver Fox jobs from other stores of your make in every place.</p>
+    </div>
+    <button class="dlg-x" id="storeClose" type="button" aria-label="Close">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
+    </button>
+  </div>
+  <div class="dlg-body store-form">
+    <label>Store name <input id="storeName" type="text" maxlength="48" autocomplete="off" placeholder="Suntrup Ford Kirkwood"></label>
+    <label>Make <select id="storeMake"></select></label>
+    <div class="logo-drop" id="logoDrop">
+      <img id="logoPreview" alt="The store's logo" hidden>
+      <span>Drop the store's logo here, or <button class="linkish" id="logoPick" type="button">choose a file</button>. It stays on this device.</span>
+      <button class="btn-quiet" id="logoClear" type="button" hidden>Remove</button>
+      <input id="logoFile" type="file" accept="image/*" hidden>
+    </div>
+    <label>Start with a theme <select id="storeTheme"></select></label>
+    <p class="dlg-note store-note" id="storeNote" role="status"></p>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn-primary" id="storeGo" type="button">Show my store</button>
+    <button class="btn-quiet" id="storeLink" type="button">Copy link</button>
+    <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
+  </div>
+</dialog>
+<script src="assets/3d/catalog.js?v=20261020p"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
@@ -901,19 +992,20 @@ img { max-width: none; }
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { Sky } from 'three/addons/objects/Sky.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
 // The dealership as a real-time 3D scene: the Blender model exported by dealership_blender.py --web
 // (assets/3d/dealership.glb and scene.json), the graphics' art from assets/3d/art/, and the catalog of places, jobs and
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = 'fac060c172';
+const ASSET_V = '614755ba92';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -949,19 +1041,30 @@ const seasonal = (o) => o.themes.some((t) => SEASONS.has(t));
 const EVENTS = new Set(['grandopening', 'anniversary', 'salesevent', 'truckmonth']);
 const occasionOf = (o) => THEMES.filter((t) => o.themes.includes(t.id) && (SEASONS.has(t.id) || EVENTS.has(t.id)))
   .sort((a, b) => monthsAway(a) - monthsAway(b))[0];
-const EVERYDAY = Object.fromEntries(C.everyday.map((k) => [byKey[k].spot, k]));
+const GENERIC_EVERYDAY = Object.fromEntries(C.everyday.map((k) => [byKey[k].spot, k]));
+let EVERYDAY = { ...GENERIC_EVERYDAY };                 // a store's view has its own (see "your store")
 const stage = $('#stage');
-const state = { chosen: new Map(Object.entries(EVERYDAY)), plain: false, view: 'overview', focus: null, hover: null, tab: 'themes' };
+const state = { chosen: new Map(Object.entries(EVERYDAY)), plain: false, view: 'overview', focus: null, hover: null, tab: 'themes',
+  store: null,                                         // a store's view: { name, make, logo } (see "your store")
+  vehicle: null };                                     // the vehicle studio's build: { v, g } (see "one quote for both")
 const lastStop = { Outside: 'overview', Inside: 'showroom' };
 const isOn = (key) => state.chosen.get(byKey[key].spot) === key;
 let night = false, nightBy = null, kit = null;          // the night view (see "day and night"): on, who turned it on
+let signs = null;                                       // the store's name signs (see "your store")
+const storeKeys = new Map();                            // each theme's set for the store in view
 
 const p = new URLSearchParams(location.hash.slice(1));
 if (p.has('g')) {
   state.chosen = new Map();
   for (const k of p.get('g').split(',')) if (byKey[k]) state.chosen.set(byKey[k].spot, k);
 }
-const updateUrl = () => history.replaceState(null, '', `#g=${[...state.chosen.values()].join(',')}${night ? '&n=1' : ''}`);
+const updateUrl = () => {
+  const q = [`g=${[...state.chosen.values()].join(',')}`];
+  if (night) q.push('n=1');
+  if (state.store) q.push(`store=${encodeURIComponent(state.store.name)}`, `make=${state.store.make}`);
+  if (state.vehicle) q.push(`vv=${state.vehicle.v}`, `vg=${state.vehicle.g.join(',')}`);
+  history.replaceState(null, '', `#${q.join('&')}`);
+};
 
 // ---- renderer, sky and light ----------------------------------------------------------------------------------------
 let renderer;
@@ -985,30 +1088,71 @@ const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.05, 4000);
 
 const S = await fetch(av('assets/3d/scene.json')).then((r) => r.json());
 const PRESET = Object.fromEntries(S.presets.map((s) => [s.id, s]));
-// The sun stands in the south-west so the storefront is in sunlight.
-const sunToward = new THREE.Vector3(-0.5, 0.62, 0.6).normalize();
-function makeSky(scale) {
-  const sky = new Sky();
-  sky.scale.setScalar(scale);
-  const u = sky.material.uniforms;
-  u.turbidity.value = 3.2;
-  u.rayleigh.value = 1.05;
-  u.mieCoefficient.value = 0.004;
-  u.mieDirectionalG.value = 0.82;
-  u.sunPosition.value.copy(sunToward);
+// The sun stands in the south-west so the storefront is in sunlight (layout.SUN_TOWARD: the light was baked under it).
+const sunToward = new THREE.Vector3(...(S.sunToward || [-0.5, 0.62, 0.6])).normalize();
+const BAKED = !!S.light;                              // the light maps are there (bake.py; see "baked light")
+if (S.sky) {
+  // The sky and sun are in real proportion now (bake.py), so a sunlit white wall wants about 1.25 to sit near white;
+  // with the light maps, inside, where the ceiling's light is a few times dimmer than the afternoon's, the eye opens
+  // up further (without them the soft fills light the rooms about as brightly as the street).
+  Object.assign(EXPO, { out: 1.25, in: BAKED ? 2.0 : 1.6 });   // Barrett, 2026-10-21: 2.9 was still too bright
+  Object.assign(ENV, { out: 1.0 });
+  renderer.toneMappingExposure = EXPO.out;
+}
+// The sky (Barrett, 2026-10-20, the polish plan): Blender's sky model with fair-weather clouds (bake.py), rendered as
+// the upper half of a panorama scaled to its brightest and multiplied back here, and the ground's light below the
+// horizon. The same sky lights the scene (the environment) and lit the bake, so the two agree.
+const SKY_VS = `
+varying vec3 vDir;
+void main() {
+  vDir = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const SKY_FS = `
+uniform sampler2D map;
+uniform float scale;
+uniform vec3 ground;
+varying vec3 vDir;
+void main() {
+  vec3 d = normalize(vDir);
+  vec3 c = ground;
+  if (d.y >= 0.0) {
+    // The panorama: north a quarter of the way across, east in the middle (bake.render_sky); straight up on top.
+    float bearing = atan(d.x, -d.z);
+    c = texture2D(map, vec2(fract(0.25 + bearing / 6.2831853), asin(min(d.y, 1.0)) / 1.5707963)).rgb * scale;
+  }
+  gl_FragColor = vec4(c, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+const texLoader = new THREE.TextureLoader();
+const skyTex = await texLoader.loadAsync(av(`assets/3d/${coarse ? '512/' : ''}sky.webp`));
+skyTex.colorSpace = THREE.SRGBColorSpace;
+skyTex.generateMipmaps = false;                       // no seam where the panorama wraps round
+skyTex.minFilter = THREE.LinearFilter;
+const SKY_GROUND = new THREE.Color(0.085, 0.095, 0.07);
+function daySky(r) {
+  const m = new THREE.ShaderMaterial({ uniforms: { map: { value: skyTex }, scale: { value: (S.sky || {}).scale || 1 },
+    ground: { value: SKY_GROUND } }, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: THREE.BackSide, depthWrite: false });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(r, 64, 32), m);
+  sky.frustumCulled = false;
   return sky;
 }
-const skyDome = makeSky(3000), envSky = makeSky(50);
+const skyDome = daySky(3000), envSky = daySky(50);
+skyDome.renderOrder = -1;
 scene.add(skyDome);
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envScene = new THREE.Scene();
 envScene.add(envSky);
 scene.environment = pmrem.fromScene(envScene, 0.02).texture;
 scene.environmentIntensity = ENV.out;
+// Haze: the distant trees and fields fade toward the horizon's color.
+const HAZE = new THREE.Color(...((S.sky || {}).horizon || [0.55, 0.6, 0.68]));
+scene.fog = new THREE.Fog(HAZE.clone(), 180, 1500);
 const lo = new THREE.Vector3(...S.site.min), hi = new THREE.Vector3(...S.site.max);
 const site = new THREE.Box3().setFromPoints([lo, hi]);
 const center = site.getCenter(new THREE.Vector3()).setY(0);
-const sun = new THREE.DirectionalLight(0xfff3e2, 2.5);
+const sun = new THREE.DirectionalLight(0xfff3e2, BAKED ? S.light.sun : 2.5);
 sun.position.copy(center).addScaledVector(sunToward, 160);
 sun.target.position.copy(center);
 sun.castShadow = true;
@@ -1021,23 +1165,244 @@ scene.add(sun, sun.target);
 // below stands in for it (it fades in as you walk inside).
 const bounce = new THREE.HemisphereLight(0xdcdad4, 0xc2bbae, 0);
 scene.add(bounce);
-RectAreaLightUniformsLib.init();
+// Without the light maps, soft lights stand in for the ceiling's, one per room or run of ceiling (no shadows).
 const roomLights = [];
-for (const l of S.lights) {
-  const r = new THREE.RectAreaLight(0xfff2e2, ROOM_LIGHT, l.w, l.d);
-  roomLights.push(r);
-  r.position.set(...l.at);
-  r.rotation.x = -Math.PI / 2;                       // shining straight down
-  scene.add(r);
+if (!BAKED) {
+  RectAreaLightUniformsLib.init();
+  for (const l of S.lights) {
+    const r = new THREE.RectAreaLight(0xfff2e2, ROOM_LIGHT, l.w, l.d);
+    roomLights.push(r);
+    r.position.set(...l.at);
+    r.rotation.x = -Math.PI / 2;                     // shining straight down
+    scene.add(r);
+  }
 }
 
+// ---- baked light ---------------------------------------------------------------------------------------------------
+// Barrett, 2026-10-20 (the polish plan): Cycles worked out the light that reaches every surface (from the sky, the
+// ceiling lights, and everything they bounce off) and stored it in light maps (bake.py): the building, the lot and the
+// cars in one, every printed piece of every graphic in a second. Here each surface takes its map instead of the sky's
+// glow and the soft fills, so rooms fall off toward their corners and desks shade the floor. The sun's own light stays
+// live (its shadows move as graphics go on and off, and the cutaway lets it into the rooms). At night the maps change
+// for the night's, which hold the lot's lights too: those leave a baked surface only their shine.
+const NO_MAP = new Set(['glass', 'light', 'strip-light', 'lamp']);
+const lmDirect = { value: 1 };                        // the live lights' diffuse light on a baked surface (0 at night)
+const lmTex = {};
+function lightTex(name) {
+  if (lmTex[name]) return lmTex[name];
+  const t = texLoader.load(av(`assets/3d/light/${coarse ? '512/' : ''}${name}.webp`), dirtyLater);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.flipY = false;                                    // glTF's UVs run from the image's top
+  t.channel = 1;                                      // the second UV map
+  t.generateMipmaps = false;                          // no bleeding between the patches of the atlas
+  t.minFilter = THREE.LinearFilter;
+  return (lmTex[name] = t);
+}
+const BAKED_BEGIN = THREE.ShaderChunk.lights_fragment_begin
+  .replace('#if ( NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )', '#if 0')
+  .replace('#if ( NUM_HEMI_LIGHTS > 0 )', '#if 0');
+const BAKED_MAPS = 'reflectedLight.directDiffuse *= lmDirect;\n' + THREE.ShaderChunk.lights_fragment_maps
+  .replace('iblIrradiance += getIBLIrradiance( geometryNormal );', '');
+const baked = new Set();
+function setLightMap(m, dark) {
+  const when = dark ? 'night' : 'day', gfx = m.userData.lmGfx;
+  m.lightMap = lightTex(gfx ? `gfx-${when}` : when);
+  m.lightMapIntensity = Math.PI * S.light[when][gfx ? 'gfxScale' : 'scale'];   // the maps hold light / pi
+}
+function bakeLight(m, gfx) {
+  m.userData.lmGfx = gfx;
+  setLightMap(m, night);
+  const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    sh.uniforms.lmDirect = lmDirect;
+    sh.fragmentShader = 'uniform float lmDirect;\n' + sh.fragmentShader
+      .replace('#include <lights_fragment_begin>', BAKED_BEGIN).replace('#include <lights_fragment_maps>', BAKED_MAPS);
+  };
+  m.customProgramCacheKey = () => `baked:${key.call(m)}`;
+  baked.add(m);
+}
+let dirtyPending = false;                             // a texture arrived: draw again (dirty() is defined further on)
+function dirtyLater() { dirtyPending = true; }
+
+// ---- surfaces: textures (build/textures.py), each laid in feet along the surface ---------------------------------
+const TEX = await fetch(av('assets/3d/tex/manifest.json')).then((r) => r.json()).catch(() => ({}));
+const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+function texture(file, srgb, tile) {
+  const t = texLoader.load(av(`assets/3d/tex/${coarse ? '512/' : ''}${file}`), dirtyLater);
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1 / tile[0], 1 / tile[1]);
+  t.anisotropy = ANISO;
+  return t;
+}
+// Big open surfaces vary a little from tile to tile: the texture again, twelve times larger, shades it.
+const MACRO = new Set(['grass', 'asphalt', 'concrete']);
+function surface(m, name) {
+  const e = TEX[name];
+  if (!e) return;
+  m.map = texture(e.map, true, e.tile);
+  m.color.set(0xffffff);
+  if (e.normal) m.normalMap = texture(e.normal, false, e.tile);
+  if (MACRO.has(name)) {
+    const prev = m.onBeforeCompile;
+    m.onBeforeCompile = (sh, r) => {
+      prev.call(m, sh, r);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+\t#ifdef USE_MAP
+\tvec3 macro = texture2D( map, vMapUv * 0.083 + 0.31 ).rgb / max( textureLod( map, vMapUv, 12.0 ).rgb, vec3( 0.01 ) );
+\tdiffuseColor.rgb *= clamp( mix( vec3( 1.0 ), macro, 0.35 ), 0.75, 1.25 );
+\t#endif`);                                       // under snow the lawn has no texture
+    };
+    m.customProgramCacheKey = () => 'macro';         // its own program (bakeLight() adds to the key)
+  }
+  m.needsUpdate = true;
+}
+
+// ---- in the air: flags, hanging banners, leaves (high quality only) ------------------------------------------------
+// A feather flag ripples out from its pole, a banner hung from the ceiling sways a little from its top, and the trees'
+// leaves stir. All in the vertex shader, on a shared clock; see updateSway() for when it runs.
+const swayT = { value: 0 };
+const HANG_SPOTS = new Set(['hang', 'drive', 'wayfinding']);
+function addSway(m, kind) {
+  if (m.userData.sway) return;
+  m.userData.sway = kind;
+  const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    sh.uniforms.swayT = swayT;
+    const move = kind === 'flag'
+      // out from the pole (the art's left edge), growing toward the free edge and the top
+      ? 'transformed += objectNormal * ( 0.07 * sin( swayT * 3.1 - uv.x * 5.0 + uv.y * 2.0 ) + 0.035 * sin( swayT * 1.7 + uv.y * 3.0 ) ) * uv.x;'
+      : kind === 'hang'
+        // a pendulum from its top: the bottom moves most, toward and away from the viewer
+        ? 'transformed.z += 0.02 * sin( swayT * 0.9 ) * ( 1.0 - uv.y );'
+        // leaves: higher up, more; each tree on its own beat
+        : 'vec3 ip = vec3( instanceMatrix[ 3 ] ); transformed += vec3( sin( swayT * 1.3 + ip.x * 0.4 ), 0.0, cos( swayT * 1.1 + ip.z * 0.4 ) ) * 0.05 * clamp( position.y / 9.0, 0.0, 1.0 );';
+    sh.vertexShader = 'uniform float swayT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n${move}`);
+  };
+  m.customProgramCacheKey = () => `sway-${kind}:${key.call(m)}`;
+}
+function gridOf(g, nu, nv) {
+  // A quad (4 corners) as a grid of nu x nv cells, so a flag can ripple: positions and UVs laid bilinearly between the
+  // corners, found by their art UVs.
+  const P = g.attributes.position, U = g.attributes.uv, U1 = g.attributes.uv1;
+  if (!U || P.count !== 4) return g;
+  const c = [0, 1, 2, 3].map((i) => ({ i, u: U.getX(i), v: U.getY(i) }));
+  const u0 = Math.min(...c.map((k) => k.u)), v0 = Math.min(...c.map((k) => k.v));
+  const at = (lo, lov) => c.reduce((b, k) => (Math.abs(k.u - lo) + Math.abs(k.v - lov) < Math.abs(b.u - lo) + Math.abs(b.v - lov) ? k : b)).i;
+  const u1 = Math.max(...c.map((k) => k.u)), v1 = Math.max(...c.map((k) => k.v));
+  const corner = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)];
+  const lerp = (attr, s, t) => {
+    const d = attr.itemSize, out = [];
+    for (let k = 0; k < d; k++) {
+      const [a, b, cc, e] = corner.map((i) => attr.getComponent(i, k));
+      out.push(a * (1 - s) * (1 - t) + b * s * (1 - t) + cc * s * t + e * (1 - s) * t);
+    }
+    return out;
+  };
+  const pos = [], uv = [], uv1 = [], nrm = [], idx = [];
+  const n0 = [g.attributes.normal.getX(0), g.attributes.normal.getY(0), g.attributes.normal.getZ(0)];
+  for (let j = 0; j <= nv; j++) {
+    for (let i = 0; i <= nu; i++) {
+      pos.push(...lerp(P, i / nu, j / nv));
+      uv.push(...lerp(U, i / nu, j / nv));
+      if (U1) uv1.push(...lerp(U1, i / nu, j / nv));
+      nrm.push(...n0);
+    }
+  }
+  for (let j = 0; j < nv; j++) {
+    for (let i = 0; i < nu; i++) {
+      const a = j * (nu + 1) + i;
+      idx.push(a, a + 1, a + nu + 2, a, a + nu + 2, a + nu + 1);
+    }
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  if (U1) out.setAttribute('uv1', new THREE.Float32BufferAttribute(uv1, 2));
+  out.setIndex(idx);
+  // keep the quad's winding: the grid faces the way the quad did
+  const a = new THREE.Vector3().fromBufferAttribute(out.attributes.position, 0);
+  const b = new THREE.Vector3().fromBufferAttribute(out.attributes.position, 1);
+  const e = new THREE.Vector3().fromBufferAttribute(out.attributes.position, nu + 1);
+  if (new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(e, a)).dot(new THREE.Vector3(...n0)) < 0) {
+    for (let k = 0; k < idx.length; k += 3) [idx[k + 1], idx[k + 2]] = [idx[k + 2], idx[k + 1]];
+    out.setIndex(idx);
+  }
+  return out;
+}
+
+// ---- reflections inside -----------------------------------------------------------------------------------------------
+// Barrett, 2026-10-20 (the polish plan): the polished floor, the furniture and the service drive's epoxy reflect their
+// room, not the sky. A cube camera takes each room from its middle at eye height (takeProbes()), and the shader
+// projects each reflection onto the room's box, so the walls seen in the floor line up with the walls. The pictures
+// are taken again when the graphics, the theme or the time of day change.
+const ROOM_TOP = { showroom: 19.0, service: 19.0 };                 // ft: the showroom's ceiling, the drive's joists
+const PROBE_MATS = { tile: 'showroom', wood: 'showroom', chrome: 'showroom', screen: 'showroom', leather: 'showroom',
+  furniture: 'showroom', baseboard: 'showroom', track: 'showroom', epoxy: 'service' };
+const probes = {};
+for (const [id, [a, b]] of Object.entries(S.rooms)) {
+  const box = new THREE.Box3().setFromPoints([new THREE.Vector3(...a), new THREE.Vector3(...b)]);
+  box.min.y = S.floor;
+  box.max.y = Math.min(box.max.y, ROOM_TOP[id] * S.ft);
+  const c = box.getCenter(new THREE.Vector3());
+  c.y = S.floor + EYE;
+  probes[id] = { box, at: c, uniforms: { boxMin: { value: box.min }, boxMax: { value: box.max }, probePos: { value: c } },
+    materials: new Set(), tex: null };
+}
+const BOX_REFLECT = `reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
+			{
+				vec3 rbmax = ( boxMax - vBoxPos ) / reflectVec, rbmin = ( boxMin - vBoxPos ) / reflectVec;
+				vec3 rb = mix( rbmin, rbmax, step( vec3( 0.0 ), reflectVec ) );
+				reflectVec = normalize( vBoxPos + reflectVec * min( min( rb.x, rb.y ), rb.z ) - probePos );
+			}`;
+function boxReflect(m, room) {
+  const pr = probes[room];
+  if (!pr || m.userData.probe) return;
+  m.userData.probe = room;
+  pr.materials.add(m);
+  const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    Object.assign(sh.uniforms, pr.uniforms);
+    sh.vertexShader = 'varying vec3 vBoxPos;\n' + sh.vertexShader.replace('#include <worldpos_vertex>',
+      '#include <worldpos_vertex>\n\tvBoxPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
+    sh.fragmentShader = 'uniform vec3 boxMin, boxMax, probePos;\nvarying vec3 vBoxPos;\n' + sh.fragmentShader.replace(
+      '#include <envmap_physical_pars_fragment>', THREE.ShaderChunk.envmap_physical_pars_fragment
+        .replace('reflectVec = inverseTransformDirection( reflectVec, viewMatrix );', BOX_REFLECT));
+  };
+  m.customProgramCacheKey = () => `box:${key.call(m)}`;
+}
+const cubeRT = new THREE.WebGLCubeRenderTarget(coarse ? 128 : 256, { type: THREE.HalfFloatType });
+const cubeCam = new THREE.CubeCamera(0.05, 400, cubeRT);
+let probesStale = 0;                                    // when to take them again (0: they're current)
+function takeProbes() {
+  for (const pr of Object.values(probes)) {
+    if (!pr.materials.size) continue;
+    cubeCam.position.copy(pr.at);
+    cubeCam.update(renderer, scene);
+    const old = pr.tex;
+    pr.tex = pmrem.fromCubemap(cubeRT.texture).texture;
+    for (const m of pr.materials) {
+      m.envMap = pr.tex;
+      m.envMapIntensity = m.name === 'tile' ? 0.7 : 1;  // the polished floor: a softer picture of the bright ceiling
+      m.needsUpdate = true;                             // the program may want the new map's size (a cheap swap if not)
+    }
+    if (old) old.dispose();
+  }
+  probesStale = 0;
+  dirty();
+}
+function staleProbes(ms = 400) { probesStale = performance.now() + ms; }
+
 // ---- the model -------------------------------------------------------------------------------------------------------
-const texLoader = new THREE.TextureLoader();
 const glass = new THREE.MeshPhysicalMaterial({ color: 0xe6f0ef, metalness: 0, roughness: 0.03, transparent: true,
   opacity: 0.16, envMapIntensity: 1.4, depthWrite: false, side: THREE.DoubleSide });
 const artCache = {}, artOf = {};
-function artMaterial(art, kind, back) {
-  const id = `${art}:${kind}:${back}`;
+function artMaterial(art, kind, back, lit) {
+  const id = `${art}:${kind}:${back}:${lit ? 1 : 0}`;
   if (artCache[id]) return artCache[id];
   const k = KIND[kind] || KIND.sign;
   // The art loads when its graphic first goes on (see loadArt()); until then the piece isn't drawn.
@@ -1068,13 +1433,15 @@ function artMaterial(art, kind, back) {
     };
     m.customProgramCacheKey = () => 'printed-back';
   }
+  if (lit) bakeLight(m, true);
   return (artCache[id] = m);
 }
 const groups = {}, pickStatic = [], pickGfx = [];
-const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift']);
+const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
+  'rug', 'carpet', 'baseboard', 'screen', 'track']);
 // The cutaway: from above the roofline the roofs, ceilings and their lights come off, so the overview looks down into
 // every room, the way Silver Fox's isometric art shows a dealership.
-const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist']), cutaway = [];
+const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist', 'rtu', 'rtu-fan']), cutaway = [];
 const gltf = await new GLTFLoader().loadAsync(av('assets/3d/dealership.glb'),
   (e) => { $('#loaderBar').style.width = `${Math.round(100 * e.loaded / (e.total || 3.4e6))}%`; });
 const model = gltf.scene;
@@ -1089,7 +1456,11 @@ model.traverse((o) => {
     return;
   }
   if (ud.art) {
-    o.material = artMaterial(ud.art, ud.kind, ud.back);
+    o.material = artMaterial(ud.art, ud.kind, ud.back, BAKED && !!o.geometry.attributes.uv1);
+    if (ud.kind === 'flag') {
+      o.geometry = gridOf(o.geometry, 6, 14);
+      addSway(o.material, 'flag');
+    } else if (HANG_SPOTS.has(byKey[ud.gfx].spot)) addSway(o.material, 'hang');
     (artOf[ud.gfx] ||= new Set()).add(o.material);
     o.castShadow = !(KIND[ud.kind] || {}).flat;
     o.receiveShadow = true;
@@ -1109,12 +1480,15 @@ model.traverse((o) => {
     o.renderOrder = 2;
     return;
   }
-  if (name === 'light' || name === 'strip-light') {
+  if (name === 'light' || name === 'strip-light' || name === 'lamp') {
     o.material.emissiveIntensity = 2.4;
     pickStatic.push(o);
     return;
   }
-  if (name === 'tile') o.material.roughness = 0.3;    // softer than the render's, since only the sky reflects here
+  if (name === 'tile') o.material.roughness = 0.2;    // polished: it reflects the room (see "reflections inside")
+  surface(o.material, name);
+  if (BAKED && PROBE_MATS[name]) boxReflect(o.material, PROBE_MATS[name]);
+  if (BAKED && !NO_MAP.has(name) && o.geometry.attributes.uv1) bakeLight(o.material, false);
   if (INDOOR.has(name)) {
     // Sky light has no shadows, so it would reach every room as if there were no roof. Surfaces that are only ever
     // indoors take a little of it; their light comes from the ceiling lights.
@@ -1127,11 +1501,92 @@ model.traverse((o) => {
 scene.add(model);
 renderer.shadowMap.needsUpdate = true;
 
+// ---- trees and the horizon ----------------------------------------------------------------------------------------
+// Barrett, 2026-10-20 (the polish plan): trees along the street's far side, the site's edges and in groups in the
+// fields around, a few small ones in the grass strip and the median where they clear every graphic
+// (surroundings.plant()), and a band of distant trees on the horizon, which leaves a gap where the street runs out.
+// They keep the theme's season: orange and red for the fall themes, bare for the winter ones. They come after the
+// store (trees.glb), each kind drawn once for all its spots.
+const TREE_SEASON = { fall: 'fall', halloween: 'fall', thanksgiving: 'fall', holiday: 'bare', yearend: 'bare',
+  newyear: 'bare' };
+const RING_TINT = { summer: [1, 1, 1], fall: [1.5, 1.0, 0.55], bare: [0.95, 0.82, 0.78] };
+const leafMat = new THREE.MeshStandardMaterial({ roughness: 0.75, alphaTest: 0.45, side: THREE.DoubleSide });
+addSway(leafMat, 'leaves');
+const leafMaps = { summer: texture('leaves.webp', true, [1, 1]) };
+leafMat.map = leafMaps.summer;
+const barkMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.10, 0.085, 0.07), roughness: 0.9 });
+const potMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.82, 0.81, 0.78), roughness: 0.35 });
+const ringMat = new THREE.MeshBasicMaterial({ map: texture('treeline.webp', true, [1, 1]), alphaTest: 0.5,
+  side: THREE.DoubleSide });
+const leafMeshes = [];
+let treeSeason = 'summer';
+async function plantTrees() {
+  const kinds = S.treeKinds || [];
+  const g = await new GLTFLoader().loadAsync(av('assets/3d/trees.glb'));
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), UPY = new THREE.Vector3(0, 1, 0);
+  kinds.forEach((kind, i) => {
+    const spots = S.trees.at.filter((t) => t[3] === i);
+    let root = null;
+    g.scene.traverse((o) => { if (!root && o.name.toLowerCase().includes(kind)) root = o; });
+    if (!root || !spots.length) return;
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+      const leaves = /leaves/.test(o.material.name);
+      const im = new THREE.InstancedMesh(o.geometry, leaves ? leafMat : /pot/.test(o.material.name) ? potMat : barkMat,
+        spots.length);
+      spots.forEach(([x, y, z, , turn, k], j) => {
+        q.setFromAxisAngle(UPY, turn);
+        im.setMatrixAt(j, m.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(k, k, k)));
+      });
+      im.castShadow = im.receiveShadow = true;
+      if (leaves) leafMeshes.push(im);
+      scene.add(im);
+    });
+  });
+  // The horizon: a band of trees all round, 900 ft out.
+  const R = 274, H = 20, N = 128, pos = [], uv = [], idx = [];
+  for (let i = 0; i < N; i++) {
+    const a0 = (i / N) * Math.PI * 2, a1 = ((i + 1) / N) * Math.PI * 2;
+    if (S.street && Math.abs(center.z + R * Math.sin((a0 + a1) / 2) - S.street.z) < 26) continue;
+    const b = pos.length / 3;
+    for (const [a, u] of [[a0, (i / N) * 14], [a1, ((i + 1) / N) * 14]]) {
+      const x = center.x + R * Math.cos(a), z = center.z + R * Math.sin(a);
+      pos.push(x, -0.5, z, x, H, z);
+      uv.push(u, 0, u, 1);
+    }
+    idx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3);
+  }
+  const rg = new THREE.BufferGeometry();
+  rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  rg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  rg.setIndex(idx);
+  scene.add(new THREE.Mesh(rg, ringMat));
+  syncTrees(themeWas);
+  tintRing();
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+function syncTrees(themeId) {
+  const season = TREE_SEASON[themeId] || 'summer';
+  if (season === treeSeason) return;
+  treeSeason = season;
+  for (const im of leafMeshes) im.visible = season !== 'bare';
+  if (season !== 'bare') leafMat.map = leafMaps[season] ||= texture(`leaves-${season}.webp`, true, [1, 1]);
+  tintRing();
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+function tintRing() {
+  ringMat.color.setRGB(...RING_TINT[treeSeason]).multiplyScalar(night ? 0.12 : 1);
+}
+
 // ---- camera: a standing viewer who looks around and walks -------------------------------------------------------------
 const cam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, hfov: 60 };
 const deg = THREE.MathUtils.degToRad;
 function applyCamera() {
   camera.position.copy(cam.pos);
+  skyDome.position.copy(cam.pos);                      // the sky is always as far away
+  nightDome.position.copy(cam.pos);
   camera.rotation.set(cam.pitch, cam.yaw, 0, 'YXZ');
   camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(deg(cam.hfov) / 2) / camera.aspect));
   const w = stage.clientWidth, h = stage.clientHeight;
@@ -1307,6 +1762,7 @@ function pick(e) {
   if (!h) return;
   hideHint();
   if (h.object.userData.gfx) { select(h.object.userData.gfx); return; }
+  if (studioTarget(h.object)) { openStudio(); return; }  // a car or the studio door: the Vehicle Graphics Builder
   const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
   if (n.y > 0.7 && h.point.y < 1.0) walkTo(h.point);
 }
@@ -1324,6 +1780,7 @@ let focusByMouse = false;                             // did the focus last move
 addEventListener('pointerdown', () => { focusByMouse = true; }, true);
 addEventListener('keydown', (e) => { if (e.key === 'Tab') focusByMouse = false; }, true);
 addEventListener('keydown', (e) => {
+  if (studioOpen) { if (e.key === 'Escape') closeStudio(); return; }   // the vehicle builder has the keys
   if ((e.target instanceof Element && e.target.closest('input, textarea, dialog')) || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
   if (MOVE_KEYS.includes(k) || k === 'shift') {
@@ -1417,9 +1874,13 @@ $('#reset').addEventListener('click', () => goStop(state.view || lastStop[zoneNo
 
 // ---- inside or out: the light adjusts -----------------------------------------------------------------------------------
 const rooms = Object.values(S.rooms).map(([a, b]) => new THREE.Box3().setFromPoints([new THREE.Vector3(...a), new THREE.Vector3(...b)]));
+const ENTRY_RAMP = 12 * S.ft;                          // m: how far in from a room's front the eye takes to adjust
 let insideAmount = 0;
 function updateLight(dt) {
-  const target = rooms.some((b) => b.containsPoint(cam.pos)) ? 1 : 0;
+  // Inside, the eye opens up over the first 12 ft from the front: by the storefront's daylight, at the reception desk,
+  // it stays nearer the street's (Barrett, 2026-10-21: "too bright ... when you first enter the showroom").
+  const room = rooms.find((b) => b.containsPoint(cam.pos));
+  const target = room ? 0.6 + 0.4 * clamp((room.max.z - cam.pos.z) / ENTRY_RAMP, 0, 1) : 0;
   if (Math.abs(target - insideAmount) < 0.002) {
     if (insideAmount !== target) {
       insideAmount = target;
@@ -1462,7 +1923,9 @@ function showChosen() {
     g.visible = isOn(key) && !state.plain;
     if (g.visible) loadArt(key);
   }
+  syncSigns();
   renderer.shadowMap.needsUpdate = true;
+  if (BAKED) staleProbes(900);                          // the rooms' reflections, once the art is in
   dirty();
 }
 function loadArt(key) {
@@ -1609,6 +2072,7 @@ function goUpClose(key, withCard = !$('#info').hidden) {
         leaveStop();
         flyTo(v, clamp(cam.pos.distanceTo(v.pos) * 30, 700, 1800));
         upClose = true;
+        dofAt = c.center.clone();
         glow = { keys: [key], t0: performance.now() + (reduced ? 0 : 700) };
         return;
       }
@@ -1662,37 +2126,547 @@ function monthsAway(t) {
 }
 const monthText = (ms) => (ms.length === 2 && ms[1] === ms[0] + 1 ? `${MONTHS[ms[0] - 1]}–${MONTHS[ms[1] - 1]}`
   : ms.map((m) => MONTHS[m - 1]).join(', '));
-const themeOn = (t) => t.keys.every(isOn);
+const themeOn = (t) => { const k = keysOf(t); return k.length > 0 && k.every(isOn); };
 function applyTheme(t) {
   // A theme puts its graphics in their places and takes any other occasion's graphics off (back to the everyday ones);
   // clicked again, its graphics come off. Undo puts back what was there.
-  const next = new Map(state.chosen);
+  const next = new Map(state.chosen), K = keysOf(t);
   state.theme = themeOn(t) ? null : t.id;
   if (themeOn(t)) {
-    for (const k of t.keys) {
+    for (const k of K) {
       const sp = byKey[k].spot;
       if (EVERYDAY[sp] && EVERYDAY[sp] !== k) next.set(sp, EVERYDAY[sp]); else next.delete(sp);
     }
     setChosen(next, `Took off the ${t.title} set.`);
     return;
   }
-  const mine = new Set(t.keys.map((k) => byKey[k].spot));
+  const mine = new Set(K.map((k) => byKey[k].spot));
   for (const [sp, k] of [...next]) {
     if (!mine.has(sp) && seasonal(byKey[k]) && !byKey[k].themes.includes(t.id)) {
       if (EVERYDAY[sp]) next.set(sp, EVERYDAY[sp]); else next.delete(sp);
     }
   }
-  for (const k of t.keys) next.set(byKey[k].spot, k);
-  setChosen(next, `Put on the ${t.title} set: ${t.keys.length} ${t.keys.length === 1 ? 'graphic' : 'graphics'}.`);
+  for (const k of K) next.set(byKey[k].spot, k);
+  setChosen(next, `Put on the ${t.title} set: ${K.length} ${K.length === 1 ? 'graphic' : 'graphics'}.`);
   // A theme that dresses the store inside and out is shown from above with the roof off, all of it in view; one that
   // stays on one side, from the stop that sees most of it.
-  const zones = new Set(t.keys.map((k) => PRESET[SPOT[byKey[k].spot].view].zone));
+  const zones = new Set(K.map((k) => PRESET[SPOT[byKey[k].spot].view].zone));
   if (zones.size > 1) { goStop('overview'); return; }
   const votes = {};
-  for (const k of t.keys) { const v = SPOT[byKey[k].spot].view; votes[v] = (votes[v] || 0) + 1; }
+  for (const k of K) { const v = SPOT[byKey[k].spot].view; votes[v] = (votes[v] || 0) + 1; }
   goStop(Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0]);
-  glow = { keys: t.keys, t0: performance.now() + (reduced ? 0 : 900) };
+  glow = { keys: K, t0: performance.now() + (reduced ? 0 : 900) };
   pop(`.theme-card[data-theme="${t.id}"]`);
+}
+
+// ---- your store: a dealership's own name on the building, its make's jobs in every place ---------------------------------
+// Barrett, 2026-10-20 ("Proceed with this"): type a store's name and pick its make (and drop in its logo) and the model
+// becomes that store: its name in letters on the fascia and on a monument sign by the drive, its logo on the sign, and in
+// every place a real Silver Fox job from another store of that make, the store's own jobs first when it's a client. A
+// place the make has no job for stays bare rather than show another brand. The name, make and theme ride in the link; the
+// logo never leaves the browser it was dropped into (it's kept on that device, under the store's name).
+const MAKE = Object.fromEntries((C.makes || []).map((m) => [m.id, m.name]));
+const MAKE_WORDS = { cdjr: ['cdjr', 'chrysler', 'dodge', 'jeep', 'ram'], 'buick-gmc': ['buick', 'gmc'],
+  'mercedes-benz': ['mercedes', 'benz', 'sprinter'], chevrolet: ['chevrolet', 'chevy'], volkswagen: ['volkswagen', 'vw'],
+  'land-rover': ['land rover'], 'alfa-romeo': ['alfa romeo'] };
+const norm = (s) => s.toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+function guessMake(name) {
+  const n = ` ${norm(name)} `;
+  return Object.keys(MAKE).find((m) => (MAKE_WORDS[m] || [MAKE[m].toLowerCase()]).some((w) => n.includes(` ${w} `))) || '';
+}
+const fitsStore = (o) => !state.store || !!o.neutral || o.makes.includes(state.store.make);
+function ownJob(o) {
+  // The store's own job: its dealer is the store (a client's past work comes first).
+  if (!state.store || !o.makes.includes(state.store.make)) return false;
+  const a = norm(state.store.name), b = norm(o.dealer);
+  return a.length > 3 && b.length > 3 && (a.includes(b) || b.includes(a));
+}
+function storeList(spot) {
+  // A place's jobs for the store: its own first, then other stores' of its make, and stock products (any make).
+  const l = opts.filter((o) => o.spot === spot && fitsStore(o));
+  return [...l.filter(ownJob), ...l.filter((o) => !ownJob(o))];
+}
+const OCCASION_SPOTS = new Set(SPOTS.map((x) => x.id).filter((id) => !GENERIC_EVERYDAY[id]));   // a bow, the hoods
+function storeEveryday() {
+  const out = {};
+  for (const sp of SPOTS) {
+    if (OCCASION_SPOTS.has(sp.id) || sp.id === 'fascia') continue;      // the fascia carries the store's own name
+    const o = storeList(sp.id).find((x) => !seasonal(x));
+    if (o) out[sp.id] = o.key;
+  }
+  return out;
+}
+function keysOf(t) {
+  // A theme's set: as the catalog has it, or for the store, each place's first job of its make for the occasion.
+  if (!state.store) return t.keys;
+  if (!storeKeys.has(t.id)) {
+    storeKeys.set(t.id, SPOTS.filter((sp) => sp.id !== 'fascia')
+      .map((sp) => storeList(sp.id).find((o) => o.themes.includes(t.id))).filter(Boolean).map((o) => o.key));
+  }
+  return storeKeys.get(t.id);
+}
+const themeList = () => (state.store ? THEMES.filter((t) => keysOf(t).length >= 2) : THEMES);
+const RAIL_SUB = $('.rail-sub').textContent;
+function syncStoreUI() {
+  const st = state.store;
+  $('#storeBtnText').textContent = st ? st.name : 'Your store';
+  $('#storeBtn').setAttribute('aria-pressed', !!st);
+  $('.rail-sub').textContent = st ? `${st.name}, dressed with real Silver Fox jobs from other ${MAKE[st.make]} stores`
+    + `${opts.some(ownJob) ? ' and its own' : ''}. Its name is on the fascia and on the sign by the drive.` : RAIL_SUB;
+}
+function setStore(st, themeId = '', keep = false) {
+  // Into a store's view (st: { name, make, logo }), or back to the showcase (null). keep: the link named the graphics.
+  if (st && st.logo === undefined) st.logo = loadLogo(st.name);
+  else if (st && st.logo) saveLogo(st);
+  else if (st) dropLogo(st.name);
+  state.store = st;
+  storeKeys.clear();
+  EVERYDAY = st ? storeEveryday() : { ...GENERIC_EVERYDAY };
+  state.theme = null;
+  if (!keep) {
+    state.chosen = new Map(Object.entries(EVERYDAY));
+    showChosen();
+  }
+  syncStoreUI();
+  renderRail();
+  if (st) drawSigns(); else syncSigns();
+  drawHouseSigns();
+  const t = themeId && themeList().find((x) => x.id === themeId);
+  if (t && !themeOn(t)) applyTheme(t);
+  else if (!keep) {
+    goStop(st ? 'street' : 'overview');
+    if (st) toast(`${st.name}: real Silver Fox jobs from other ${MAKE[st.make]} stores.`);
+  }
+}
+
+// The store's logo: kept on this device only, under its name.
+const logoKey = (name) => `dsb-logo:${norm(name)}`;
+function loadLogo(name) { try { return localStorage.getItem(logoKey(name)) || null; } catch { return null; } }
+function saveLogo(st) { try { localStorage.setItem(logoKey(st.name), st.logo); } catch { /* a private window: it lasts the visit */ } }
+function dropLogo(name) { try { localStorage.removeItem(logoKey(name)); } catch { /* nothing kept */ } }
+const loadImage = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+function readLogo(file) {
+  // A picture file as a PNG at most 1024 px across (an SVG with no size of its own is drawn at 1024 x 512).
+  return new Promise((res, rej) => {
+    if (!file || !/^image\//.test(file.type)) { rej(new Error('not an image')); return; }
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        const img = await loadImage(r.result);
+        const w = img.naturalWidth || 1024, h = img.naturalHeight || 512, k = Math.min(1, 1024 / Math.max(w, h));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(w * k));
+        c.height = Math.max(1, Math.round(h * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/png'));
+      } catch (err) { rej(err); }
+    };
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+// The signs: the name in letters across the fascia (dark by day, lit white at night, like day/night acrylic letters),
+// and a two-sided monument sign by the drive with the logo over the name on a white face, lit at night.
+const INK = '#22262b';
+function makeSigns() {
+  const F = C.store.fascia, M = C.store.monument;
+  const g = new THREE.Group();
+  const fascia = new THREE.Mesh(new THREE.PlaneGeometry(F.w, F.h), new THREE.MeshStandardMaterial({ alphaTest: 0.5,
+    roughness: 0.45, metalness: 0.1, emissive: 0xffffff, emissiveIntensity: 0, polygonOffset: true, polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2 }));
+  fascia.position.set(F.at[0], F.at[1], F.at[2] + 0.02);                 // on the wall, facing the street (+Z)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(M.w + 0.25, 0.4, 0.5),
+    new THREE.MeshStandardMaterial({ color: 0x6d7076, roughness: 0.9 }));
+  base.position.set(M.at[0], 0.2, M.at[2]);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(M.w + 0.12, M.h + 0.12, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x23272d, roughness: 0.45, metalness: 0.3 }));
+  cab.position.set(...M.at);
+  const faceMat = new THREE.MeshStandardMaterial({ roughness: 0.35, emissive: 0xffffff, emissiveIntensity: 0 });
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(M.w, M.h), faceMat);
+  front.position.set(M.at[0], M.at[1], M.at[2] + 0.152);
+  const back = new THREE.Mesh(front.geometry, faceMat);
+  back.position.set(M.at[0], M.at[1], M.at[2] - 0.152);
+  back.rotation.y = Math.PI;
+  for (const m of [base, cab]) m.castShadow = m.receiveShadow = true;
+  g.add(base, cab, front, back, fascia);
+  g.visible = false;
+  scene.add(g);
+  return { g, fascia, faceMat };
+}
+function canvasTex(c) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+function setMaps(m, map, glow) {
+  for (const t of new Set([m.map, m.emissiveMap])) if (t) t.dispose();
+  Object.assign(m, { map, emissiveMap: glow });
+  m.needsUpdate = true;
+}
+function fitFont(x, lines, maxW, maxH) {
+  // The biggest bold size at which every line fits maxW across and maxH tall.
+  let size = Math.floor(maxH);
+  x.font = `800 ${size}px Montserrat, system-ui, sans-serif`;
+  const widest = Math.max(...lines.map((l) => x.measureText(l).width));
+  if (widest > maxW) size = Math.floor(size * maxW / widest);
+  x.font = `800 ${size}px Montserrat, system-ui, sans-serif`;
+  return size;
+}
+function nameLines(name, max) {
+  // A long name on two lines, split at the space nearest its middle.
+  const words = name.split(' ');
+  if (max < 2 || words.length < 2 || name.length <= 14) return [name];
+  let best = 1;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(' ').length;
+    if (Math.abs(a - name.length / 2) < Math.abs(words.slice(0, best).join(' ').length - name.length / 2)) best = i;
+  }
+  return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+}
+async function drawSigns() {
+  if (!state.store || !C.store) return;
+  signs ||= makeSigns();
+  const st = state.store, name = st.name.toUpperCase();
+  try { await document.fonts.load('800 64px Montserrat'); } catch { /* the fallback face */ }
+  if (state.store !== st) return;                                      // the store changed while the font loaded
+  const F = C.store.fascia, M = C.store.monument;
+  const fw = 2048, fh = Math.round(fw * F.h / F.w);
+  const letters = (color) => {
+    const c = document.createElement('canvas');
+    c.width = fw;
+    c.height = fh;
+    const x = c.getContext('2d');
+    fitFont(x, [name], fw * 0.96, fh * 0.74);
+    Object.assign(x, { fillStyle: color, textAlign: 'center', textBaseline: 'middle' });
+    x.fillText(name, fw / 2, fh * 0.54);
+    return canvasTex(c);
+  };
+  setMaps(signs.fascia.material, letters(INK), letters('#ffffff'));
+  const mw = 1024, mh = Math.round(mw * M.h / M.w);
+  const c = document.createElement('canvas');
+  c.width = mw;
+  c.height = mh;
+  const x = c.getContext('2d');
+  x.fillStyle = '#f4f5f6';
+  x.fillRect(0, 0, mw, mh);
+  let box = [mh * 0.12, mh * 0.88];
+  if (st.logo) {
+    try {
+      const img = await loadImage(st.logo);
+      const bw = mw * 0.8, bh = mh * 0.5, k = Math.min(bw / img.width, bh / img.height);
+      x.drawImage(img, (mw - img.width * k) / 2, mh * 0.08 + (bh - img.height * k) / 2, img.width * k, img.height * k);
+      box = [mh * 0.62, mh * 0.92];
+    } catch { /* a logo that won't draw: the name alone */ }
+  }
+  const lines = nameLines(name, st.logo ? 1 : 2), lh = (box[1] - box[0]) / lines.length;
+  fitFont(x, lines, mw * 0.86, lh * 0.8);
+  Object.assign(x, { fillStyle: INK, textAlign: 'center', textBaseline: 'middle' });
+  lines.forEach((l, i) => x.fillText(l, mw / 2, box[0] + lh * (i + 0.5)));
+  const face = canvasTex(c);
+  setMaps(signs.faceMat, face, face);
+  syncSigns();
+}
+// The store's own signs that are always up (the polish plan): lit letters on the dark panel over the doors, "SHOWROOM"
+// until a store is set, and "WELCOME" on the reception desk's front; in a store's view, its name, or its logo when one
+// was given. They glow after dark.
+const HOUSE = { portal: { text: 'SHOWROOM', glow: 1.4 }, desk: { text: 'WELCOME', glow: 0.5 } };
+const house = {};
+let houseFor = null;
+async function drawHouseSigns() {
+  if (!C.store) return;
+  const st = state.store, want = st ? `${st.name}|${st.logo ? st.logo.length : 0}` : '';
+  if (want === houseFor) return;
+  houseFor = want;
+  try { await document.fonts.load('800 64px Montserrat'); } catch { /* the fallback face */ }
+  if (houseFor !== want) return;                                       // the store changed while the font loaded
+  const logo = st && st.logo ? await loadImage(st.logo).catch(() => null) : null;
+  if (houseFor !== want) return;
+  for (const [id, h] of Object.entries(HOUSE)) {
+    const P = C.store[id];
+    if (!P) continue;
+    if (!house[id]) {
+      house[id] = new THREE.Mesh(new THREE.PlaneGeometry(P.w, P.h), new THREE.MeshStandardMaterial({ alphaTest: 0.5,
+        roughness: 0.4, emissive: 0xffffff, emissiveIntensity: 0, polygonOffset: true, polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2 }));
+      house[id].position.set(P.at[0], P.at[1], P.at[2] + 0.02);       // on its panel, facing the street (+Z)
+      scene.add(house[id]);
+    }
+    const w = 1024, ht = Math.round(w * P.h / P.w), c = document.createElement('canvas');
+    c.width = w;
+    c.height = ht;
+    const x = c.getContext('2d');
+    if (logo) {
+      const k = Math.min(w * 0.86 / logo.width, ht * 0.8 / logo.height);
+      x.drawImage(logo, (w - logo.width * k) / 2, (ht - logo.height * k) / 2, logo.width * k, logo.height * k);
+    } else {
+      const lines = st ? nameLines(st.name.toUpperCase(), 2) : [h.text], lh = ht * 0.62 / lines.length;
+      fitFont(x, lines, w * 0.84, lh * 0.82);
+      Object.assign(x, { fillStyle: '#ffffff', textAlign: 'center', textBaseline: 'middle' });
+      lines.forEach((l, i) => x.fillText(l, w / 2, ht * 0.19 + lh * (i + 0.5)));
+    }
+    const t = canvasTex(c);
+    setMaps(house[id].material, t, t);
+  }
+  syncSigns();
+}
+function syncSigns() {
+  // The signs show in a store's view; the fascia's letters step aside for a fascia job picked there.
+  for (const [id, m] of Object.entries(house)) m.material.emissiveIntensity = night ? HOUSE[id].glow : 0;
+  if (!signs) return;
+  signs.g.visible = !!state.store;
+  signs.fascia.visible = !!state.store && !state.chosen.get('fascia');
+  signs.fascia.material.emissiveIntensity = night ? 1.0 : 0;
+  signs.faceMat.emissiveIntensity = night ? 0.75 : 0;
+  renderer.shadowMap.needsUpdate = true;
+  dirty();
+}
+function viewName() {
+  // Up close to the store's name on the fascia, from the front walk.
+  const F = C.store.fascia, at = new THREE.Vector3(...F.at);
+  const eye = new THREE.Vector3(F.at[0], EYE + 0.5, F.at[2] + 17);
+  flyTo({ ...aim(eye, at), hfov: 52 });
+  upClose = true;
+}
+
+// The panel: name, make, logo and a theme to start with.
+let pendingLogo = null, logoTouched = false;
+function fillMakes(sel) {
+  const count = (m) => opts.filter((o) => o.makes.includes(m)).length;
+  const list = Object.keys(MAKE).map((m) => [m, MAKE[m], count(m)]).sort((a, b) => a[1].localeCompare(b[1]));
+  $('#storeMake').replaceChildren(new Option('Pick its make', ''),
+    ...list.map(([m, n, c]) => new Option(`${n} · ${c} ${c === 1 ? 'job' : 'jobs'}`, m)));
+  $('#storeMake').value = sel || '';
+}
+function fillThemes() {
+  // The themes the make has at least two jobs for, the season's first, with how many graphics each puts up.
+  const sel = $('#storeTheme'), keep = sel.value, make = $('#storeMake').value;
+  const list = [new Option('No theme: the everyday set', '')];
+  if (make) {
+    const was = state.store;
+    state.store = { name: $('#storeName').value.trim() || 'store', make };
+    storeKeys.clear();
+    for (const t of [...THEMES].sort((a, b) => monthsAway(a) - monthsAway(b))) {
+      const n = keysOf(t).length;
+      if (n >= 2) list.push(new Option(`${t.title}${t.months ? ` · ${monthText(t.months)}` : ''} · ${n} graphics`, t.id));
+    }
+    state.store = was;
+    storeKeys.clear();
+  }
+  sel.replaceChildren(...list);
+  sel.value = [...sel.options].some((o) => o.value === keep) ? keep : '';
+}
+function syncLogo() {
+  $('#logoPreview').hidden = !pendingLogo;
+  if (pendingLogo) $('#logoPreview').src = pendingLogo;
+  $('#logoClear').hidden = !pendingLogo;
+}
+function openStore() {
+  const st = state.store;
+  $('#storeName').value = st ? st.name : '';
+  delete $('#storeMake').dataset.touched;
+  fillMakes(st ? st.make : '');
+  fillThemes();
+  $('#storeTheme').value = state.theme && st ? state.theme : '';
+  pendingLogo = st ? st.logo : null;
+  logoTouched = false;
+  syncLogo();
+  $('#storeNote').textContent = '';
+  $('#storeOff').hidden = !st;
+  $('#storeDlg').showModal();
+}
+async function takeLogo(file) {
+  try {
+    pendingLogo = await readLogo(file);
+    logoTouched = true;
+    $('#storeNote').textContent = '';
+  } catch {
+    $('#storeNote').textContent = 'That file couldn’t be read as a picture. Try a PNG, JPG or SVG.';
+  }
+  syncLogo();
+}
+function storeForm() {
+  const name = $('#storeName').value.trim().replace(/\s+/g, ' '), make = $('#storeMake').value;
+  if (!name || !make) { $('#storeNote').textContent = 'Type the store’s name and pick its make.'; return null; }
+  return { name, make, theme: $('#storeTheme').value };
+}
+$('#storeBtn').addEventListener('click', openStore);
+$('#storeClose').addEventListener('click', () => $('#storeDlg').close());
+$('#storeName').addEventListener('input', () => {
+  const g = guessMake($('#storeName').value);
+  if (g && !$('#storeMake').dataset.touched && $('#storeMake').value !== g) { $('#storeMake').value = g; fillThemes(); }
+});
+$('#storeName').addEventListener('change', () => {
+  if (!logoTouched) { pendingLogo = loadLogo($('#storeName').value.trim()); syncLogo(); }   // a store this device knows
+});
+$('#storeMake').addEventListener('change', () => { $('#storeMake').dataset.touched = '1'; fillThemes(); });
+const drop = $('#logoDrop');
+drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); takeLogo(e.dataTransfer.files[0]); });
+$('#logoPick').addEventListener('click', () => $('#logoFile').click());
+$('#logoFile').addEventListener('change', () => { takeLogo($('#logoFile').files[0]); $('#logoFile').value = ''; });
+$('#logoClear').addEventListener('click', () => { pendingLogo = null; logoTouched = true; syncLogo(); });
+$('#storeGo').addEventListener('click', () => {
+  const f = storeForm();
+  if (!f) return;
+  $('#storeDlg').close();
+  setStore({ name: f.name, make: f.make, logo: pendingLogo }, f.theme);
+});
+$('#storeOff').addEventListener('click', () => { $('#storeDlg').close(); setStore(null); });
+$('#storeLink').addEventListener('click', async () => {
+  // A link to the store's view, its everyday set or the theme picked: the logo isn't in it.
+  const f = storeForm();
+  if (!f) return;
+  const q = new URLSearchParams({ store: f.name, make: f.make });
+  if (f.theme) q.set('t', f.theme);
+  const url = `${location.origin}${location.pathname}${location.search}#${q}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    $('#storeNote').textContent = 'Link copied. The logo isn’t in it: it stays on this device.';
+  } catch {
+    $('#storeNote').textContent = url;
+  }
+});
+
+// ---- the vehicle studio: the Vehicle Graphics Builder over the dealership ------------------------------------------------
+// Barrett, 2026-10-20: "make one of the doors clickable, and upon clicking, the user is transported to the builder page
+// (like its a showroom)", then "Go with your suggestion": a car, the "Vehicle Graphics Studio" door on the service wing,
+// or the studio dot over the showroom car opens the Vehicle Graphics Builder over the 3D store, the car wearing what the
+// lot's cars wear. "Back to the dealership" returns to the same spot and puts the build made there on the lot's cars (its
+// windshield banner, hood graphic and body side; the builder's other pieces stay with it). The two builders share
+// silver-fox-marketing.github.io, so this page can read the other's link; opened from another site (a local copy), the
+// car still goes in but the build doesn't come back. Served from the vault's output folder (the "builders" preview), the
+// page finds its sibling package there instead. ?vgb=URL points at another copy, but only on this page's own site or
+// silver-fox-marketing.github.io, over http(s): the address goes into the studio's frame, so a link must not be able to
+// put a javascript: URL or someone else's page there.
+const VGB_HOME = 'https://silver-fox-marketing.github.io/vehicle-graphics-builder/';
+const VGB_DEFAULT = location.pathname.includes('/dealership-showroom-3d/')
+  ? new URL('../content-slate-aug-oct-2026/vehicle-graphics-configurator/', location.href).href : VGB_HOME;
+function safeVgb(raw) {
+  try {
+    const u = new URL(raw, location.href);
+    if (/^https?:$/.test(u.protocol) && (u.origin === location.origin || u.origin === new URL(VGB_HOME).origin)) return u.href;
+  } catch { /* not a URL */ }
+  return VGB_DEFAULT;
+}
+const VGB = safeVgb(new URLSearchParams(location.search).get('vgb') || VGB_DEFAULT);
+const VGB_SAME = new URL(VGB, location.href).origin === location.origin;
+const CAR_SPOTS = ['car-windshield', 'car-hood', 'car-bodyside'];
+const STUDIO = '\u0000studio';                          // the hover key for a way into the studio
+const CAR_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 9.6 4.2 6.4a1.5 1.5 0 0 1 1.4-1h4.8a1.5 1.5 0 0 1 1.4 1L13 9.6v3a.5.5 0 0 1-.5.5h-1.2a.5.5 0 0 1-.5-.5v-.7H5.2v.7a.5.5 0 0 1-.5.5H3.5a.5.5 0 0 1-.5-.5zm2-3-.8 2.2h7.6L11 6.6a.5.5 0 0 0-.5-.3h-5a.5.5 0 0 0-.5.3zM4.8 10a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6zm6.4 0a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6z"/></svg>';
+let studioOpen = false, studioDoor = null;
+const isCar = (o) => { const m = o.userData.mat || (o.material && o.material.name) || ''; return /^paint\d+$/.test(m) || m === 'cabin'; };
+const studioTarget = (o) => o === studioDoor || isCar(o);
+function studioVehicle() {
+  // The builder's vehicle for the store's make: the Wrangler for a Jeep store, the Silverado for the truck brands.
+  const m = state.store && state.store.make;
+  return m === 'cdjr' ? 'wrangler' : ['chevrolet', 'buick-gmc', 'cadillac', 'ford', 'lincoln'].includes(m) ? 'silverado' : 'rav4';
+}
+function openStudio() {
+  if (studioOpen || !C.studio) return;
+  const g = CAR_SPOTS.map((sp) => state.chosen.get(sp)).filter((k) => k && k.startsWith('vgb-')).map((k) => k.slice(4));
+  $('#studioFrame').src = `${VGB}#v=${studioVehicle()}&g=${g.join(',')}`;
+  $('#studioNote').textContent = VGB_SAME ? 'Back puts your build on the lot’s cars.' : '';
+  $('#studio').hidden = false;
+  studioOpen = true;
+  setHover(null);
+  history.pushState({ studio: true }, '');              // the browser's Back closes it too
+  $('#studioBack').focus();
+}
+function closeStudio(fromHistory = false) {
+  if (!studioOpen) return;
+  let back = null, vehicle = null;
+  try {
+    const q = new URLSearchParams($('#studioFrame').contentWindow.location.hash.slice(1));
+    back = q.get('g');
+    vehicle = q.get('v');
+  } catch { /* the builder on another site: its build can't be read from here */ }
+  if (back !== null) state.vehicle = { v: vehicle || studioVehicle(), g: back.split(',').filter(Boolean) };
+  studioOpen = false;
+  $('#studio').hidden = true;
+  $('#studioFrame').src = 'about:blank';
+  if (!fromHistory) history.back();
+  if (back !== null) bringBack(back.split(',').filter(Boolean));
+  dirty();
+}
+// One quote for both builders: the build made in the vehicle studio rides along in the package. The review lists it under
+// the vehicle it was built on, the copied list and the quote email carry it with a link back to it, and the page's link
+// keeps it (vv and vg). Its names and sizes come from the vehicle builder's own catalog (its assets/layout.js).
+let vgbCatalog = null;
+function vehicleCatalog() {
+  vgbCatalog ||= fetch(new URL('assets/layout.js', new URL(VGB, location.href))).then((r) => r.text())
+    .then((t) => JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))).catch(() => null);
+  return vgbCatalog;
+}
+const vehicleLink = () => (state.vehicle ? `${new URL(VGB, location.href).href.split('#')[0]}#v=${state.vehicle.v}&g=${state.vehicle.g.join(',')}` : '');
+let vehicleText = '';                                   // the build as list lines, once the catalog has come
+async function vehicleRows() {
+  const vb = state.vehicle;
+  const L = vb && vb.g.length ? await vehicleCatalog() : null;
+  if (!L || state.vehicle !== vb) return null;
+  const by = Object.fromEntries(L.options.map((o) => [o.key, o])), grp = Object.fromEntries(L.groups.map((g) => [g.id, g.title]));
+  const name = (L.vehicles.find((x) => x.id === vb.v) || {}).name || 'the vehicle';
+  const rows = vb.g.filter((k) => by[k]).map((k) => by[k]);
+  vehicleText = rows.length ? `\n\nOn the ${name}, from the vehicle builder (${vehicleLink()}):\n`
+    + rows.map((o) => `- ${grp[o.group] || o.group}: ${o.shape}, ${o.size[0]} × ${o.size[1]} in. ${o.where}. Example job: ${o.dealer}.`).join('\n') : '';
+  return { name, rows, grp };
+}
+function bringBack(keys) {
+  // The build's pieces that have a place on the lot's cars go on them (one a place, as the builder lists them); a car
+  // place the build left empty comes off the cars too.
+  const next = new Map(state.chosen), took = new Set();
+  for (const k of keys) {
+    const o = byKey[`vgb-${k}`];
+    if (!o || took.has(o.spot)) continue;
+    took.add(o.spot);
+    next.set(o.spot, o.key);
+  }
+  for (const sp of CAR_SPOTS) if (!took.has(sp)) next.delete(sp);
+  if (CAR_SPOTS.every((sp) => next.get(sp) === state.chosen.get(sp))) { syncAll(); return; }
+  const left = keys.length - took.size;
+  setChosen(next, `Your vehicle build is on the lot’s cars${left ? ` (${left} of its pieces have no place on them here)` : ''}.`);
+}
+// Closing goes back one step in the history (the step opening it added); the address then needs the page's state again.
+addEventListener('popstate', () => { if (studioOpen) closeStudio(true); else updateUrl(); });
+$('#studioBack').addEventListener('click', () => closeStudio());
+function makeStudioDoor() {
+  // The door graphic on the service wing's west door: Vehicle Graphics Studio, lit a little at night.
+  const D = C.studio.door, c = document.createElement('canvas');
+  c.width = 640;
+  c.height = Math.round(640 * D.h / D.w);
+  const tex = canvasTex(c);
+  const m = new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.4, emissive: 0xffffff, emissiveMap: tex,
+    emissiveIntensity: 0.25, depthWrite: false });
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(D.w, D.h), m);
+  door.position.set(...D.at);
+  door.renderOrder = 3;
+  scene.add(door);
+  pickStatic.push(door);
+  (async () => {
+    try { await document.fonts.load('800 64px Montserrat'); } catch { /* the fallback face */ }
+    const x = c.getContext('2d'), W = c.width, H = c.height;
+    x.fillStyle = 'rgba(27, 42, 74, 0.88)';
+    x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    x.lineWidth = 6;
+    x.strokeRect(14, 14, W - 28, H - 28);
+    Object.assign(x, { fillStyle: '#ffffff', textAlign: 'center', textBaseline: 'middle' });
+    ['VEHICLE', 'GRAPHICS', 'STUDIO'].forEach((l, i) => {
+      fitFont(x, [l], W * 0.78, H * 0.12);
+      x.fillText(l, W / 2, H * (0.2 + 0.13 * i));
+    });
+    try {
+      const icon = await loadImage(`data:image/svg+xml,${encodeURIComponent(CAR_ICON.replace('currentColor', '#FD410D'))}`);
+      x.drawImage(icon, W / 2 - H * 0.12, H * 0.56, H * 0.24, H * 0.24);
+    } catch { /* the words alone */ }
+    x.font = `600 ${Math.round(H * 0.055)}px Montserrat, system-ui, sans-serif`;
+    x.fillText('Click to step in', W / 2, H * 0.88);
+    tex.needsUpdate = true;
+    dirty();
+  })();
+  return door;
 }
 
 // ---- rail ---------------------------------------------------------------------------------------------------------------
@@ -1709,7 +2683,7 @@ const GROUP_TAB = { 'Storefront glass': 'Storefront', 'Service drive': 'Service'
 function card(o) {
   const b = document.createElement('button');
   b.type = 'button';
-  b.className = 'card';
+  b.className = ownJob(o) ? 'card own' : 'card';
   b.dataset.key = o.key;
   b.setAttribute('aria-pressed', isOn(o.key));
   b.innerHTML = `<span class="card-art"><img alt="" loading="lazy"><span class="card-check">${CHECK}</span></span>`
@@ -1747,13 +2721,13 @@ function renderThemes(body) {
   note.className = 'themes-note';
   note.textContent = 'One click dresses the dealership for the occasion; everyday graphics stay on.';
   body.append(note);
-  const away = monthsAway;
-  const ahead = THEMES.filter((t) => t.months && away(t) > 0).sort((a, b) => away(a) - away(b));
+  const away = monthsAway, list = themeList();         // a store's view: the themes its make can dress
+  const ahead = list.filter((t) => t.months && away(t) > 0).sort((a, b) => away(a) - away(b));
   const sets = [                        // the next three months in view; the rest of the year folded away
-    ['In season now', THEMES.filter((t) => away(t) === 0)],
+    ['In season now', list.filter((t) => away(t) === 0)],
     ['Coming up', ahead.filter((t) => away(t) <= 3)],
     ['Later in the year', ahead.filter((t) => away(t) > 3), true],
-    ['Dealer programs', THEMES.filter((t) => !t.months)],
+    ['Dealer programs', list.filter((t) => !t.months)],
   ];
   for (const [title, list, fold] of sets) {
     if (!list.length) continue;
@@ -1767,7 +2741,7 @@ function renderThemes(body) {
       b.type = 'button';
       b.className = 'theme-card';
       b.dataset.theme = t.id;
-      const shots = t.keys.slice(0, 4);
+      const shots = keysOf(t).slice(0, 4);
       b.innerHTML = `<span class="theme-shot${shots.length === 1 ? ' one' : ''}">${shots.map(() => '<img alt="" loading="lazy">').join('')}`
         + `${t.months ? '<span class="theme-when"></span>' : ''}<span class="card-check">${CHECK}</span></span>`
         + '<span class="theme-name"></span><span class="theme-count"></span><span class="theme-blurb"></span>';
@@ -1838,10 +2812,20 @@ function renderRail() {
       const where = document.createElement('p');
       where.className = 'grp-blurb';
       where.textContent = sp.where;
-      const mine = opts.filter((x) => x.spot === sp.id);
+      // A store's view lists its make's jobs (its own first), and folds the other makes' away.
+      const all = opts.filter((x) => x.spot === sp.id);
+      const mine = state.store ? storeList(sp.id) : all, rest = state.store ? all.filter((o) => !fitsStore(o)) : [];
       const folds = (o) => occasionOf(o) && EVERYDAY[o.spot] !== o.key;   // the place's starting job stays in view
       const now = mine.filter((o) => !folds(o)), later = mine.filter(folds);
       sec.append(h, where);
+      const say = state.store && sp.id === 'fascia' ? `${state.store.name}’s name is here. Pick a job to see another store’s letters instead.`
+        : state.store && !mine.length ? `No ${MAKE[state.store.make]} job for this place yet, so it stays bare.` : '';
+      if (say) {
+        const p = document.createElement('p');
+        p.className = 'store-none';
+        p.textContent = say;
+        sec.append(p);
+      }
       if (now.length) {
         const grid = document.createElement('div');
         grid.className = 'cards';
@@ -1849,6 +2833,18 @@ function renderRail() {
         sec.append(grid);
       }
       if (later.length) sec.append(occasionCards(later, !now.length || later.some((o) => isOn(o.key))));
+      if (rest.length) {
+        const box = document.createElement('details');
+        box.className = 'occ';
+        box.open = rest.some((o) => isOn(o.key));
+        const sum = document.createElement('summary');
+        sum.textContent = `Other makes · ${rest.length} ${rest.length === 1 ? 'job' : 'jobs'}`;
+        const g = document.createElement('div');
+        g.className = 'cards';
+        for (const o of rest) g.append(card(o));
+        box.append(sum, g);
+        sec.append(box);
+      }
       body.append(sec);
     }
   }
@@ -1900,7 +2896,8 @@ function syncAll() {
     const t = THEMES.find((x) => x.id === c.dataset.theme);
     const on = themeOn(t);
     c.setAttribute('aria-pressed', on);
-    c.querySelector('.theme-count').textContent = on ? 'On the dealership' : `${t.keys.length} ${t.keys.length === 1 ? 'graphic' : 'graphics'}`;
+    const n = keysOf(t).length;
+    c.querySelector('.theme-count').textContent = on ? 'On the dealership' : `${n} ${n === 1 ? 'graphic' : 'graphics'}`;
   }
   for (const b of document.querySelectorAll('.rail-tab')) {
     const id = b.dataset.tab;
@@ -1911,7 +2908,7 @@ function syncAll() {
     badge.textContent = n;
     badge.hidden = !n;
   }
-  $('#count').textContent = state.chosen.size;
+  $('#count').textContent = state.chosen.size + (state.vehicle ? state.vehicle.g.filter((k) => !byKey[`vgb-${k}`] || !isOn(`vgb-${k}`)).length : 0);
   syncDetail();
   syncThemePill();
   updateUrl();
@@ -1920,7 +2917,7 @@ function syncAll() {
 // ---- review ---------------------------------------------------------------------------------------------------------------
 const chosen = () => [...state.chosen.values()].map((k) => byKey[k]);
 const listText = () => chosen().map((o) => `- ${o.product}, ${sizeText(o)}. ${SPOT[o.spot].where} Example job: ${o.dealer}`
-  + `${o.installed ? ` (installed as: ${o.installed})` : ''}.`).join('\n');
+  + `${o.installed ? ` (installed as: ${o.installed})` : ''}.`).join('\n') + (state.vehicle ? vehicleText : '');
 let toastTimer;
 function toast(text, action) {
   const t = $('#toast'), act = $('#toastAct');
@@ -1945,11 +2942,40 @@ function openSheet() {
     return tr;
   });
   $('#sheetRows').replaceChildren(...rows);
-  $('#sheetEmpty').hidden = rows.length > 0;
-  const body = `I'd like a quote on these dealership graphics:\n\n${listText()}\n\nSee them on the dealership: ${location.href}\n`;
+  $('#sheetEmpty').hidden = rows.length > 0 || !!state.vehicle;
+  const st = state.store;
+  $('#sheetTitle').textContent = st ? `${st.name}: dealership graphics` : 'Your dealership graphics';
+  $('#sheetSub').textContent = st ? `Shown on a model dealership with ${st.name}’s name, using real Silver Fox jobs from other `
+    + `${MAKE[st.make]} stores as examples.` : 'Shown on a generic dealership, using real Silver Fox jobs as examples.';
+  const body = `I'd like a quote on these dealership graphics${st ? ` for ${st.name}` : ''}:\n\n${listText()}\n\n`
+    + `See them on the dealership: ${location.href}\n`;
   $('#quote').href = `mailto:${QUOTE_TO}?subject=${encodeURIComponent('Dealership graphics quote')}&body=${encodeURIComponent(body)}`;
   $('#sheetNote').textContent = '';
   $('#sheet').showModal();
+  // The vehicle build, when there is one: its rows under the vehicle's name, and in the quote and the list.
+  vehicleRows().then((v) => {
+    if (!v || !v.rows.length || !$('#sheet').open) return;
+    const head = document.createElement('tr');
+    head.className = 'r-head';
+    head.innerHTML = '<td colspan="3"></td>';
+    head.firstChild.textContent = `On the ${v.name}, from the vehicle builder`;
+    const vehRows = v.rows.map((o) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td><span class="r-graphic"><img class="r-thumb" alt=""><span><span class="r-name"></span>'
+        + '<span class="r-dealer"></span></span></span></td><td class="r-where"></td><td class="r-size"></td>';
+      load(tr.querySelector('img'), new URL(o.thumb, new URL(VGB, location.href)).href);
+      tr.querySelector('.r-name').textContent = `${v.grp[o.group] || o.group}: ${o.shape}`;
+      tr.querySelector('.r-dealer').textContent = `${o.message} · as made for ${o.dealer}`;
+      tr.querySelector('.r-where').textContent = o.where;
+      tr.querySelector('.r-size').textContent = `${o.size[0]} × ${o.size[1]} in`;
+      return tr;
+    });
+    $('#sheetRows').append(head, ...vehRows);
+    $('#sheetEmpty').hidden = true;
+    const all = `I'd like a quote on these dealership graphics${st ? ` for ${st.name}` : ''}:\n\n${listText()}\n\n`
+      + `See them on the dealership: ${location.href}\n`;
+    $('#quote').href = `mailto:${QUOTE_TO}?subject=${encodeURIComponent('Dealership graphics quote')}&body=${encodeURIComponent(all)}`;
+  });
 }
 async function copy(text, done) {
   try { await navigator.clipboard.writeText(text); $('#sheetNote').textContent = done; }
@@ -1984,22 +3010,26 @@ function setPlain(plain) {
 $('#before').addEventListener('click', () => setPlain(true));
 $('#after').addEventListener('click', () => setPlain(false));
 $('#everyday').addEventListener('click', () => setChosen(new Map(Object.entries(EVERYDAY)), 'Back to the everyday set.'));
-$('#allOff').addEventListener('click', () => setChosen(new Map(), 'Took every graphic off.'));
+$('#allOff').addEventListener('click', () => { state.vehicle = null; setChosen(new Map(), 'Took every graphic off.'); });
 
 // ---- pins: a dot on each kind of graphic, numbered as on the placement sheet ----------------------------------------------
 const PIN_SPOTS = SPOTS.filter((x) => x.pin);
+// The studio's dot over the showroom car: a way into the Vehicle Graphics Builder, with the places' dots but not the tour.
+const PIN_ALL = C.studio ? [...PIN_SPOTS, { id: 'studio', pin: C.studio.display, group: 'Vehicles', label: 'Vehicle Graphics Builder' }]
+  : PIN_SPOTS;
 const pinEl = {}, pinSeen = {};
 function buildPins() {
-  $('#pins').replaceChildren(...PIN_SPOTS.map((x) => {
+  $('#pins').replaceChildren(...PIN_ALL.map((x) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'pin off';
+    b.className = x.id === 'studio' ? 'pin studio-pin off' : 'pin off';
     b.style.setProperty('--c', COLOR[x.group] || 'var(--ink-3)');
     b.innerHTML = '<span class="pin-dot" aria-hidden="true"></span><span class="pin-label"></span>';
-    b.querySelector('.pin-dot').textContent = x.n;
+    if (x.id === 'studio') b.querySelector('.pin-dot').innerHTML = CAR_ICON;
+    else b.querySelector('.pin-dot').textContent = x.n;
     b.querySelector('.pin-label').textContent = x.label;
     b.addEventListener('pointerdown', (e) => e.stopPropagation());      // not the start of a look-around drag
-    b.addEventListener('click', (e) => { e.stopPropagation(); pickProduct(x.id); });
+    b.addEventListener('click', (e) => { e.stopPropagation(); if (x.id === 'studio') openStudio(); else pickProduct(x.id); });
     return (pinEl[x.id] = b);
   }));
 }
@@ -2017,7 +3047,7 @@ function placePins(now, settle = false) {
   const recast = settle || now - pinCastAt > 150;
   if (recast) pinCastAt = now;
   const w = stage.clientWidth, h = stage.clientHeight;
-  for (const x of PIN_SPOTS) {
+  for (const x of PIN_ALL) {
     pinAt.set(...x.pin);
     const dist = pinAt.distanceTo(camera.position);
     if (recast) {
@@ -2043,12 +3073,15 @@ function stepProduct(d) {
 function pickProduct(id) {
   const sp = SPOT[id];
   hideHint();
-  if (!state.chosen.get(id)) {                         // an empty place gets its everyday job, to have something to show
-    const k = EVERYDAY[id] || (opts.find((o) => o.spot === id) || {}).key;
+  const nameHere = state.store && id === 'fascia' && !state.chosen.get(id);   // a store's name on its fascia
+  if (!state.chosen.get(id) && !nameHere) {             // an empty place gets its everyday job, to have something to show
+    const k = EVERYDAY[id] || ((state.store ? storeList(id) : opts.filter((o) => o.spot === id))[0] || {}).key;
     if (k) { choose(k); showChosen(); }
   }
   const key = state.chosen.get(id);
   if (key) { state.focus = key; goUpClose(key, true); }
+  else if (nameHere) viewName();
+  else goStop(sp.view);                                 // nothing of the store's make for it: the place's stop
   if (state.tab !== sp.group) { state.tab = sp.group; renderRail(); }
   showInfo(id);
   syncAll();
@@ -2069,8 +3102,8 @@ function showInfo(id) {
   const img = $('#infoImg');
   img.hidden = !info.image;
   if (info.image) load(img, av(info.image));
-  const n = opts.filter((o) => o.spot === id).length;
-  $('#infoJobs').textContent = `See the ${n} real ${n === 1 ? 'job' : 'jobs'}`;
+  const n = (state.store ? storeList(id) : opts.filter((o) => o.spot === id)).length;
+  $('#infoJobs').textContent = n ? `See the ${n} real ${n === 1 ? 'job' : 'jobs'}` : `No ${MAKE[state.store.make]} jobs here yet`;
   $('#infoJobs').onclick = () => {
     if (state.tab !== sp.group) { state.tab = sp.group; renderRail(); }
     const sec = document.querySelector(`.spot-sec[data-spot="${id}"]`);
@@ -2107,9 +3140,9 @@ function setHover(key, e) {
   const tip = $('#tip');
   tip.hidden = !key;
   if (!key) return;
-  const o = byKey[key];
-  $('#tipName').textContent = SPOT[o.spot].label;
-  $('#tipMsg').textContent = o.message;
+  const o = key === STUDIO ? null : byKey[key];
+  $('#tipName').textContent = o ? SPOT[o.spot].label : 'Vehicle Graphics Builder';
+  $('#tipMsg').textContent = o ? o.message : 'Click to open a car in the vehicle builder';
   const r = stage.getBoundingClientRect();
   tip.style.transform = `translate(${Math.min(e.clientX - r.left + 14, r.width - 270)}px, ${e.clientY - r.top + 16}px)`;
 }
@@ -2123,7 +3156,7 @@ canvas.addEventListener('pointermove', (e) => {
   ray.setFromCamera(ndc, camera);
   ray.far = 2000;
   const h = ray.intersectObjects([...pickGfx, ...pickStatic], false).filter((x) => shown(x.object))[0];
-  setHover(h && h.object.userData.gfx ? h.object.userData.gfx : null, e);
+  setHover(h ? h.object.userData.gfx || (studioTarget(h.object) ? STUDIO : null) : null, e);
 });
 canvas.addEventListener('pointerleave', () => { if (hoverKey) setHover(null); });
 
@@ -2137,8 +3170,8 @@ function syncThemePill() {
   syncWeather();
 }
 function flipTheme(d) {
-  const i = THEMES.findIndex((x) => x.id === state.theme);
-  applyTheme(THEMES[(i + d + THEMES.length) % THEMES.length]);
+  const list = themeList(), i = list.findIndex((x) => x.id === state.theme);
+  applyTheme(list[(i + d + list.length) % list.length]);
 }
 $('#themePrev').addEventListener('click', () => flipTheme(-1));
 $('#themeNext').addEventListener('click', () => flipTheme(1));
@@ -2154,7 +3187,9 @@ $('#themeOff').addEventListener('click', () => {
 // store) has no weather. Black Friday brings the night instead (see "day and night").
 const WEATHER = { holiday: 'snow', yearend: 'snow', newyear: 'snow', fall: 'leaves', halloween: 'leaves',
   thanksgiving: 'leaves' };
-const GROUND = { snow: { grass: 0xd9dee4, roof: 0xe6e9ed }, leaves: { grass: 0x4d4718 } };   // snow on the grass and roofs
+// Snow covers the grass and roofs (their texture off, so it's white); fallen leaves turn the lawn olive and brown.
+const GROUND = { snow: { grass: { rgb: [0.69, 0.73, 0.78], plain: true }, roof: { rgb: [0.79, 0.81, 0.85] } },
+  leaves: { grass: { rgb: [1.5, 1.0, 0.45] } } };
 const FALL_VS = `
 uniform float time, scale;
 uniform vec3 lo0, hi0, lo1, hi1;
@@ -2224,14 +3259,27 @@ function fallers(n, leaves) {
 }
 const named = {};
 model.traverse((o) => { if (o.isMesh && !o.userData.gfx && o.material && o.material.name) named[o.material.name] ||= o.material; });
-const groundDay = Object.fromEntries(['grass', 'roof'].filter((k) => named[k]).map((k) => [k, named[k].color.clone()]));
+const groundDay = Object.fromEntries(['grass', 'roof'].filter((k) => named[k])
+  .map((k) => [k, { color: named[k].color.clone(), map: named[k].map }]));
 let weather = null, falling = null, weatherT0 = 0, weatherAt = 0;
 const fallen = {};
+function setGroundMap(m, map) {
+  if (m.map === map) return;
+  m.map = map;
+  m.needsUpdate = true;
+}
 function setWeather(w) {
-  for (const [k, c] of Object.entries(groundDay)) named[k].color.copy(c);
+  for (const [k, d] of Object.entries(groundDay)) {
+    named[k].color.copy(d.color);
+    setGroundMap(named[k], d.map);
+  }
   for (const pts of Object.values(fallen)) pts.visible = false;
   weather = w;
-  for (const [k, hex] of Object.entries(GROUND[w] || {})) if (named[k]) named[k].color.set(hex);
+  for (const [k, g] of Object.entries(GROUND[w] || {})) {
+    if (!named[k]) continue;
+    named[k].color.setRGB(...g.rgb);
+    if (g.plain) setGroundMap(named[k], null);
+  }
   if (w) {
     falling = fallen[w] ||= fallers(w === 'snow' ? (coarse ? 6000 : 12000) : (coarse ? 400 : 750), w === 'leaves');
     falling.material.uniforms.glow.value = night ? NIGHT.fall : 1;
@@ -2254,9 +3302,10 @@ function syncWeather() {
   }
   const w = id && !state.plain ? WEATHER[id] || null : null;
   if (w !== weather) setWeather(w);
+  syncTrees(id && !state.plain ? id : null);
 }
 function updateWeather(now) {
-  if (!falling || (reduced && now - weatherT0 > 100) || now - weatherAt < 33) return false;
+  if (!falling || studioOpen || (reduced && now - weatherT0 > 100) || now - weatherAt < 33) return false;
   weatherAt = now;
   const u = falling.material.uniforms;
   u.time.value = reduced ? 0 : (now - weatherT0) / 1000;
@@ -2278,7 +3327,7 @@ function updateWeather(now) {
 // overhead, a lighter blue at the horizon, and the last light low in the west (before the exposure).
 const NIGHT = { zenith: 0x121a30, horizon: 0x303852, glow: 0x453028, west: new THREE.Vector3(-0.86, 0, 0.5).normalize(),
   moon: new THREE.Vector3(0.3, 0.8, 0.52).normalize(), moonLight: 0.12, moonColor: 0x9fb6e6, expo: 0.72, env: 1.4,
-  pole: 100, canopy: 22, wallpack: 26, fall: 0.35 };
+  pole: 250, canopy: 40, wallpack: 40, fall: 0.35 };   // as bake.py's NIGHT_* (the baked light is theirs)
 const NIGHT_SKY_VS = `
 varying vec3 vDir;
 void main() {
@@ -2313,6 +3362,7 @@ nightDome.position.copy(center);
 nightDome.renderOrder = -1;
 scene.add(nightDome);
 envScene.add(nightEnvSky);
+if (BAKED) NIGHT.expo = 6.0;                          // the baked lot lights, in the sun's units: the eye opens wide
 const NIGHT_LIT = { fascia: 0.55, bldg: 0.55, clings: 0.3, door: 0.3, bow: 0.3, letters: 0.2 };   // lit after dark
 const NIGHT_THEMES = new Set(['blackfriday']);
 const dayLight = { expo: EXPO.out, env: ENV.out, sun: sun.intensity, color: sun.color.clone() };
@@ -2418,7 +3468,13 @@ function setNight(on, by = 'user') {
   showNight(on);
 }
 function showNight(on) {
+  syncSigns();                                          // a store's signs light up after dark
   setSky(on, on ? NIGHT.moon : sunToward);
+  lmDirect.value = on ? 0 : 1;                          // the night's map holds the lot's lights and the moon
+  for (const m of baked) setLightMap(m, on);
+  staleProbes(600);
+  scene.fog.color.copy(on ? new THREE.Color(NIGHT.horizon) : HAZE);
+  tintRing();
   sun.intensity = on ? NIGHT.moonLight : dayLight.sun;
   sun.color.set(on ? NIGHT.moonColor : dayLight.color);
   relight({ expo: { out: on ? NIGHT.expo : dayLight.expo }, env: { out: on ? NIGHT.env : dayLight.env } });
@@ -2454,46 +3510,94 @@ function updateCutaway() {
   return true;
 }
 // ---- drawing: only when something changes ------------------------------------------------------------------------------
-let composer = null;
-if (!coarse) {
+// Quality (Barrett, 2026-10-20, the polish plan). High: soft contact shadows, a glow round the lights and lit signs,
+// the background a little soft in a close-up, flags, banners and leaves moving in the air, a sharper sun shadow. Low:
+// none of those, for a steady frame rate on a small GPU. Phones start low, computers high; the HD button switches it
+// and the choice is kept on this device.
+let composer = null, bloom = null, dof = null, dofAt = null;
+let hq = !coarse;
+try { const q = localStorage.getItem('dsb-quality'); if (q) hq = q === 'high'; } catch { /* the default */ }
+function makeComposer() {
   const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
-  composer = new EffectComposer(renderer, rt);
-  composer.addPass(new RenderPass(scene, camera));
+  const c = new EffectComposer(renderer, rt);
+  c.addPass(new RenderPass(scene, camera));
   const ao = new GTAOPass(scene, camera, 1, 1);
-  ao.blendIntensity = 0.85;
+  ao.blendIntensity = BAKED ? 0.5 : 0.85;              // the light maps have the rooms' own shade: AO for the rest
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0 });
-  composer.addPass(ao);
-  composer.addPass(new OutputPass());
+  c.addPass(ao);
+  bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.45, 1.4);    // only what's brighter than daylight
+  c.addPass(bloom);
+  dof = new BokehPass(scene, camera, { focus: 10, aperture: 0.0016, maxblur: 0.005 });
+  dof.enabled = false;
+  c.addPass(dof);
+  c.addPass(new OutputPass());
+  return c;
 }
+function setQuality(on, keep = true) {
+  hq = on;
+  if (keep) try { localStorage.setItem('dsb-quality', on ? 'high' : 'low'); } catch { /* a private window */ }
+  if (on && !composer) composer = makeComposer();
+  renderer.setPixelRatio(Math.min(devicePixelRatio, on ? 2 : 1.25));
+  const n = on && !coarse ? 4096 : 2048;
+  if (sun.shadow.mapSize.x !== n) {
+    sun.shadow.mapSize.set(n, n);
+    if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+    renderer.shadowMap.needsUpdate = true;
+  }
+  $('#hdToggle').setAttribute('aria-pressed', on);
+  resize();
+}
+$('#hdToggle').addEventListener('click', () => { setQuality(!hq); toast(hq ? 'High quality on' : 'High quality off: smoother on a slower device'); });
 let needs = true;
 function dirty() { needs = true; }
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / Math.max(1, h);
-  if (composer) composer.setSize(w, h);
+  if (composer) {
+    composer.setPixelRatio(renderer.getPixelRatio());
+    composer.setSize(w, h);
+  }
   dirty();
 }
 new ResizeObserver(resize).observe(stage);
+let lastInput = performance.now(), swayAt = 0;
+for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown']) addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true });
+function updateSway(now) {
+  // In high quality, outside (trees, flags) or under hung banners, and until 20 s after the last touch: a still page
+  // doesn't keep the GPU busy.
+  if (!hq || reduced || studioOpen || now - lastInput > 20000 || now - swayAt < 33) return false;
+  swayAt = now;
+  swayT.value = now / 1000;
+  return true;
+}
 let last = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
-    | updateWeather(now) | updateJump(dt);
+    | updateWeather(now) | updateJump(dt) | updateSway(now);
+  if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
   if (!busy && !needs) {
     if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
+    if (probesStale && now > probesStale) takeProbes();              // the rooms' reflections, while nothing moves
     return;
   }
   needs = false;
   applyCamera();
-  if (composer) composer.render(); else renderer.render(scene, camera);
+  if (dof) {                                            // a close-up: the background a little soft
+    dof.enabled = hq && upClose && !!dofAt;
+    if (dof.enabled) dof.uniforms.focus.value = camera.position.distanceTo(dofAt);
+  }
+  if (hq && composer) composer.render(); else renderer.render(scene, camera);
   placePins(now);
   pinsStale = true;
 }
 
+setQuality(hq, false);
 showChosen();
+if (C.studio) studioDoor = makeStudioDoor();
 buildPins();
 if (coarse) $('#hint').textContent = 'Tap a numbered dot to see a kind of graphic. Drag to look around, pinch to zoom.';
 renderRail();
@@ -2502,7 +3606,16 @@ const first = PRESET.overview;
 Object.assign(cam, aim(new THREE.Vector3(...first.eye), new THREE.Vector3(...first.target)), { hfov: first.hfov });
 renderTabs();
 requestAnimationFrame(loop);
+if (S.trees) plantTrees().catch((err) => console.warn('trees', err));
+drawHouseSigns();
 if (p.get('n') === '1') setNight(true);               // a link to the night view
+if (p.get('vv')) {                                     // a link with a vehicle build in it
+  state.vehicle = { v: p.get('vv'), g: (p.get('vg') || '').split(',').filter(Boolean) };
+  syncAll();
+}
+if (p.get('store') && MAKE[p.get('make')]) {            // a link to a store's view (its graphics too, when it names them)
+  setStore({ name: p.get('store').slice(0, 48), make: p.get('make') }, p.get('t') || '', p.has('g'));
+}
 $('#loader').classList.add('done');
 setTimeout(() => $('#loader').remove(), 500);
 // For checks in the browser: the scene, the camera, the stops, and the light settings (relight() applies them).
@@ -2517,7 +3630,8 @@ function relight(v = {}) {
   dirty();
 }
 window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state,
-  NIGHT, setNight, pickProduct };
+  NIGHT, setNight, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES, setQuality,
+  baked, probes };
 </script>
 </body>
 </html>

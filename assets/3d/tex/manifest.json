@@ -1,0 +1,112 @@
+{
+ "asphalt": {
+  "map": "asphalt.webp",
+  "tile": [
+   16.0,
+   16.0
+  ]
+ },
+ "concrete": {
+  "map": "concrete.webp",
+  "tile": [
+   10.0,
+   10.0
+  ],
+  "normal": "concrete_n.webp"
+ },
+ "grass": {
+  "map": "grass.webp",
+  "tile": [
+   10.0,
+   10.0
+  ]
+ },
+ "mulch": {
+  "map": "mulch.webp",
+  "tile": [
+   6.0,
+   6.0
+  ]
+ },
+ "panel": {
+  "map": "panel.webp",
+  "tile": [
+   20.0,
+   8.0
+  ],
+  "normal": "panel_n.webp"
+ },
+ "cmu": {
+  "map": "cmu.webp",
+  "tile": [
+   8.0,
+   8.0
+  ],
+  "normal": "cmu_n.webp"
+ },
+ "tile": {
+  "map": "tile.webp",
+  "tile": [
+   8.0,
+   8.0
+  ],
+  "normal": "tile_n.webp"
+ },
+ "carpet": {
+  "map": "carpet.webp",
+  "tile": [
+   4.0,
+   4.0
+  ]
+ },
+ "ceiling": {
+  "map": "ceiling.webp",
+  "tile": [
+   8.0,
+   8.0
+  ],
+  "normal": "ceiling_n.webp"
+ },
+ "epoxy": {
+  "map": "epoxy.webp",
+  "tile": [
+   8.0,
+   8.0
+  ]
+ },
+ "wood": {
+  "map": "wood.webp",
+  "tile": [
+   4.0,
+   4.0
+  ]
+ },
+ "bark": {
+  "map": "bark.webp",
+  "tile": [
+   2.0,
+   4.0
+  ]
+ },
+ "leaves": {
+  "map": "leaves.webp",
+  "tile": [
+   1.0,
+   1.0
+  ]
+ },
+ "leaves-fall": {
+  "map": "leaves-fall.webp",
+  "tile": [
+   1.0,
+   1.0
+  ]
+ },
+ "treeline": {
+  "map": "treeline.webp",
+  "tile": [
+   1.0,
+   1.0
+  ]
+ }
+}
