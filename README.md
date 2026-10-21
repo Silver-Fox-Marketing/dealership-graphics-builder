@@ -1,6 +1,6 @@
 # Dealership Graphics Builder
 
-Silver Fox Marketing's dealership graphics on a walk-around 3D dealership: pole banners, ground frames and flags on the lot, window film and lettering on the storefront, banners, wall graphics, floor graphics and signs inside, the lounge and the service drive, and vehicle graphics on the cars. Every graphic is a real Silver Fox job, shown at its installed size.
+Silver Fox Marketing's dealership graphics on a walk-around 3D dealership: pole banners, ground frames and flags on the lot, window film and lettering on the storefront, banners, wall graphics, floor graphics, signs and digital screens inside, the lounge and the service drive, and vehicle graphics on the cars. Every graphic is a real Silver Fox job, shown at its installed size.
 
 **Open it:** https://silver-fox-marketing.github.io/dealership-graphics-builder/ on a computer, tablet or phone. There's nothing to install. A computer shows it best.
 
