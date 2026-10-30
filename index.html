@@ -984,7 +984,7 @@ img { max-width: none; }
     <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
   </div>
 </dialog>
-<script src="assets/3d/catalog.js?v=20261021e"></script>
+<script src="assets/3d/catalog.js?v=5da66e522c"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
@@ -1006,7 +1006,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = 'a68bd91421';
+const ASSET_V = '5da66e522c';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -4018,9 +4018,10 @@ $('#themeOff').addEventListener('click', () => {
 
 // ---- the season's weather: snow and falling leaves ---------------------------------------------------------------------
 // Barrett, 2026-10-19 ("clearer and more fun"): the theme that's on brings its season: snow for the winter ones and
-// falling leaves for the fall ones. They fall outside only (the vertex shader drops any inside the showroom or the
-// service wing), at about 30 frames a second, and hold still for anyone who asks for less motion. 'Before' (the bare
-// store) has no weather. Black Friday brings the night instead (see "day, dusk and night").
+// falling leaves for the fall ones (real leaves since 2026-10-30: see "the fall themes' leaves"). They fall outside only
+// (the vertex shader drops any inside the showroom or the service wing), at about 30 frames a second, and hold still for
+// anyone who asks for less motion. 'Before' (the bare store) has no weather. Black Friday brings the night instead (see
+// "day, dusk and night").
 const WEATHER = { holiday: 'snow', yearend: 'snow', newyear: 'snow', fall: 'leaves', halloween: 'leaves',
   thanksgiving: 'leaves' };
 // Snow covers the grass and roofs (their texture off, so it's white); fallen leaves turn the lawn olive and brown.
@@ -4030,15 +4031,9 @@ const FALL_VS = `
 uniform float time, scale;
 uniform vec3 lo0, hi0, lo1, hi1;
 attribute vec4 seed;
-varying vec4 vSeed;
-varying float vSpin;
 bool within(vec3 p, vec3 a, vec3 b) { return all(greaterThan(p, a)) && all(lessThan(p, b)); }
 void main() {
-#ifdef LEAVES
-  float fall = 0.8 + 0.7 * seed.x, sway = 1.3, size = 0.19;      // leaves drawn larger than life, to read from the street
-#else
   float fall = 0.6 + 0.5 * seed.x, sway = 0.3, size = 0.05;
-#endif
   vec3 p = position;
   p.y = mod(position.y - time * fall, 18.0);
   p.x += sway * sin(time * (0.5 + 0.6 * seed.y) + 6.283 * seed.z);
@@ -4046,32 +4041,17 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = within(p, lo0, hi0) || within(p, lo1, hi1) ? vec4(2.0, 2.0, 2.0, 1.0) : projectionMatrix * mv;
   gl_PointSize = clamp(size * (0.7 + 0.6 * seed.w) * scale / -mv.z, 1.0, 48.0);
-  vSeed = seed;
-  vSpin = time * (0.8 + 2.0 * seed.z) + 6.283 * seed.w;
 }`;
 const FALL_FS = `
 uniform float glow;
-varying vec4 vSeed;
-varying float vSpin;
 void main() {
-  vec2 c = gl_PointCoord - 0.5;
-#ifdef LEAVES
-  float s = sin(vSpin), k = cos(vSpin);
-  c = mat2(k, -s, s, k) * c;
-  c.y *= 1.0 + 0.8 * abs(sin(vSpin * 0.7));            // tumbling: thinner as it turns edge on
-  if (length(c * vec2(2.0, 1.0)) > 0.48) discard;      // a leaf, twice as long as it is wide
-  vec3 col = vSeed.x < 0.3 ? vec3(0.62, 0.15, 0.03) : vSeed.x < 0.6 ? vec3(0.78, 0.33, 0.04)
-    : vSeed.x < 0.85 ? vec3(0.74, 0.52, 0.07) : vec3(0.33, 0.17, 0.05);
-  gl_FragColor = vec4(col * (1.2 + 0.6 * vSeed.y) * glow, 1.0);
-#else
-  float d = length(c);
+  float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
   gl_FragColor = vec4(vec3(1.9 * glow), 1.0 - smoothstep(0.15, 0.5, d));
-#endif
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
-function fallers(n, leaves) {
+function fallers(n) {
   const H = 18, x0 = site.min.x - 6, x1 = site.max.x + 6, z0 = site.min.z - 6, z1 = site.max.z;
   const pos = new Float32Array(n * 3), seed = new Float32Array(n * 4);
   for (let i = 0; i < n; i++) {
@@ -4084,14 +4064,215 @@ function fallers(n, leaves) {
   const m = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, scale: { value: 800 }, glow: { value: 1 }, lo0: { value: rooms[0].min },
       hi0: { value: rooms[0].max }, lo1: { value: rooms[1].min }, hi1: { value: rooms[1].max } },
-    defines: leaves ? { LEAVES: '' } : {}, vertexShader: FALL_VS, fragmentShader: FALL_FS,
-    transparent: !leaves, depthWrite: leaves,
+    vertexShader: FALL_VS, fragmentShader: FALL_FS, transparent: true, depthWrite: false,
   });
   const pts = new THREE.Points(g, m);
   pts.frustumCulled = false;
   pts.visible = false;
   scene.add(pts);
   return pts;
+}
+// ---- the fall themes' leaves: falling and fallen ---------------------------------------------------------------------
+// Barrett, 2026-10-30: "Lets make the leaves more realistic for this. This involves making them better for the builder
+// as well". Real leaves: sixteen of them (textures.py's leaf atlas: maple, oak, linden and elm, the kinds planted round
+// the lot, in their reds, oranges, golds and browns), life size (4 to 7 in), lit by the sun, the sky and the lot's lights
+// as the trees are, with some of their own color for the light that comes through a leaf (more in the air than on
+// the ground, where nothing lights them from behind).
+// - In the air: most let go from the trees round the lot, each with its own tree's leaves; the rest from higher up. Each
+//   falls about a meter a second and drifts on a light breeze toward the street. Most flutter as a falling leaf does,
+//   swinging side to side, tilting into each swing and turning slowly; about one in four tumbles end over end. All of it
+//   in the vertex shader from each leaf's own numbers and the clock, so the page only moves the clock (updateWeather()).
+// - On the ground: over the grass, the beds and the walks, thickest under the trees and thin on the asphalt, each lying
+//   a little curled at its own angle, some browner than others. Placed once, the first time a fall theme comes on.
+// Neither shows inside the showroom or the service wing. Both are one draw each, and are kept out of the passes that
+// redraw the scene in a material of their own (ambient occlusion, the close-up blur), which can't move them.
+const LEAF_N = coarse ? 900 : 2000, LITTER_N = coarse ? 8000 : 24000;
+const LEAF_WIND = new THREE.Vector2(0.5, 0.18);         // m/s: a light breeze toward the east and the street
+const LITTER_ON = { grass: 1, mulch: 1, concrete: 0.5, asphalt: 0.12 };   // how readily a fallen leaf stays on each
+const LEAF_CELLS = { maple: [0, 6], oak: [6, 10], linden: [10, 13], pear: [13, 16] };   // the atlas's leaves by tree
+const LEAF_SOURCES = (S.trees ? S.trees.at : []).filter(([x, , z, k]) => LEAF_CELLS[(S.treeKinds || [])[k]]
+  && x > site.min.x - 14 && x < site.max.x + 14 && z > site.min.z - 14 && z < site.max.z + 16);
+const leafT = { value: 0 }, leafMats = [];
+const noAO = [];                                        // drawn where their own shader puts them (see makeComposer())
+let leafAtlas = null, litter = null;
+const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+const leafOf = (t) => {                                 // a leaf from this tree (or any, with none)
+  const [a, b] = t ? LEAF_CELLS[S.treeKinds[t[3]]] : [0, 16];
+  return a + Math.floor(Math.random() * (b - a));
+};
+const leafSource = (share = 0.6) => (LEAF_SOURCES.length && Math.random() < share
+  ? LEAF_SOURCES[Math.floor(Math.random() * LEAF_SOURCES.length)] : null);
+const LEAF_UV = `
+#ifdef USE_MAP
+	vMapUv = ( uv + vec2( mod( leafK, 4.0 ), 3.0 - floor( leafK / 4.0 ) ) ) * 0.25;
+#endif
+#ifdef USE_EMISSIVEMAP
+	vEmissiveMapUv = ( uv + vec2( mod( leafK, 4.0 ), 3.0 - floor( leafK / 4.0 ) ) ) * 0.25;
+#endif`;
+const LEAF_POSE = `
+uniform float leafT;
+uniform vec2 leafWind;
+uniform vec3 lo0, hi0, lo1, hi1;
+attribute vec3 leafAt;                                  // where it lets go: x, height, z
+attribute vec4 leafSeed;
+mat3 leafTurn( vec3 a, float t ) {
+	float c = cos( t ), s = sin( t ), k = 1.0 - c;
+	return mat3( c + a.x * a.x * k, a.y * a.x * k + a.z * s, a.z * a.x * k - a.y * s,
+		a.x * a.y * k - a.z * s, c + a.y * a.y * k, a.z * a.y * k + a.x * s,
+		a.x * a.z * k + a.y * s, a.y * a.z * k - a.x * s, c + a.z * a.z * k );
+}
+bool leafIn( vec3 p, vec3 a, vec3 b ) { return all( greaterThan( p, a ) ) && all( lessThan( p, b ) ); }
+void leafPose( out vec3 c, out mat3 R, out float size ) {
+	vec4 s = leafSeed;
+	float v = 0.75 + 0.6 * s.x;                         // m/s down
+	float top = leafAt.y;
+	float tau = fract( s.y + leafT * v / top ) * top / v;   // seconds since it let go
+	float a = ( 1.6 + 1.6 * s.z ) * leafT + 6.2832 * s.w;   // its swing
+	float h = 6.2832 * fract( s.x * 7.13 + s.w );
+	vec2 dir = vec2( cos( h ), sin( h ) );
+	float amp = 0.15 + 0.35 * fract( s.z * 3.7 );
+	c = vec3( leafAt.x, top - tau * v - 0.05 * cos( 2.0 * a ), leafAt.z );
+	c.xz += leafWind * tau * ( 0.7 + 0.6 * fract( s.y * 5.3 ) );
+	size = 0.12 + 0.06 * fract( s.w * 9.1 );
+	const mat3 FLAT = mat3( 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0 );   // the card laid face up
+	if ( fract( s.y * 11.7 ) < 0.25 ) {                 // a tumbler: end over end about an axis of its own
+		vec3 ax = normalize( vec3( fract( s.x * 3.1 ), fract( s.z * 5.7 ), fract( s.w * 2.3 ) ) - 0.499 );
+		R = leafTurn( ax, leafT * ( 4.0 + 5.0 * fract( s.x * 13.3 ) ) + 6.2832 * s.y ) * FLAT;
+		c.xz += dir * amp * 0.4 * sin( a );
+	} else {                                            // a flutterer: side to side, tilting into each swing, turning
+		c.xz += dir * amp * sin( a );
+		float yaw = 6.2832 * fract( s.w * 4.7 ) + leafT * ( fract( s.z * 17.1 ) - 0.5 ) * 1.6;
+		R = leafTurn( vec3( -dir.y, 0.0, dir.x ), 0.75 * sin( a ) ) * leafTurn( vec3( 0.0, 1.0, 0.0 ), yaw ) * FLAT;
+	}
+	if ( leafIn( c, lo0, hi0 ) || leafIn( c, lo1, hi1 ) ) size = 0.0;   // never inside the showroom or the service wing
+}
+`;
+function leafMaterial(kind, glow, pose) {
+  // A leaf from the atlas (its cell from leafK), both faces lit; in the air, posed by LEAF_POSE.
+  leafAtlas ||= texture(TEX.leaf.map, true, [1, 1]);
+  const m = new THREE.MeshStandardMaterial({ map: leafAtlas, emissiveMap: leafAtlas, emissive: 0xffffff,
+    emissiveIntensity: glow, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8 });
+  m.userData.glow = glow;
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { leafT, leafWind: { value: LEAF_WIND }, lo0: { value: rooms[0].min },
+      hi0: { value: rooms[0].max }, lo1: { value: rooms[1].min }, hi1: { value: rooms[1].max } });
+    let vs = 'attribute float leafK;\n' + (pose ? LEAF_POSE : '') + sh.vertexShader;
+    vs = vs.replace('#include <uv_vertex>', `#include <uv_vertex>${LEAF_UV}`);
+    if (pose) {
+      vs = vs.replace('#include <beginnormal_vertex>', `vec3 leafC; mat3 leafR; float leafS;
+	leafPose( leafC, leafR, leafS );
+	vec3 objectNormal = leafR * vec3( 0.0, 0.0, 1.0 );`)
+        .replace('#include <begin_vertex>', 'vec3 transformed = leafC + leafR * ( position * leafS );');
+    }
+    sh.vertexShader = vs;
+  };
+  m.customProgramCacheKey = () => `leaf-${kind}`;
+  leafMats.push(m);
+  return m;
+}
+function leafLight() {
+  // The light through a leaf: less at dusk, least at night.
+  const k = !night ? 1 : dusk ? 0.55 : 0.2;
+  for (const m of leafMats) m.emissiveIntensity = m.userData.glow * k;
+}
+function leafFall(n) {
+  const g = new THREE.InstancedBufferGeometry().copy(new THREE.PlaneGeometry(1, 1));
+  const at = new Float32Array(n * 3), seed = new Float32Array(n * 4), k = new Float32Array(n);
+  const x0 = site.min.x - 6, x1 = site.max.x + 6, z0 = site.min.z - 6, z1 = site.max.z - 2;
+  for (let i = 0; i < n; i++) {
+    const t = leafSource();
+    const top = t ? (3 + 6 * Math.random()) * t[5] : 5 + 11 * Math.random();
+    at.set(t ? [t[0] + gauss() * 2.6 * t[5], top, t[2] + gauss() * 2.6 * t[5]]
+      : [x0 + Math.random() * (x1 - x0) - LEAF_WIND.x * top * 0.6, top,
+        z0 + Math.random() * (z1 - z0) - LEAF_WIND.y * top * 0.6], i * 3);
+    seed.set([Math.random(), Math.random(), Math.random(), Math.random()], i * 4);
+    k[i] = leafOf(t);
+  }
+  g.setAttribute('leafAt', new THREE.InstancedBufferAttribute(at, 3));
+  g.setAttribute('leafSeed', new THREE.InstancedBufferAttribute(seed, 4));
+  g.setAttribute('leafK', new THREE.InstancedBufferAttribute(k, 1));
+  g.instanceCount = n;
+  const mesh = new THREE.Mesh(g, leafMaterial('fall', 0.3, true));
+  Object.assign(mesh, { frustumCulled: false, visible: false, receiveShadow: true });
+  noAO.push(mesh);
+  scene.add(mesh);
+  return mesh;
+}
+function groundAt() {
+  // The top of the ground near the store (its grass, beds, walks and asphalt, from the model's own faces, in 3 m
+  // cells): (x, z) -> { y, w } for the highest there, w its LITTER_ON, or null.
+  const X0 = site.min.x - 16, X1 = site.max.x + 16, Z0 = site.min.z - 12, Z1 = site.max.z + 18, CELL = 3;
+  const nx = Math.ceil((X1 - X0) / CELL), nz = Math.ceil((Z1 - Z0) / CELL);
+  const cells = Array.from({ length: nx * nz }, () => []);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), e = new THREE.Vector3(),
+    f = new THREE.Vector3();
+  model.updateMatrixWorld(true);
+  model.traverse((o) => {
+    const w = o.isMesh && !o.userData.gfx && o.material && LITTER_ON[o.material.name];
+    if (!w) return;
+    const pos = o.geometry.attributes.position, idx = o.geometry.index, n = idx ? idx.count : pos.count;
+    for (let i = 0; i < n; i += 3) {
+      a.fromBufferAttribute(pos, idx ? idx.getX(i) : i).applyMatrix4(o.matrixWorld);
+      b.fromBufferAttribute(pos, idx ? idx.getX(i + 1) : i + 1).applyMatrix4(o.matrixWorld);
+      c.fromBufferAttribute(pos, idx ? idx.getX(i + 2) : i + 2).applyMatrix4(o.matrixWorld);
+      if (Math.abs(e.subVectors(b, a).cross(f.subVectors(c, a)).normalize().y) < 0.8) continue;   // a curb's face
+      const lx = Math.min(a.x, b.x, c.x), hx = Math.max(a.x, b.x, c.x), lz = Math.min(a.z, b.z, c.z),
+        hz = Math.max(a.z, b.z, c.z);
+      if (hx < X0 || lx >= X1 || hz < Z0 || lz >= Z1) continue;
+      const t = [a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, w];
+      for (let ix = Math.max(0, Math.floor((lx - X0) / CELL)); ix <= Math.min(nx - 1, Math.floor((hx - X0) / CELL)); ix++) {
+        for (let iz = Math.max(0, Math.floor((lz - Z0) / CELL)); iz <= Math.min(nz - 1, Math.floor((hz - Z0) / CELL)); iz++) {
+          cells[iz * nx + ix].push(t);
+        }
+      }
+    }
+  });
+  const at = (x, z) => {
+    if (x < X0 || x >= X1 || z < Z0 || z >= Z1) return null;
+    let best = null;
+    for (const [ax, ay, az, bx, by, bz, cx, cy, cz, w] of cells[Math.floor((z - Z0) / CELL) * nx + Math.floor((x - X0) / CELL)]) {
+      const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+      if (Math.abs(d) < 1e-9) continue;
+      const l1 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d, l2 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d;
+      if (l1 < 0 || l2 < 0 || l1 + l2 > 1) continue;
+      const y = l1 * ay + l2 * by + (1 - l1 - l2) * cy;
+      if (!best || y > best.y + 0.005 || (y > best.y - 0.005 && w < best.w)) best = { y, w };   // a tie: the paving
+    }
+    return best;
+  };
+  return { at, X0, X1, Z0, Z1 };
+}
+function leafLitter(n) {
+  const ground = groundAt();
+  const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), leafMaterial('litter', 0.06, false), n);
+  const k = new Float32Array(n), m = new THREE.Matrix4(), p = new THREE.Vector3(), sc = new THREE.Vector3(),
+    q = new THREE.Quaternion(), tilt = new THREE.Quaternion(), axis = new THREE.Vector3(), col = new THREE.Color(),
+    FLAT = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2), UPY = new THREE.Vector3(0, 1, 0);
+  let i = 0;
+  for (let tries = 0; i < n && tries < n * 12; tries++) {
+    const t = leafSource(0.8), r = t && 3.2 * t[5] * Math.sqrt(-Math.log(1 - Math.random())) ** 0.8;   // dense at the trunk
+    const h = Math.random() * Math.PI * 2;
+    const x = t ? t[0] + r * Math.cos(h) + LEAF_WIND.x * 2 : ground.X0 + Math.random() * (ground.X1 - ground.X0);
+    const z = t ? t[2] + r * Math.sin(h) + LEAF_WIND.y * 2 : ground.Z0 + Math.random() * (ground.Z1 - ground.Z0);
+    const g = ground.at(x, z);
+    if (!g || Math.random() > g.w) continue;
+    p.set(x, g.y + 0.014, z);
+    if (rooms.some((r) => r.containsPoint(p))) continue;
+    const b = Math.random() * Math.PI * 2;
+    tilt.setFromAxisAngle(axis.set(Math.cos(b), 0, Math.sin(b)), Math.random() * 0.2);
+    q.setFromAxisAngle(UPY, Math.random() * Math.PI * 2);
+    const size = 0.09 + 0.06 * Math.random();
+    im.setMatrixAt(i, m.compose(p, tilt.multiply(q).multiply(FLAT), sc.set(size, size, size)));
+    const v = 0.72 + 0.32 * Math.random();
+    im.setColorAt(i, Math.random() < 0.35 ? col.setRGB(v * 0.86, v * 0.72, v * 0.6) : col.setRGB(v, v, v));   // some older, browner
+    k[i++] = leafOf(t);
+  }
+  im.count = i;
+  im.geometry.setAttribute('leafK', new THREE.InstancedBufferAttribute(k, 1));
+  Object.assign(im, { visible: false, receiveShadow: true, frustumCulled: false });
+  noAO.push(im);
+  scene.add(im);
+  return im;
 }
 const named = {};
 model.traverse((o) => { if (o.isMesh && !o.userData.gfx && o.material && o.material.name) named[o.material.name] ||= o.material; });
@@ -4110,6 +4291,7 @@ function setWeather(w) {
     setGroundMap(named[k], d.map);
   }
   for (const pts of Object.values(fallen)) pts.visible = false;
+  if (litter) litter.visible = false;
   weather = w;
   for (const [k, g] of Object.entries(GROUND[w] || {})) {
     if (!named[k]) continue;
@@ -4117,8 +4299,10 @@ function setWeather(w) {
     if (g.plain) setGroundMap(named[k], null);
   }
   if (w) {
-    falling = fallen[w] ||= fallers(w === 'snow' ? (coarse ? 6000 : 12000) : (coarse ? 400 : 750), w === 'leaves');
-    falling.material.uniforms.glow.value = night && !dusk ? NIGHT.fall : 1;
+    falling = fallen[w] ||= w === 'leaves' ? leafFall(LEAF_N) : fallers(coarse ? 6000 : 12000);
+    if (w === 'leaves') (litter ||= leafLitter(LITTER_N)).visible = true;
+    else falling.material.uniforms.glow.value = night && !dusk ? NIGHT.fall : 1;
+    leafLight();
     falling.visible = true;
     weatherT0 = performance.now();
   } else falling = null;
@@ -4143,8 +4327,13 @@ function syncWeather() {
 function updateWeather(now) {
   if (!falling || studioOpen || (reduced && now - weatherT0 > 100) || now - weatherAt < 33) return false;
   weatherAt = now;
+  const t = reduced ? 0 : (now - weatherT0) / 1000;
+  if (weather === 'leaves') {
+    leafT.value = t;
+    return true;
+  }
   const u = falling.material.uniforms;
-  u.time.value = reduced ? 0 : (now - weatherT0) / 1000;
+  u.time.value = t;
   u.scale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   return true;
 }
@@ -4367,7 +4556,8 @@ function showNight(on) {
     m.userData.lit = lit;
     setEmit(m, 0);
   }
-  if (falling) falling.material.uniforms.glow.value = dark ? NIGHT.fall : 1;
+  if (falling && falling.material.uniforms) falling.material.uniforms.glow.value = dark ? NIGHT.fall : 1;
+  leafLight();
   renderer.shadowMap.needsUpdate = true;
   dirty();
 }
@@ -4402,6 +4592,10 @@ function makeComposer() {
   const c = new EffectComposer(renderer, rt);
   c.addPass(new RenderPass(scene, camera));
   const ao = new GTAOPass(scene, camera, 1, 1);
+  // The leaves are placed by their own shaders, which these passes' materials don't run: they'd draw every leaf at
+  // the ground's origin. Ambient occlusion hides them (as it hides points and lines), and so does the blur's depth.
+  const hide = ao.overrideVisibility.bind(ao);
+  ao.overrideVisibility = () => { hide(); for (const o of noAO) o.visible = false; };
   ao.blendIntensity = BAKED ? 0.5 : 0.85;              // the light maps have the rooms' own shade: AO for the rest
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0 });
   c.addPass(ao);
@@ -4409,6 +4603,13 @@ function makeComposer() {
   c.addPass(bloom);
   dof = new BokehPass(scene, camera, { focus: 10, aperture: 0.0016, maxblur: 0.005 });
   dof.enabled = false;
+  const blur = dof.render.bind(dof);
+  dof.render = (...args) => {
+    const was = noAO.map((o) => o.visible);
+    for (const o of noAO) o.visible = false;
+    blur(...args);
+    noAO.forEach((o, i) => { o.visible = was[i]; });
+  };
   c.addPass(dof);
   c.addPass(new OutputPass());
   return c;
