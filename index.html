@@ -984,7 +984,7 @@ img { max-width: none; }
     <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
   </div>
 </dialog>
-<script src="assets/3d/catalog.js?v=5da66e522c"></script>
+<script src="assets/3d/catalog.js?v=20261030b"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
@@ -1006,7 +1006,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = '5da66e522c';
+const ASSET_V = 'c19e57925e';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1188,7 +1188,7 @@ if (!BAKED) {
 // glow and the soft fills, so rooms fall off toward their corners and desks shade the floor. The sun's own light stays
 // live (its shadows move as graphics go on and off, and the cutaway lets it into the rooms). At night the maps change
 // for the night's, which hold the lot's lights too: those leave a baked surface only their shine.
-const NO_MAP = new Set(['glass', 'light', 'strip-light', 'lamp']);
+const NO_MAP = new Set(['glass', 'light', 'strip-light', 'lamp', 'exit']);   // the exit signs' letters glow (details.py)
 const lmDirect = { value: 1 };                        // the live lights' diffuse light on a baked surface (0 at night)
 const lmTex = {};
 const timeNow = () => (!night ? 'day' : dusk ? 'dusk' : 'night');
@@ -1948,10 +1948,12 @@ function updateTV(now) {
 }
 const groups = {}, pickStatic = [], pickGfx = [];
 const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
-  'rug', 'carpet', 'baseboard', 'screen', 'track', 'platform', 'paper']);
+  'rug', 'carpet', 'baseboard', 'screen', 'track', 'platform', 'paper', 'fixture', 'grille', 'sprinkler-pipe', 'cone']);
 // The cutaway: from above the roofline the roofs, ceilings and their lights come off, so the overview looks down into
 // every room, the way Silver Fox's isometric art shows a dealership.
-const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist', 'rtu', 'rtu-fan']), cutaway = [];
+// The ceilings' fittings and the drive's sprinkler pipes (details.py, 2026-11-03) come off with them.
+const CUTAWAY = new Set(['roof', 'ceiling', 'light', 'strip-light', 'joist', 'rtu', 'rtu-fan', 'fixture', 'grille',
+  'sprinkler-pipe']), cutaway = [];
 const gltf = await new GLTFLoader().loadAsync(av('assets/3d/dealership.glb'),
   (e) => { $('#loaderBar').style.width = `${Math.round(100 * e.loaded / (e.total || 3.4e6))}%`; });
 const model = gltf.scene;
@@ -2022,42 +2024,88 @@ renderer.shadowMap.needsUpdate = true;
 // fields around, a few small ones in the grass strip and the median where they clear every graphic
 // (surroundings.plant()), and a band of distant trees on the horizon, which leaves a gap where the street runs out.
 // They keep the theme's season: orange and red for the fall themes, bare for the winter ones. They come after the
-// store (trees.glb), each kind drawn once for all its spots.
+// store (trees.glb), each shape drawn once for all its spots.
+// Barrett, 2026-11-03 ("make the trees ... more realistic"): each kind comes in a few shapes (trees.glb's
+// "tree-<kind>-<shape>", a spot's seventh value), its crown's own shade rides in its vertex colors, the bark has its
+// texture, and each tree is a little lighter or darker, greener or yellower than its neighbors (instance colors). The
+// sprays are the kind's own leaves (textures.py); the boxwoods and the showroom's ficus keep theirs all winter.
 const TREE_SEASON = { fall: 'fall', halloween: 'fall', thanksgiving: 'fall', holiday: 'bare', yearend: 'bare',
   newyear: 'bare' };
+const EVERGREEN = new Set(['plant', 'shrub']);
 const RING_TINT = { summer: [1, 1, 1], fall: [1.5, 1.0, 0.55], bare: [0.95, 0.82, 0.78] };
-const leafMat = new THREE.MeshStandardMaterial({ roughness: 0.75, alphaTest: 0.45, side: THREE.DoubleSide });
+const leafMat = new THREE.MeshStandardMaterial({ roughness: 0.75, alphaTest: 0.45, side: THREE.DoubleSide,
+  vertexColors: true });
+leafLook(leafMat);
 addSway(leafMat, 'leaves');
-const leafMaps = { summer: texture('leaves.webp', true, [1, 1]) };
+const leafTex = (file) => Object.assign(texture(file, true, [1, 1]), { flipY: false });   // as Blender lays its cells
+const leafMaps = { summer: leafTex('leaves.webp') };
 leafMat.map = leafMaps.summer;
-const barkMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.10, 0.085, 0.07), roughness: 0.9 });
+const barkMat = new THREE.MeshStandardMaterial({ roughness: 0.95, vertexColors: true });
+surface(barkMat, 'bark');
 const potMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.82, 0.81, 0.78), roughness: 0.35 });
-const ringMat = new THREE.MeshBasicMaterial({ map: texture('treeline.webp', true, [1, 1]), alphaTest: 0.5,
-  side: THREE.DoubleSide });
+const ringMat = new THREE.MeshBasicMaterial({ map: Object.assign(texture('treeline.webp', true, [1, 1]),
+  { wrapT: THREE.ClampToEdgeWrapping }), alphaTest: 0.5, side: THREE.DoubleSide });   // its foot never wraps to its top
 const leafMeshes = [];
 let treeSeason = 'summer';
+function leafLook(m) {
+  // Three things a crown of cut-out cards gets wrong. Far off, the texture's smaller copies (mipmaps) average each
+  // spray's leaves with the clear round them and the cut-out loses them, so a distant crown thins to a skeleton: the
+  // further down the copies, the more the leaves' cover is kept. A card seen edge-on smears its spray into streaks: it
+  // fades out (its neighbors, facing other ways, fill in). And a leaf with the sun behind it glows, the light coming
+  // through it: the more so the more the viewer faces the sun, less deep in the crown (its shade).
+  const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <alphatest_fragment>', `#ifdef USE_MAP
+	vec2 texel = vMapUv * vec2( textureSize( map, 0 ) );
+	float lod = max( 0.0, 0.5 * log2( max( dot( dFdx( texel ), dFdx( texel ) ), dot( dFdy( texel ), dFdy( texel ) ) ) ) );
+	diffuseColor.a *= 1.0 + lod * 0.3;
+	#endif
+	vec3 faceN = normalize( cross( dFdx( vViewPosition ), dFdy( vViewPosition ) ) );
+	diffuseColor.a *= smoothstep( 0.06, 0.32, abs( dot( faceN, normalize( vViewPosition ) ) ) );
+	#include <alphatest_fragment>`).replace('#include <aomap_fragment>', `#include <aomap_fragment>
+	#if NUM_DIR_LIGHTS > 0
+	float through = pow( max( dot( geometryViewDir, - directionalLights[ 0 ].direction ), 0.0 ), 3.0 );
+	totalEmissiveRadiance += diffuseColor.rgb * directionalLights[ 0 ].color * through * 0.3 * vColor.r * vColor.r;
+	#endif`);
+  };
+  m.customProgramCacheKey = () => `leaf-look:${key.call(m)}`;
+}
 async function plantTrees() {
   const kinds = S.treeKinds || [];
   const g = await new GLTFLoader().loadAsync(av('assets/3d/trees.glb'));
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), UPY = new THREE.Vector3(0, 1, 0);
+  const tint = new THREE.Color();
   kinds.forEach((kind, i) => {
-    const spots = S.trees.at.filter((t) => t[3] === i);
-    let root = null;
-    g.scene.traverse((o) => { if (!root && o.name.toLowerCase().includes(kind)) root = o; });
-    if (!root || !spots.length) return;
-    root.traverse((o) => {
-      if (!o.isMesh) return;
-      const leaves = /leaves/.test(o.material.name);
-      const im = new THREE.InstancedMesh(o.geometry, leaves ? leafMat : /pot/.test(o.material.name) ? potMat : barkMat,
-        spots.length);
-      spots.forEach(([x, y, z, , turn, k], j) => {
-        q.setFromAxisAngle(UPY, turn);
-        im.setMatrixAt(j, m.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(k, k, k)));
+    const all = S.trees.at.filter((t) => t[3] === i);
+    for (const v of new Set(all.map((t) => t[6] || 0))) {
+      const spots = all.filter((t) => (t[6] || 0) === v);
+      let root = g.scene.getObjectByName(`tree-${kind}-${v}`);
+      if (!root) g.scene.traverse((o) => { if (!root && o.name.toLowerCase().includes(kind)) root = o; });   // an older trees.glb
+      if (!root) continue;
+      root.traverse((o) => {
+        if (!o.isMesh) return;
+        const leaves = /leaves/.test(o.material.name), pot = /pot/.test(o.material.name);
+        const im = new THREE.InstancedMesh(o.geometry, leaves ? leafMat : pot ? potMat : barkMat, spots.length);
+        spots.forEach(([x, y, z, , turn, k], j) => {
+          q.setFromAxisAngle(UPY, turn);
+          im.setMatrixAt(j, m.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(k, k, k)));
+          if (pot) return;
+          // each tree its own: its leaves a touch lighter or darker, yellower or bluer; its bark lighter or darker
+          const r = (f) => { const a = Math.sin(x * 12.9898 + z * 78.233 + f) * 43758.5453; return a - Math.floor(a) - 0.5; };
+          const b = 0.93 + r(3) * 0.14, hue = r(1);
+          if (leaves) tint.setRGB(b * (1 + hue * 0.08), b, b * (1 - hue * 0.07));
+          else tint.setScalar(0.92 + r(4) * 0.16);
+          im.setColorAt(j, tint);
+        });
+        im.castShadow = im.receiveShadow = true;
+        if (leaves) {
+          leafMeshes.push({ im, kind });
+          noAO.push(im);                     // ambient occlusion's own pass has no cut-out: it'd draw each card whole
+        }
+        scene.add(im);
       });
-      im.castShadow = im.receiveShadow = true;
-      if (leaves) leafMeshes.push(im);
-      scene.add(im);
-    });
+    }
   });
   // The horizon: a band of trees all round, 900 ft out.
   const R = 274, H = 20, N = 128, pos = [], uv = [], idx = [];
@@ -2076,7 +2124,9 @@ async function plantTrees() {
   rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   rg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   rg.setIndex(idx);
-  scene.add(new THREE.Mesh(rg, ringMat));
+  const ring = new THREE.Mesh(rg, ringMat);
+  noAO.push(ring);
+  scene.add(ring);
   syncTrees(themeWas);
   tintRing();
   renderer.shadowMap.needsUpdate = true;
@@ -2086,8 +2136,8 @@ function syncTrees(themeId) {
   const season = TREE_SEASON[themeId] || 'summer';
   if (season === treeSeason) return;
   treeSeason = season;
-  for (const im of leafMeshes) im.visible = season !== 'bare';
-  if (season !== 'bare') leafMat.map = leafMaps[season] ||= texture(`leaves-${season}.webp`, true, [1, 1]);
+  for (const { im, kind } of leafMeshes) im.visible = season !== 'bare' || EVERGREEN.has(kind);
+  if (season !== 'bare') leafMat.map = leafMaps[season] ||= leafTex(`leaves-${season}.webp`);
   tintRing();
   renderer.shadowMap.needsUpdate = true;
   dirty();
@@ -4200,7 +4250,7 @@ function leafFall(n) {
 }
 function groundAt() {
   // The top of the ground near the store (its grass, beds, walks and asphalt, from the model's own faces, in 3 m
-  // cells): (x, z) -> { y, w } for the highest there, w its LITTER_ON, or null.
+  // cells): (x, z) -> { y, w, lawn } for the highest there, w its LITTER_ON, lawn if it's grass, or null.
   const X0 = site.min.x - 16, X1 = site.max.x + 16, Z0 = site.min.z - 12, Z1 = site.max.z + 18, CELL = 3;
   const nx = Math.ceil((X1 - X0) / CELL), nz = Math.ceil((Z1 - Z0) / CELL);
   const cells = Array.from({ length: nx * nz }, () => []);
@@ -4219,7 +4269,7 @@ function groundAt() {
       const lx = Math.min(a.x, b.x, c.x), hx = Math.max(a.x, b.x, c.x), lz = Math.min(a.z, b.z, c.z),
         hz = Math.max(a.z, b.z, c.z);
       if (hx < X0 || lx >= X1 || hz < Z0 || lz >= Z1) continue;
-      const t = [a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, w];
+      const t = [a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, w, o.material.name === 'grass'];
       for (let ix = Math.max(0, Math.floor((lx - X0) / CELL)); ix <= Math.min(nx - 1, Math.floor((hx - X0) / CELL)); ix++) {
         for (let iz = Math.max(0, Math.floor((lz - Z0) / CELL)); iz <= Math.min(nz - 1, Math.floor((hz - Z0) / CELL)); iz++) {
           cells[iz * nx + ix].push(t);
@@ -4230,13 +4280,13 @@ function groundAt() {
   const at = (x, z) => {
     if (x < X0 || x >= X1 || z < Z0 || z >= Z1) return null;
     let best = null;
-    for (const [ax, ay, az, bx, by, bz, cx, cy, cz, w] of cells[Math.floor((z - Z0) / CELL) * nx + Math.floor((x - X0) / CELL)]) {
+    for (const [ax, ay, az, bx, by, bz, cx, cy, cz, w, lawn] of cells[Math.floor((z - Z0) / CELL) * nx + Math.floor((x - X0) / CELL)]) {
       const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
       if (Math.abs(d) < 1e-9) continue;
       const l1 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d, l2 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d;
       if (l1 < 0 || l2 < 0 || l1 + l2 > 1) continue;
       const y = l1 * ay + l2 * by + (1 - l1 - l2) * cy;
-      if (!best || y > best.y + 0.005 || (y > best.y - 0.005 && w < best.w)) best = { y, w };   // a tie: the paving
+      if (!best || y > best.y + 0.005 || (y > best.y - 0.005 && w < best.w)) best = { y, w, lawn };   // a tie: the paving
     }
     return best;
   };
@@ -4256,7 +4306,7 @@ function leafLitter(n) {
     const z = t ? t[2] + r * Math.sin(h) + LEAF_WIND.y * 2 : ground.Z0 + Math.random() * (ground.Z1 - ground.Z0);
     const g = ground.at(x, z);
     if (!g || Math.random() > g.w) continue;
-    p.set(x, g.y + 0.014, z);
+    p.set(x, g.y + (g.lawn ? 0.035 : 0.014), z);        // on a lawn, resting on its blades (2026-11-03)
     if (rooms.some((r) => r.containsPoint(p))) continue;
     const b = Math.random() * Math.PI * 2;
     tilt.setFromAxisAngle(axis.set(Math.cos(b), 0, Math.sin(b)), Math.random() * 0.2);
@@ -4336,6 +4386,168 @@ function updateWeather(now) {
   u.time.value = t;
   u.scale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   return true;
+}
+
+// ---- the lawn's blades (high quality only) -------------------------------------------------------------------------
+// Barrett, 2026-11-03: "make the trees inside the dealership graphics builder more realistic ... focus on the grass and
+// trees/shrubs"; 3D grass in HD only (his pick). Round the viewer the lawn grows real blades, each a little different
+// in height, width, lean and color, stirring with the leaves; past about 10 m they shrink into the lawn's texture, which
+// carries on to the horizon. Two grids follow the viewer, a dense one within about 5 m and a sparser one of wider blades
+// out to 10 m, each blade fixed to its own spot on the ground (it never swims as the viewer walks). Where the ground is
+// lawn, and how high and how lit it is there, comes from one look straight down at the model (captureGrass(): the
+// lawn's own baked light, again whenever the time of day swaps the light maps), so the blades sit in the shade the
+// lawn does and the sun's live shadows fall across them. Off under snow, indoors, high above the lot (they're too
+// small to see), and in low quality.
+const GRASS = { near: { n: 250, cell: 0.045, rIn: 0, rOut: 5.4, wide: 1 }, far: { n: 200, cell: 0.1, rIn: 4.4, rOut: 9.6,
+  wide: 1.6 } };
+const grassCap = { rt: null, scene: null, cam: null, map: null, lawn: null, box: new THREE.Vector4() };
+const bladeLight = { value: 1 }, bladeGrow = { value: 0 }, bladeCam = { value: new THREE.Vector2() };
+const blades = [];
+function captureGrass() {
+  // The model seen from straight above, 40 m round the site: where the top surface is lawn, its light map's light and
+  // its height (+10, so the clear 0 means "not lawn").
+  const lm = named.grass && named.grass.lightMap;
+  if (!lm || !lm.image || !lm.image.width) return false;          // still loading
+  if (!grassCap.scene) {
+    const x0 = site.min.x - 40, z0 = site.min.z - 40;
+    const size = Math.max(site.max.x - site.min.x, site.max.z - site.min.z) + 80;
+    grassCap.box.set(x0, z0, size, 0);
+    grassCap.rt = new THREE.WebGLRenderTarget(1024, 1024, { type: THREE.HalfFloatType, minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter, generateMipmaps: false });
+    const c = grassCap.cam = new THREE.OrthographicCamera(-size / 2, size / 2, size / 2, -size / 2, 1, 1000);
+    c.position.set(x0 + size / 2, 500, z0 + size / 2);
+    c.up.set(0, 0, -1);                                // the image's up is north, so its v runs against z
+    c.lookAt(x0 + size / 2, 0, z0 + size / 2);
+    c.updateMatrixWorld();
+    const vs = `in vec3 position; in vec2 uv1; uniform mat4 modelMatrix, modelViewMatrix, projectionMatrix;
+      out vec2 vUv1; out float vY;
+      void main() { vUv1 = uv1; vY = ( modelMatrix * vec4( position, 1.0 ) ).y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`;
+    const raw = (fs, uniforms = {}) => new THREE.RawShaderMaterial({ glslVersion: THREE.GLSL3, uniforms, vertexShader: vs,
+      fragmentShader: `precision highp float; uniform sampler2D lm; in vec2 vUv1; in float vY; out vec4 o; void main() { ${fs} }` });
+    grassCap.lawn = raw('o = vec4( texture( lm, vUv1 ).rgb, vY + 10.0 );', { lm: { value: lm } });
+    const other = raw('o = vec4( 0.0 );');
+    grassCap.scene = new THREE.Scene();
+    model.updateMatrixWorld(true);
+    model.traverse((o) => {
+      if (!o.isMesh || o.userData.gfx || !o.material) return;
+      const m = new THREE.Mesh(o.geometry, o.material.name === 'grass' ? grassCap.lawn : other);
+      m.matrixAutoUpdate = false;
+      m.matrix.copy(o.matrixWorld);
+      m.matrixWorld.copy(o.matrixWorld);
+      grassCap.scene.add(m);
+    });
+  }
+  grassCap.lawn.uniforms.lm.value = lm;
+  const target = renderer.getRenderTarget(), clear = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha();
+  renderer.setRenderTarget(grassCap.rt);
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.render(grassCap.scene, grassCap.cam);
+  renderer.setRenderTarget(target);
+  renderer.setClearColor(clear, alpha);
+  grassCap.map = lm;
+  return true;
+}
+function bladeMaterial(g) {
+  // The lawn's own texture and color (so the fall's olive lawn browns them too), each blade taking the color of the
+  // lawn at its root, dark at its foot and lighter toward its tip; lit as the lawn is (its baked light, the sun live).
+  const m = new THREE.MeshStandardMaterial({ roughness: 0.8, side: THREE.DoubleSide, map: named.grass.map });
+  m.color = named.grass.color;
+  const u = { swayT, lmDirect, bladeLight, bladeGrow, bladeCam, gCap: { value: grassCap.rt.texture },
+    gBox: { value: grassCap.box }, gBase: { value: new THREE.Vector2() }, gCell: { value: g.cell },
+    gIn: { value: g.rIn }, gOut: { value: g.rOut }, gWide: { value: g.wide } };
+  m.userData.grid = u;
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = `uniform float swayT, gCell, gIn, gOut, gWide, bladeGrow;
+uniform vec2 gBase, bladeCam;
+uniform vec4 gBox;
+uniform sampler2D gCap;
+varying vec3 vCapLight;
+varying float vBladeY;
+vec4 bladeHash( vec2 c ) {
+\tuvec2 q = uvec2( ivec2( c ) + 1048576 );
+\tuvec4 h = uvec4( q.x * 1597334677u ^ q.y * 3812015801u ) * uvec4( 2654435761u, 2246822519u, 3266489917u, 668265263u );
+\th ^= h >> 15u; h *= 2246822519u; h ^= h >> 13u;
+\treturn vec4( h ) / 4294967295.0;
+}
+` + sh.vertexShader.replace('#include <beginnormal_vertex>', `
+\tvec2 cellI = gBase + vec2( float( gl_InstanceID % ${g.n} ), float( gl_InstanceID / ${g.n} ) );
+\tvec4 h = bladeHash( cellI );
+\tvec2 root = ( cellI + h.xy ) * gCell;
+\tvec2 cuv = ( root - gBox.xy ) / gBox.z;
+\tvec4 cap = texture( gCap, vec2( cuv.x, 1.0 - cuv.y ) );
+\tfloat d = distance( root, bladeCam );
+\tfloat keep = step( 5.0, cap.a ) * step( 0.0, cuv.x ) * step( cuv.x, 1.0 ) * step( 0.0, cuv.y ) * step( cuv.y, 1.0 )
+\t\t* ( 1.0 - smoothstep( gOut * 0.6, gOut, d ) ) * ( gIn > 0.0 ? smoothstep( gIn * 0.8, gIn, d ) : 1.0 ) * bladeGrow;
+\tfloat hgt = ( 0.05 + 0.075 * h.z ) * keep;
+\tfloat wid = ( 0.010 + 0.009 * h.w ) * gWide * keep;
+\tfloat yaw = h.x * 6.2831 + h.y * 2.0;
+\tvec3 face = vec3( cos( yaw ), 0.0, sin( yaw ) ), across = vec3( - face.z, 0.0, face.x );
+\tfloat y = position.y;
+\tfloat lean = ( 0.15 + 0.5 * fract( h.z * 7.13 ) ) * y * y;
+\tfloat wind = ( 0.12 * sin( swayT * 2.3 + root.x * 1.9 + root.y * 1.4 ) + 0.05 * sin( swayT * 5.1 + h.x * 9.0 ) ) * y * y;
+\tvec3 bladeAt = vec3( root.x, cap.a - 10.0, root.y ) + across * position.x * wid
+\t\t+ face * ( lean + wind ) * hgt + vec3( 0.0, y * hgt * ( 1.0 - 0.3 * lean ), 0.0 );
+\tvMapUv = ( mapTransform * vec3( root.x / 0.3048, 1.0 + root.y / 0.3048, 1.0 ) ).xy;   // the lawn's UVs: feet
+\tvCapLight = cap.rgb;
+\tvBladeY = y;
+\tvec3 objectNormal = normalize( vec3( 0.0, 1.0, 0.0 ) + face * 0.35 );`)
+      .replace('#include <begin_vertex>', 'vec3 transformed = bladeAt;');
+    sh.fragmentShader = `uniform float lmDirect, bladeLight;
+varying vec3 vCapLight;
+varying float vBladeY;
+` + sh.fragmentShader
+      .replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', ''))
+      .replace('#include <map_fragment>', '#include <map_fragment>\n\tdiffuseColor.rgb *= mix( 0.72, 1.12, vBladeY );')
+      .replace('#include <lights_fragment_begin>', BAKED_BEGIN)
+      .replace('#include <lights_fragment_maps>', `reflectedLight.directDiffuse *= lmDirect;
+\t#if defined( RE_IndirectDiffuse )
+\tirradiance += vCapLight * bladeLight;
+\t#endif
+\t#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )
+\tradiance += getIBLRadiance( geometryViewDir, geometryNormal, material.roughness );
+\t#endif`);
+  };
+  m.customProgramCacheKey = () => `blades-${g.n}`;
+  return m;
+}
+function makeBlades() {
+  for (const g of Object.values(GRASS)) {
+    const geo = new THREE.InstancedBufferGeometry();
+    // a blade: its foot two corners wide, a bend partway up, a point at the tip (2 triangles); x across, y up (0..1)
+    geo.setAttribute('position', new THREE.Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, -0.3, 0.55, 0, 0.05, 1, 0], 3));
+    geo.setIndex([0, 1, 2, 1, 3, 2]);
+    geo.instanceCount = g.n * g.n;
+    const mesh = new THREE.Mesh(geo, bladeMaterial(g));
+    Object.assign(mesh, { frustumCulled: false, receiveShadow: true, visible: false });
+    mesh.userData.g = g;
+    noAO.push(mesh);
+    scene.add(mesh);
+    blades.push(mesh);
+  }
+}
+function updateGrass() {
+  // Every frame (cheap): on or off, and the grids round the viewer. Draws again only when that changes something.
+  const grow = !hq || weather === 'snow' || !named.grass || studioOpen ? 0
+    : (1 - THREE.MathUtils.smoothstep(cam.pos.y, 5, 9)) * (1 - THREE.MathUtils.smoothstep(insideAmount, 0.6, 0.95));
+  if (grow > 0 && !blades.length) {
+    if (!captureGrass()) return false;
+    makeBlades();
+  } else if (grow > 0 && grassCap.map !== named.grass.lightMap) {
+    if (!captureGrass()) return false;                // the time of day swapped the lawn's light map
+  }
+  let changed = grow !== bladeGrow.value;
+  bladeGrow.value = grow;
+  bladeLight.value = named.grass ? named.grass.lightMapIntensity : 1;
+  bladeCam.value.set(cam.pos.x, cam.pos.z);
+  for (const b of blades) {
+    if (b.visible !== grow > 0) { b.visible = grow > 0; changed = true; }
+    const g = b.userData.g;
+    b.material.userData.grid.gBase.value.set(Math.floor(cam.pos.x / g.cell) - g.n / 2, Math.floor(cam.pos.z / g.cell) - g.n / 2);
+  }
+  return changed;
 }
 
 // ---- day, dusk and night ----------------------------------------------------------------------------------------------
@@ -4658,7 +4870,8 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
-    | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt) | updateSlides(now) | updateTV(now);
+    | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt) | updateSlides(now) | updateTV(now)
+    | updateGrass();
   if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
   if (!busy && !needs) {
     if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
@@ -4710,7 +4923,7 @@ function relight(v = {}) {
   if (v.bounce !== undefined) bounce.intensity = v.bounce * insideAmount;
   dirty();
 }
-window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state,
+window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state, blades,
   NIGHT, setNight, setTime, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES,
   setQuality, baked, probes, body,
   tv: () => ({ mode: tv.mode, vi: tv.vi, ready: tv.ready, full: tv.m && tv.m.uniforms.full.value,

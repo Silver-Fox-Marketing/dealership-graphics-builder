@@ -17,9 +17,10 @@
  "grass": {
   "map": "grass.webp",
   "tile": [
-   10.0,
-   10.0
-  ]
+   8.0,
+   8.0
+  ],
+  "normal": "grass_n.webp"
  },
  "mulch": {
   "map": "mulch.webp",
@@ -86,21 +87,84 @@
   "tile": [
    2.0,
    4.0
-  ]
+  ],
+  "normal": "bark_n.webp"
  },
  "leaves": {
   "map": "leaves.webp",
   "tile": [
    1.0,
    1.0
-  ]
+  ],
+  "grid": 4,
+  "cells": {
+   "maple": [
+    0,
+    1,
+    2
+   ],
+   "oak": [
+    3,
+    4,
+    5
+   ],
+   "linden": [
+    6,
+    7,
+    8
+   ],
+   "pear": [
+    9,
+    10
+   ],
+   "shrub": [
+    11,
+    12,
+    13
+   ],
+   "plant": [
+    14,
+    15
+   ]
+  }
  },
  "leaves-fall": {
   "map": "leaves-fall.webp",
   "tile": [
    1.0,
    1.0
-  ]
+  ],
+  "grid": 4,
+  "cells": {
+   "maple": [
+    0,
+    1,
+    2
+   ],
+   "oak": [
+    3,
+    4,
+    5
+   ],
+   "linden": [
+    6,
+    7,
+    8
+   ],
+   "pear": [
+    9,
+    10
+   ],
+   "shrub": [
+    11,
+    12,
+    13
+   ],
+   "plant": [
+    14,
+    15
+   ]
+  }
  },
  "treeline": {
   "map": "treeline.webp",
