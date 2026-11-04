@@ -1006,7 +1006,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = 'c19e57925e';
+const ASSET_V = '5d4666a1f3';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1239,6 +1239,35 @@ function texture(file, srgb, tile) {
   t.repeat.set(1 / tile[0], 1 / tile[1]);
   t.anisotropy = ANISO;
   return t;
+}
+// The lot's wear (Barrett, 2026-11-03, the realism audit's item 9): one map over the site (textures.py's lot_wear),
+// laid by each point's place in feet on upward faces only. Its red darkens the asphalt where cars drip oil and tires
+// run; its green wears the lot's paint through to the asphalt. Off the lot it's 0, so the street and the walls (the
+// signs share the paint's white, green and blue) are untouched.
+const WEAR = TEX['lot-wear'];
+const WEAR_KIND = { asphalt: 'ground', stripe: 'paint', marking: 'paint', 'ada-blue': 'paint', 'ev-green': 'paint' };
+let wearTex = null;
+function wear(m, kind) {
+  if (!WEAR) return;
+  wearTex ||= Object.assign(texture(WEAR.map, false, [1, 1]),
+    { wrapS: THREE.ClampToEdgeWrapping, wrapT: THREE.ClampToEdgeWrapping });
+  const prev = m.onBeforeCompile, key = m.customProgramCacheKey;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    sh.uniforms.wearMap = { value: wearTex };
+    sh.uniforms.wearAt = { value: new THREE.Vector3(WEAR.origin[0], WEAR.origin[1], WEAR.tile[0]) };
+    sh.vertexShader = 'uniform vec3 wearAt;\nvarying vec2 vWear;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+      `#include <begin_vertex>
+	vec4 wearW = modelMatrix * vec4( transformed, 1.0 );
+	vWear = ( vec2( wearW.x, - wearW.z ) / 0.3048 - wearAt.xy ) / wearAt.z;`);
+    sh.fragmentShader = 'uniform sampler2D wearMap;\nvarying vec2 vWear;\n' + sh.fragmentShader.replace(
+      '#include <emissivemap_fragment>', `vec2 wearT = texture2D( wearMap, vWear ).rg;
+	float wearUp = smoothstep( 0.6, 0.9, dot( normal, normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz ) ) );
+	${kind === 'paint' ? 'diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.05, 0.05, 0.053 ), wearT.g * wearUp );'
+    : 'diffuseColor.rgb *= 1.0 - 0.8 * wearT.r * wearUp;'}
+	#include <emissivemap_fragment>`);
+  };
+  m.customProgramCacheKey = () => `wear-${kind}:${key.call(m)}`;
 }
 // Big open surfaces vary a little from tile to tile: the texture again, twelve times larger, shades it.
 const MACRO = new Set(['grass', 'asphalt', 'concrete']);
@@ -2007,6 +2036,7 @@ model.traverse((o) => {
   surface(o.material, name);
   if (BAKED && PROBE_MATS[name]) boxReflect(o.material, PROBE_MATS[name]);
   if (BAKED && !NO_MAP.has(name) && o.geometry.attributes.uv1) bakeLight(o.material, false);
+  if (WEAR_KIND[name]) wear(o.material, WEAR_KIND[name]);
   if (INDOOR.has(name)) {
     // Sky light has no shadows, so it would reach every room as if there were no roof. Surfaces that are only ever
     // indoors take a little of it; their light comes from the ceiling lights.
@@ -2031,7 +2061,9 @@ renderer.shadowMap.needsUpdate = true;
 // sprays are the kind's own leaves (textures.py); the boxwoods and the showroom's ficus keep theirs all winter.
 const TREE_SEASON = { fall: 'fall', halloween: 'fall', thanksgiving: 'fall', holiday: 'bare', yearend: 'bare',
   newyear: 'bare' };
-const EVERGREEN = new Set(['plant', 'shrub']);
+// The feather reed grass (2026-11-03) stands all winter too, dried: the winter themes show it from the fall atlas,
+// where the boxwoods and the ficus are as green as in summer.
+const EVERGREEN = new Set(['plant', 'shrub', 'reed']);
 const RING_TINT = { summer: [1, 1, 1], fall: [1.5, 1.0, 0.55], bare: [0.95, 0.82, 0.78] };
 const leafMat = new THREE.MeshStandardMaterial({ roughness: 0.75, alphaTest: 0.45, side: THREE.DoubleSide,
   vertexColors: true });
@@ -2137,7 +2169,8 @@ function syncTrees(themeId) {
   if (season === treeSeason) return;
   treeSeason = season;
   for (const { im, kind } of leafMeshes) im.visible = season !== 'bare' || EVERGREEN.has(kind);
-  if (season !== 'bare') leafMat.map = leafMaps[season] ||= leafTex(`leaves-${season}.webp`);
+  const atlas = season === 'bare' ? 'fall' : season;
+  leafMat.map = leafMaps[atlas] ||= leafTex(`leaves-${atlas}.webp`);
   tintRing();
   renderer.shadowMap.needsUpdate = true;
   dirty();
