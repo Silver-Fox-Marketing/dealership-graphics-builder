@@ -987,7 +987,8 @@ img { max-width: none; }
 <script src="assets/3d/catalog.js?v=20261030b"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+               "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.18/build/index.module.js" } }
 </script>
 <script type="module">
 import * as THREE from 'three';
@@ -1000,6 +1001,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { computeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 
 // The dealership as a real-time 3D scene: the Blender model exported by dealership_blender.py --web
 // (assets/3d/dealership.glb and scene.json), the graphics' art from assets/3d/art/, and the catalog of places, jobs and
@@ -2235,12 +2237,31 @@ function updateFly(now) {
   if (t >= 1) fly = null;
   return true;
 }
+// Rays (the pins' walls, walking, the floor, clicks and hover, a close-up's clear view): the performance audit
+// (Barrett, 2026-11-04: "Do 1 and 2") timed 40 rays at 46 ms outside and 108 ms in the showroom, each testing every
+// triangle of the merged model, and the pins cast ~36 every 150 ms while the view moves. Each mesh's triangles are now
+// indexed once (three-mesh-bvh, a bounding volume tree), a little at a time after the first view is up; a mesh not
+// indexed yet is tested the old way. Only shown meshes are tested, and each gives its nearest hit only.
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 const ray = new THREE.Raycaster();
+ray.firstHitOnly = true;
 const shown = (o) => { for (let a = o; a; a = a.parent) if (!a.visible) return false; return true; };
+const hitsOf = (list) => ray.intersectObjects(list.filter(shown), false);
 function cast(from, dir, far, list = pickStatic) {
   ray.set(from, dir);
   ray.far = far;
-  return ray.intersectObjects(list, false).filter((h) => shown(h.object))[0];
+  return hitsOf(list)[0];
+}
+function indexRays() {
+  // A few meshes per slice, between frames, the walls and floors first (the pins and walking use them).
+  const todo = [...new Set([...pickStatic, ...pickGfx].map((o) => o.geometry))].filter((g) => !g.boundsTree);
+  const slice = () => {
+    const t0 = performance.now();
+    while (todo.length && performance.now() - t0 < 6) todo.shift().computeBoundsTree({ indirect: true });
+    if (todo.length) setTimeout(slice, 0);
+  };
+  setTimeout(slice, 0);
 }
 const DOWN = new THREE.Vector3(0, -1, 0);
 function floorAt(p) {
@@ -2359,7 +2380,7 @@ function pick(e) {
   ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   ray.far = 2000;
-  const h = ray.intersectObjects([...pickGfx, ...pickStatic], false).filter((x) => shown(x.object))[0];
+  const h = hitsOf([...pickGfx, ...pickStatic])[0];
   if (!h) return;
   hideHint();
   if (h.object.userData.gfx) { select(h.object.userData.gfx); return; }
@@ -4074,7 +4095,7 @@ canvas.addEventListener('pointermove', (e) => {
   ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   ray.far = 2000;
-  const h = ray.intersectObjects([...pickGfx, ...pickStatic], false).filter((x) => shown(x.object))[0];
+  const h = hitsOf([...pickGfx, ...pickStatic])[0];
   setHover(h ? h.object.userData.gfx || (studioTarget(h.object) ? STUDIO : null) : null, e);
 });
 canvas.addEventListener('pointerleave', () => { if (hoverKey) setHover(null); });
@@ -4829,7 +4850,7 @@ function updateCutaway() {
 // the background a little soft in a close-up, flags, banners and leaves moving in the air, a sharper sun shadow. Low:
 // none of those, for a steady frame rate on a small GPU. Phones start low, computers high; the HD button switches it
 // and the choice is kept on this device.
-let composer = null, bloom = null, dof = null, dofAt = null;
+let composer = null, bloom = null, dof = null, dofAt = null, roughComposer = null;
 let hq = !coarse;
 try { const q = localStorage.getItem('dsb-quality'); if (q) hq = q === 'high'; } catch { /* the default */ }
 function makeComposer() {
@@ -4884,6 +4905,7 @@ function resize() {
     composer.setPixelRatio(renderer.getPixelRatio());
     composer.setSize(w, h);
   }
+  if (roughComposer) sizeRough();
   dirty();
 }
 new ResizeObserver(resize).observe(stage);
@@ -4897,6 +4919,75 @@ function updateSway(now) {
   swayT.value = now / 1000;
   return true;
 }
+// Drawing while the eye moves (Barrett, 2026-11-04, the performance audit: "Do 1 and 2"). At retina size high quality's
+// ambient occlusion, the high-range image the effects draw into and the glow cost 20-38 ms a frame on the M4, against
+// 3-4 ms drawn straight to the screen as low quality does. So while the eye moves (a drag, the keys, a flight, a pinch,
+// a jump) a frame goes without the ambient occlusion and the soft focus. Outside by day, where the glow shows nothing,
+// it's drawn straight to the screen at full resolution. Inside and at night it keeps the glow, so the ceiling lights and
+// lit signs don't flare up when the eye stops, drawn at 1x (a quarter of retina's pixels; motion hides the softness):
+// roughComposer. Once the eye has been still for REST_MS, one frame in full. A still view looks as it did;
+// motion with the eye still (wind, snow, leaves, the TV) is drawn in full, as before. The films ask for every frame
+// in full (fullFrames).
+const REST_MS = 180;
+const eyeWas = { x: NaN, y: 0, z: 0, yaw: 0, pitch: 0, hfov: 0, shift: 0 };
+let movedAt = -Infinity, roughShown = false, fullAlways = false, warmAt = 0, warmDraw = false, programsSeen = 0;
+function eyeMoved() {
+  const p = cam.pos, e = eyeWas;
+  if (p.x === e.x && p.y === e.y && p.z === e.z && cam.yaw === e.yaw && cam.pitch === e.pitch && cam.hfov === e.hfov
+    && shift === e.shift) return false;                // shift: the view sliding aside for the information panel
+  Object.assign(e, { x: p.x, y: p.y, z: p.z, yaw: cam.yaw, pitch: cam.pitch, hfov: cam.hfov, shift });
+  return true;
+}
+function sizeRough() {
+  roughComposer.setPixelRatio(Math.min(1, renderer.getPixelRatio()));
+  roughComposer.setSize(stage.clientWidth, stage.clientHeight);
+}
+function draw(rough) {
+  if (!hq || !composer) { renderer.render(scene, camera); return; }
+  if (rough) {
+    if (!night && insideAmount < 0.5) { renderer.render(scene, camera); return; }   // outside by day: no glow to keep
+    if (!roughComposer) {
+      const c = roughComposer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
+      c.addPass(new RenderPass(scene, camera));
+      c.addPass(new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.45, 1.4));   // as the full frame's glow
+      c.addPass(new OutputPass());
+      sizeRough();
+    }
+    roughComposer.render();
+    return;
+  }
+  if (dof) {                                            // a close-up: the background a little soft
+    dof.enabled = upClose && !!dofAt;
+    if (dof.enabled) dof.uniforms.focus.value = camera.position.distanceTo(dofAt);
+  }
+  composer.render();
+}
+function warmShaders() {
+  // Drawn straight to the screen, a shader carries the tone mapping itself, so each needs a second build. Built at the
+  // first move, that stalled the frame (121-174 ms on the M4), and the browser also finishes a shader only when it's
+  // first drawn with (up to 800 ms more). So whenever a full frame has brought in new shaders (the first view, the
+  // trees, a graphic's art arriving), they're built in the background, then drawn with once (drawWarm), unseen.
+  warmAt = 0;
+  programsSeen = renderer.info.programs.length;
+  renderer.setRenderTarget(null);
+  renderer.compileAsync(scene, camera).then(() => { warmDraw = true; }, () => { warmDraw = true; });
+}
+const warmVp = new THREE.Vector4();
+function drawWarm() {
+  // The whole scene, the roofs and what's out of view included, straight to a 2-pixel corner of the screen; the full
+  // frame drawn over it in the same tick hides it.
+  const hidden = cutaway.filter((o) => !o.visible), culled = [];
+  for (const o of hidden) o.visible = true;
+  scene.traverse((o) => { if (o.frustumCulled && (o.isMesh || o.isPoints)) { o.frustumCulled = false; culled.push(o); } });
+  renderer.getViewport(warmVp);
+  renderer.setRenderTarget(null);
+  renderer.setViewport(0, 0, 1, 1);
+  renderer.render(scene, camera);
+  renderer.setViewport(warmVp);
+  for (const o of culled) o.frustumCulled = true;
+  for (const o of hidden) o.visible = false;
+  programsSeen = renderer.info.programs.length;
+}
 let last = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
@@ -4906,18 +4997,23 @@ function loop(now) {
     | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt) | updateSlides(now) | updateTV(now)
     | updateGrass();
   if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
+  if (warmAt && now > warmAt) warmShaders();                       // the moves' shaders, in the background
+  if (warmDraw && !(now - movedAt < REST_MS)) { warmDraw = false; drawWarm(); needs = true; }   // then a full frame over it
   if (!busy && !needs) {
-    if (pinsStale) { placePins(now, true); pinsStale = false; }      // the view settled: check the pins' walls once more
-    if (probesStale && now > probesStale) takeProbes();              // the rooms' reflections, while nothing moves
-    return;
+    if (roughShown && now - movedAt >= REST_MS) needs = true;        // the eye has settled: draw the view in full
+    else {
+      if (pinsStale) { placePins(now, true); pinsStale = false; }    // the view settled: check the pins' walls once more
+      if (probesStale && now > probesStale) takeProbes();            // the rooms' reflections, while nothing moves
+      return;
+    }
   }
   needs = false;
   applyCamera();
-  if (dof) {                                            // a close-up: the background a little soft
-    dof.enabled = hq && upClose && !!dofAt;
-    if (dof.enabled) dof.uniforms.focus.value = camera.position.distanceTo(dofAt);
-  }
-  if (hq && composer) composer.render(); else renderer.render(scene, camera);
+  if (eyeMoved()) movedAt = now;
+  const rough = hq && !fullAlways && now - movedAt < REST_MS;
+  draw(rough);
+  roughShown = rough;
+  if (hq && !rough && !warmAt && renderer.info.programs.length !== programsSeen) warmAt = now + 300;
   placePins(now);
   pinsStale = true;
 }
@@ -4934,6 +5030,7 @@ Object.assign(cam, aim(new THREE.Vector3(...first.eye), new THREE.Vector3(...fir
 renderTabs();
 requestAnimationFrame(loop);
 if (S.trees) plantTrees().catch((err) => console.warn('trees', err));
+indexRays();
 drawHouseSigns();
 if (p.get('n') === '1' || p.get('n') === 'd') setTime(p.get('n') === 'd' ? 'dusk' : 'night');   // a link to either
 if (p.get('vv')) {                                     // a link with a vehicle build in it
@@ -4958,7 +5055,7 @@ function relight(v = {}) {
 }
 window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state, blades,
   NIGHT, setNight, setTime, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES,
-  setQuality, baked, probes, body,
+  setQuality, baked, probes, body, fullFrames: (on) => { fullAlways = !!on; dirty(); },
   tv: () => ({ mode: tv.mode, vi: tv.vi, ready: tv.ready, full: tv.m && tv.m.uniforms.full.value,
     playing: !!tvEl && !tvEl.paused, t: tvEl ? +tvEl.currentTime.toFixed(1) : null, video: tv.list && tv.list.videos[tv.vi] && tv.list.videos[tv.vi].slug }),
   tvVideo: () => tvEl };
