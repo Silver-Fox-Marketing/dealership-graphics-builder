@@ -1008,7 +1008,7 @@ import { computeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = '5d4666a1f3';
+const ASSET_V = '0c2b6db034';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1247,7 +1247,17 @@ function texture(file, srgb, tile) {
 // run; its green wears the lot's paint through to the asphalt. Off the lot it's 0, so the street and the walls (the
 // signs share the paint's white, green and blue) are untouched.
 const WEAR = TEX['lot-wear'];
-const WEAR_KIND = { asphalt: 'ground', stripe: 'paint', marking: 'paint', 'ada-blue': 'paint', 'ev-green': 'paint' };
+// The service drive's epoxy (2026-11-05, the interior audit) takes it too: tire tracks in through its doors. So do the
+// showroom's tile, a little (paths worn where people walk, grime at its edges), and the walls' foot (scuffs: the green
+// on the walls' vertical faces, up to about a foot over the floor).
+const WEAR_KIND = { asphalt: 'ground', stripe: 'paint', marking: 'paint', 'ada-blue': 'paint', 'ev-green': 'paint',
+  epoxy: 'ground', tile: 'floor', 'tile-dark': 'floor', wall: 'wall' };
+const WEAR_SHADE = {
+  ground: 'diffuseColor.rgb *= 1.0 - 0.8 * wearT.r * wearUp;',
+  floor: 'diffuseColor.rgb *= 1.0 - 0.5 * wearT.r * wearUp;',
+  paint: 'diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.05, 0.05, 0.053 ), wearT.g * wearUp );',
+  wall: `float wearLow = 1.0 - smoothstep( 0.22, 0.4, vWearH - ${S.floor.toFixed(4)} );
+	diffuseColor.rgb *= 1.0 - 0.6 * wearT.g * ( 1.0 - wearUp ) * wearLow;` };
 let wearTex = null;
 function wear(m, kind) {
   if (!WEAR) return;
@@ -1258,27 +1268,33 @@ function wear(m, kind) {
     prev.call(m, sh, r);
     sh.uniforms.wearMap = { value: wearTex };
     sh.uniforms.wearAt = { value: new THREE.Vector3(WEAR.origin[0], WEAR.origin[1], WEAR.tile[0]) };
-    sh.vertexShader = 'uniform vec3 wearAt;\nvarying vec2 vWear;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+    sh.vertexShader = 'uniform vec3 wearAt;\nvarying vec2 vWear;\nvarying float vWearH;\n' + sh.vertexShader.replace('#include <begin_vertex>',
       `#include <begin_vertex>
 	vec4 wearW = modelMatrix * vec4( transformed, 1.0 );
-	vWear = ( vec2( wearW.x, - wearW.z ) / 0.3048 - wearAt.xy ) / wearAt.z;`);
-    sh.fragmentShader = 'uniform sampler2D wearMap;\nvarying vec2 vWear;\n' + sh.fragmentShader.replace(
+	vWear = ( vec2( wearW.x, - wearW.z ) / 0.3048 - wearAt.xy ) / wearAt.z;
+	vWearH = wearW.y;`);
+    sh.fragmentShader = 'uniform sampler2D wearMap;\nvarying vec2 vWear;\nvarying float vWearH;\n' + sh.fragmentShader.replace(
       '#include <emissivemap_fragment>', `vec2 wearT = texture2D( wearMap, vWear ).rg;
 	float wearUp = smoothstep( 0.6, 0.9, dot( normal, normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz ) ) );
-	${kind === 'paint' ? 'diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.05, 0.05, 0.053 ), wearT.g * wearUp );'
-    : 'diffuseColor.rgb *= 1.0 - 0.8 * wearT.r * wearUp;'}
+	${WEAR_SHADE[kind]}
 	#include <emissivemap_fragment>`);
   };
   m.customProgramCacheKey = () => `wear-${kind}:${key.call(m)}`;
 }
 // Big open surfaces vary a little from tile to tile: the texture again, twelve times larger, shades it.
 const MACRO = new Set(['grass', 'asphalt', 'concrete']);
+// The service drive's walls are painted two-tone (2026-11-05, the interior audit): below 4 ft the same block, darker
+// ('cmu-low'), so it takes the block's texture, tinted, and its joints run on from the paint above.
+const TINT = { 'cmu-low': ['cmu', 0x7d7f83], 'tile-dark': ['tile', 0x45433f] };   // and the showroom's darker tile (item 4)
+const texShared = {};
 function surface(m, name) {
-  const e = TEX[name];
+  const [src, tint] = TINT[name] || [name, 0xffffff];
+  const e = TEX[src];
   if (!e) return;
-  m.map = texture(e.map, true, e.tile);
-  m.color.set(0xffffff);
-  if (e.normal) m.normalMap = texture(e.normal, false, e.tile);
+  const tex = (file, srgb) => (texShared[file] ||= texture(file, srgb, e.tile));
+  m.map = tex(e.map, true);
+  m.color.set(tint);
+  if (e.normal) m.normalMap = tex(e.normal, false);
   if (MACRO.has(name)) {
     const prev = m.onBeforeCompile;
     m.onBeforeCompile = (sh, r) => {
@@ -1977,8 +1993,8 @@ function updateTV(now) {
   if (!tvEl.paused && !('requestVideoFrameCallback' in tvEl)) busy = true;   // no frame callbacks: draw every frame
   return busy;
 }
-const groups = {}, pickStatic = [], pickGfx = [];
-const INDOOR = new Set(['tile', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
+const groups = {}, pickStatic = [], pickGfx = [], solidGlass = [], doorParts = [], setUp = new Set();
+const INDOOR = new Set(['tile', 'tile-dark', 'ceiling', 'wall', 'furniture', 'epoxy', 'joist', 'lift', 'wood', 'upholstery', 'leather',
   'rug', 'carpet', 'baseboard', 'screen', 'track', 'platform', 'paper', 'fixture', 'grille', 'sprinkler-pipe', 'cone']);
 // The cutaway: from above the roofline the roofs, ceilings and their lights come off, so the overview looks down into
 // every room, the way Silver Fox's isometric art shows a dealership.
@@ -2024,9 +2040,11 @@ model.traverse((o) => {
   }
   const name = o.material.name;
   if (CUTAWAY.has(name)) cutaway.push(o);
+  if (ud.door) doorParts.push(o);                     // a door that opens (see "doors that open")
   if (name === 'glass') {
     o.material = glass;
     o.renderOrder = 2;
+    solidGlass.push(o);                               // walking stops at glass, as at walls (2026-11-05)
     return;
   }
   if (name === 'light' || name === 'strip-light' || name === 'lamp') {
@@ -2035,21 +2053,142 @@ model.traverse((o) => {
     return;
   }
   if (name === 'tile') o.material.roughness = 0.2;    // polished: it reflects the room (see "reflections inside")
-  surface(o.material, name);
-  if (BAKED && PROBE_MATS[name]) boxReflect(o.material, PROBE_MATS[name]);
-  if (BAKED && !NO_MAP.has(name) && o.geometry.attributes.uv1) bakeLight(o.material, false);
-  if (WEAR_KIND[name]) wear(o.material, WEAR_KIND[name]);
-  if (INDOOR.has(name)) {
-    // Sky light has no shadows, so it would reach every room as if there were no roof. Surfaces that are only ever
-    // indoors take a little of it; their light comes from the ceiling lights.
-    o.material.envMap = scene.environment;
-    o.material.envMapIntensity = 0.28;
+  if (name === 'tile-dark') o.material.roughness = 0.55;   // the darker tile (2026-11-05) is honed: polished, the room's
+                                                       // reflection hid its color
+  // A material is set up once: since 2026-11-05 the doors that open are meshes of their own sharing the model's
+  // materials ('mullion', 'chrome'), and a second setup wrapped the shader twice.
+  if (!setUp.has(o.material)) {
+    setUp.add(o.material);
+    surface(o.material, name);
+    if (BAKED && PROBE_MATS[name]) boxReflect(o.material, PROBE_MATS[name]);
+    if (BAKED && !NO_MAP.has(name) && o.geometry.attributes.uv1) bakeLight(o.material, false);
+    if (WEAR_KIND[name]) wear(o.material, WEAR_KIND[name]);
+    if (INDOOR.has(name)) {
+      // Sky light has no shadows, so it would reach every room as if there were no roof. Surfaces that are only ever
+      // indoors take a little of it; their light comes from the ceiling lights.
+      o.material.envMap = scene.environment;
+      o.material.envMapIntensity = 0.28;
+    }
   }
   o.castShadow = o.receiveShadow = true;
   pickStatic.push(o);
 });
 scene.add(model);
 renderer.shadowMap.needsUpdate = true;
+
+// ---- doors that open ------------------------------------------------------------------------------------------------
+// Barrett, 2026-11-05: "I want the doors to be openable rather than just letting the user walk through the glass". On
+// his picks, the front entry pair and a glass door in the lounge glass into the service drive (scene.json's 'doors',
+// from layout.doors()). A door opens as you walk up to it, and as a flight or a walk passes through it, and closes
+// behind you; a click opens or closes it. Its leaves swing about their hinges, with any graphic on their glass (the
+// entry doors' vinyl, the lounge glass's north pane). Glass stops you walking now, as walls do (blocked()), and a
+// click-to-walk into another room goes through its door (walkTo()).
+const DOOR_NEAR = 2.4, DOOR_S = 0.75, DOOR_FAST_S = 0.3;   // meters from the doorway; seconds to open
+const doors = (S.doors || []).map((d) => ({ ...d, t: 0, held: false, passUntil: 0, fast: false,
+  leaves: d.leaves.map((l) => ({ ...l, parts: [] })) }));
+const doorById = Object.fromEntries(doors.map((d) => [d.id, d]));
+model.updateMatrixWorld(true);
+function doorPart(o, leaf) {
+  o.matrixAutoUpdate = false;
+  const pW = o.parent.matrixWorld.clone();
+  leaf.parts.push({ o, m0: o.matrix.clone(), pW, pInv: pW.clone().invert() });
+}
+for (const o of doorParts) {
+  const d = doorById[o.userData.door];
+  if (d && d.leaves[o.userData.leaf]) doorPart(o, d.leaves[o.userData.leaf]);
+}
+{
+  // The graphics on a door's glass: each piece of a job in the door's graphic place that lies on the doorway goes with
+  // the leaf whose hinge is nearest. Every job's pieces are in the model (hidden until picked), so all are taken.
+  const box3 = new THREE.Box3(), c = new THREE.Vector3();
+  for (const [key, g] of Object.entries(groups)) {
+    const d = doors.find((dd) => byKey[key] && byKey[key].spot === dd.gfx);
+    if (!d) continue;
+    const [a, b] = d.line, vx = b[0] - a[0], vz = b[2] - a[2], L2 = vx * vx + vz * vz;
+    g.traverse((o) => {
+      if (!o.isMesh) return;
+      box3.setFromObject(o).getCenter(c);
+      const u = ((c.x - a[0]) * vx + (c.z - a[2]) * vz) / L2;
+      if (u < 0 || u > 1 || Math.hypot(c.x - a[0] - vx * u, c.z - a[2] - vz * u) > 0.25) return;
+      const leaf = d.leaves.reduce((m, l) => (Math.hypot(c.x - l.hinge[0], c.z - l.hinge[2])
+        < Math.hypot(c.x - m.hinge[0], c.z - m.hinge[2]) ? l : m));
+      doorPart(o, leaf);
+    });
+  }
+}
+const doorT = new THREE.Matrix4(), doorR = new THREE.Matrix4(), doorB = new THREE.Matrix4(), doorM = new THREE.Matrix4();
+function setDoor(d) {
+  const e = d.t * d.t * (3 - 2 * d.t);
+  for (const l of d.leaves) {
+    doorT.makeTranslation(l.hinge[0], 0, l.hinge[2]);
+    doorB.makeTranslation(-l.hinge[0], 0, -l.hinge[2]);
+    doorM.multiplyMatrices(doorT, doorR.makeRotationY(l.open * e)).multiply(doorB);
+    for (const p of l.parts) {
+      p.o.matrix.copy(p.pInv).multiply(doorM).multiply(p.pW).multiply(p.m0);
+      p.o.matrixWorldNeedsUpdate = true;
+    }
+  }
+}
+function nearDoor(d) {
+  // On foot (or gliding at eye height) within DOOR_NEAR of the doorway.
+  const [a, b] = d.line, vx = b[0] - a[0], vz = b[2] - a[2];
+  const u = clamp(((cam.pos.x - a[0]) * vx + (cam.pos.z - a[2]) * vz) / (vx * vx + vz * vz), 0, 1);
+  return Math.hypot(cam.pos.x - a[0] - vx * u, cam.pos.z - a[2] - vz * u) < DOOR_NEAR
+    && Math.abs(cam.pos.y - d.leaves[0].hinge[1] - EYE) < 1.5;
+}
+function updateDoors(now, dt) {
+  let moving = false;
+  for (const d of doors) {
+    const want = d.held || now < d.passUntil || nearDoor(d) ? 1 : 0;
+    if (d.t === want) continue;
+    const rate = dt / (d.fast ? DOOR_FAST_S : DOOR_S);
+    d.t = want > d.t ? Math.min(1, d.t + rate) : Math.max(0, d.t - rate);
+    if (d.t === 0 || d.t === 1) d.fast = false;
+    setDoor(d);
+    moving = true;
+  }
+  if (moving) renderer.shadowMap.needsUpdate = true;
+  return moving;
+}
+function doorsOnPath(p, q, until) {
+  // A flight or a walk from p to q through a doorway, at eye height: its door opens ahead of it, quickly.
+  for (const d of doors) {
+    const [a, b] = d.line;
+    const r = [q.x - p.x, q.z - p.z], s2 = [b[0] - a[0], b[2] - a[2]];
+    const den = r[0] * s2[1] - r[1] * s2[0];
+    if (Math.abs(den) < 1e-9) continue;
+    const t = ((a[0] - p.x) * s2[1] - (a[2] - p.z) * s2[0]) / den;
+    const u = ((a[0] - p.x) * r[1] - (a[2] - p.z) * r[0]) / den;
+    const y = p.y + (q.y - p.y) * t;
+    if (t >= 0 && t <= 1 && u > -0.1 && u < 1.1 && Math.abs(y - d.leaves[0].hinge[1] - EYE) < 2.5) {
+      d.passUntil = until;
+      if (d.t < 1) d.fast = true;
+      dirty();
+    }
+  }
+}
+function toggleDoor(id) {
+  const d = doorById[id];
+  if (!d) return;
+  const open = d.t > 0.5 || d.held;
+  d.held = !open;
+  d.passUntil = 0;
+  dirty();
+}
+// The rooms a walk can be in, for going through the right door (walkTo()): the showroom (with the portal's entry, in
+// front of the storefront to the entry doors), the service drive, the glass offices (their doors stay shut), outside.
+const ROOMS = S.rooms, OFFICES_BOX = S.offices;
+const inBox = (p, b) => p.x > Math.min(b[0][0], b[1][0]) && p.x < Math.max(b[0][0], b[1][0])
+  && p.z > Math.min(b[0][2], b[1][2]) && p.z < Math.max(b[0][2], b[1][2]);
+function roomAt(p) {
+  if (OFFICES_BOX && inBox(p, OFFICES_BOX)) return 'office';
+  if (inBox(p, ROOMS.showroom)) return 'showroom';
+  const e = doorById.entry;
+  if (e && p.z > 0 && p.z < e.line[0][2] + 0.05 && Math.abs(p.x) < Math.abs(e.line[0][0]) + 1.25) return 'showroom';
+  if (inBox(p, ROOMS.service)) return 'service';
+  return 'outside';
+}
+const WAYS = [...doors.map((d) => ({ rooms: d.rooms, sides: d.sides })), ...(S.openings || [])];
 
 // ---- trees and the horizon ----------------------------------------------------------------------------------------
 // Barrett, 2026-10-20 (the polish plan): trees along the street's far side, the site's edges and in groups in the
@@ -2218,10 +2357,14 @@ function aim(eye, target) {
 let fly = null;
 let jumpV = null;               // a jump's speed up while in the air (see "Space jumps"); null on the ground
 let upClose = false;            // flown up to one graphic: the dots step out of the way until the view moves on
-function flyTo(to, ms = 1100) {
+let walkLegs = [];               // a walk's next legs, through a door (walkTo())
+function flyTo(to, ms = 1100, keepLegs = false) {
   jumpV = null;                                       // a jump in the air ends where the flight starts
-  fly = { from: { pos: cam.pos.clone(), yaw: cam.yaw, pitch: cam.pitch, hfov: cam.hfov }, to, t0: performance.now(),
+  if (!keepLegs) walkLegs = [];
+  const now = performance.now();
+  fly = { from: { pos: cam.pos.clone(), yaw: cam.yaw, pitch: cam.pitch, hfov: cam.hfov }, to, t0: now,
     ms: reduced ? 1 : ms };
+  doorsOnPath(cam.pos, to.pos, now + fly.ms + 900);   // a door on the way opens ahead of it
   dirty();
 }
 function updateFly(now) {
@@ -2234,7 +2377,10 @@ function updateFly(now) {
   cam.yaw = from.yaw + dy * e;
   cam.pitch = from.pitch + (to.pitch - from.pitch) * e;
   cam.hfov = from.hfov + ((to.hfov ?? from.hfov) - from.hfov) * e;
-  if (t >= 1) fly = null;
+  if (t >= 1) {
+    fly = null;
+    if (walkLegs.length) walkLegs.shift()();          // on through the door
+  }
   return true;
 }
 // Rays (the pins' walls, walking, the floor, clicks and hover, a close-up's clear view): the performance audit
@@ -2255,7 +2401,7 @@ function cast(from, dir, far, list = pickStatic) {
 }
 function indexRays() {
   // A few meshes per slice, between frames, the walls and floors first (the pins and walking use them).
-  const todo = [...new Set([...pickStatic, ...pickGfx].map((o) => o.geometry))].filter((g) => !g.boundsTree);
+  const todo = [...new Set([...pickStatic, ...pickGfx, ...solidGlass].map((o) => o.geometry))].filter((g) => !g.boundsTree);
   const slice = () => {
     const t0 = performance.now();
     while (todo.length && performance.now() - t0 < 6) todo.shift().computeBoundsTree({ indirect: true });
@@ -2321,6 +2467,7 @@ canvas.addEventListener('pointerdown', (e) => {
   try { canvas.setPointerCapture(e.pointerId); } catch { /* a pointer the browser doesn't track */ }
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   fly = null;
+  walkLegs = [];
   if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: false,
     t0: performance.now(), yaw0: cam.yaw, pitch0: cam.pitch, touch: e.pointerType === 'touch' };
   else {
@@ -2380,10 +2527,11 @@ function pick(e) {
   ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   ray.far = 2000;
-  const h = hitsOf([...pickGfx, ...pickStatic])[0];
+  const h = hitsOf([...pickGfx, ...pickStatic, ...doorParts.filter((o) => o.material === glass)])[0];
   if (!h) return;
   hideHint();
   if (h.object.userData.gfx) { select(h.object.userData.gfx); return; }
+  if (h.object.userData.door) { toggleDoor(h.object.userData.door); return; }   // a door: open it, or close it
   if (studioTarget(h.object)) { openStudio(); return; }  // a car or the studio door: the Vehicle Graphics Builder
   const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
   if (n.y > 0.7 && h.point.y < 1.0) walkTo(h.point);
@@ -2393,8 +2541,34 @@ function walkTo(p) {
   const high = cam.pos.y > 6;
   const to = new THREE.Vector3(p.x, p.y + EYE, p.z);
   leaveStop();
-  flyTo({ pos: to, yaw: cam.yaw, pitch: high ? -0.06 : cam.pitch, hfov: high ? 64 : cam.hfov },
-    clamp(cam.pos.distanceTo(to) * 45, 500, 1800));
+  if (high) {                                         // from above: straight down to it, as before
+    flyTo({ pos: to, yaw: cam.yaw, pitch: -0.06, hfov: 64 }, clamp(cam.pos.distanceTo(to) * 45, 500, 1800));
+    return;
+  }
+  // On foot (2026-11-05, "doors that open"): into another room through the door between them, facing the way you go;
+  // the glass offices' doors stay shut, so a walk there stops at their glass.
+  let target = roomAt(to);
+  if (target === 'office') {
+    to.z = Math.max(OFFICES_BOX[0][2], OFFICES_BOX[1][2]) + 0.6;
+    to.y = floorAt(new THREE.Vector3(to.x, 1.5, to.z)) + EYE;
+    target = 'showroom';
+  }
+  const here = roomAt(cam.pos) === 'office' ? 'showroom' : roomAt(cam.pos);
+  const way = here !== target && WAYS.find((w) => w.rooms.includes(here) && w.rooms.includes(target));
+  const pts = [];
+  if (way) {
+    const [s0, s1] = way.rooms[0] === here ? way.sides : [way.sides[1], way.sides[0]];
+    for (const q of [s0, s1]) pts.push(new THREE.Vector3(q[0], floorAt(new THREE.Vector3(q[0], 1.5, q[2])) + EYE, q[2]));
+  }
+  pts.push(to);
+  const leg = (q, i) => () => {
+    const d = new THREE.Vector3().subVectors(q, cam.pos);
+    const yaw = pts.length > 1 && Math.hypot(d.x, d.z) > 0.3 ? Math.atan2(-d.x, -d.z) : cam.yaw;
+    flyTo({ pos: q, yaw, pitch: cam.pitch, hfov: cam.hfov }, clamp(cam.pos.distanceTo(q) * 45, 400, 1800), true);
+    walkLegs = pts.slice(i + 1).map((qq, j) => leg(qq, i + 1 + j));
+  };
+  walkLegs = [];
+  leg(pts[0], 0)();
 }
 const keys = new Set();
 const MOVE_KEYS = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
@@ -2408,6 +2582,7 @@ addEventListener('keydown', (e) => {
   if (MOVE_KEYS.includes(k) || k === 'shift') {
     keys.add(k);
     fly = null;
+    walkLegs = [];
     if (MOVE_KEYS.includes(k)) { e.preventDefault(); hideHint(); leaveStop(); }
     dirty();
   } else if (k === '+' || k === '=') zoom(1 / 1.3);
@@ -2432,10 +2607,12 @@ addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
 const fwd = new THREE.Vector3(), side = new THREE.Vector3(), step = new THREE.Vector3();
 function blocked(dir, dist) {
+  // Walls and furniture stop you, and since 2026-11-05 glass too (the doors open instead: "doors that open").
+  const walls = [...pickStatic, ...solidGlass];
   for (const drop of [0, EYE - 0.45]) {
     const from = cam.pos.clone();
     from.y -= drop;
-    if (cast(from, dir, dist + 0.35)) return true;
+    if (cast(from, dir, dist + 0.35, walls)) return true;
   }
   return false;
 }
@@ -2809,16 +2986,20 @@ function clustersOf(key, merge = true) {
     for (const a of [-0.3, 0, 0.3]) for (const b of [-0.3, 0, 0.3]) {
       c.samples.push(c.center.clone().addScaledVector(right, a * c.across).addScaledVector(c.up, b * c.tall));
     }
+    c.key = key;                                        // its own pieces don't hide it (viewOf())
   }
   return out;
 }
-function clearFrom(eye, c) {
-  // Nothing solid between the eye and most of the graphic (glass and other graphics don't count).
+function clearFrom(eye, c, others = null) {
+  // Nothing solid between the eye and most of the graphic (glass and other graphics don't count): 7 of its 9 sample
+  // points in sight. Given a list of the other graphics, none of them may stand in front of any sample point.
   let seen = 0;
   for (const q of c.samples) {
     const d = new THREE.Vector3().subVectors(q, eye);
     const len = d.length();
-    if (!cast(eye, d.normalize(), len - 0.15)) seen++;
+    d.normalize();
+    if (!cast(eye, d, len - 0.15)) seen++;
+    if (others && cast(eye, d, len - 0.15, others)) return false;
   }
   return seen >= 7;
 }
@@ -2860,14 +3041,18 @@ function viewOf(c) {
   }
   const base = Math.max(2.4, Math.max(c.across, c.tall * 1.4) / framing / (2 * Math.tan(deg(30))));
   const room = roomOf(c);
-  for (const lift of room ? [0] : [0, 2.5, 5]) for (const k of [1, 1.35, 1.8, 2.4, 3.2]) {
-    for (const turn of [0, 25, -25, 45, -45]) {
+  // Outside, first a near straight-on viewpoint with no other graphic in front of it (2026-11-05: a parking sign stood in
+  // front of a storefront band in the band's own close-up); then, as before, any that sees most of it past the walls.
+  // Inside, the furniture's own signs (the reception desk's) belong in the view, so only the second.
+  const passes = room ? [] : [[pickGfx.filter((o) => o.userData.gfx !== c.key), [0, 25, -25]]];
+  for (const [list, turns] of [...passes, [null, [0, 25, -25, 45, -45]]]) {
+    for (const lift of room ? [0] : [0, 2.5, 5]) for (const k of [1, 1.35, 1.8, 2.4, 3.2]) for (const turn of turns) {
       const dir = c.n.clone().applyAxisAngle(UP, deg(turn));
       const reach = room ? roomRoom(dir, c.center, room) - 1.0 : Infinity;
       if (reach < 2.0) continue;
       const eye = c.center.clone().addScaledVector(dir, Math.min(base * k, reach));
       eye.y = floorAt(eye) + EYE + lift;
-      if (!clearFrom(eye, c)) continue;
+      if (!clearFrom(eye, c, list)) continue;
       const dist = eye.distanceTo(c.center);
       const aspect = camera.aspect || 16 / 9;
       const h1 = 2 * Math.atan(c.across / framing / 2 / dist);
@@ -3249,7 +3434,9 @@ function syncSigns() {
 // Barrett, 2026-10-21 (the second polish round): the screens are on. The desks' monitors show a sales program, the
 // reception's the day's appointments, the write-up podiums a repair order, and the lounge TV a welcome, with the
 // store's name in its view. Each is a picture just off its glass (scene.json's 'screens', from interior.SCREENS),
-// lit from within: as bright as a white wall, whatever the eye has adjusted to.
+// lit from within: as bright as a white wall, whatever the eye has adjusted to. Since 2026-11-05 (the interior audit,
+// fitout.py) the write-up counter's monitors show a repair order too, the drive's status TV where each car is, and the
+// key-drop kiosk its two buttons.
 const SCREEN_WHITE = 0.8;
 const screenMats = {};
 function drawScreen(kind, c) {
@@ -3260,6 +3447,131 @@ function drawScreen(kind, c) {
     x.roundRect(px, py, pw, ph, r);
     x.fill();
   };
+  const font = (wt, px) => `${wt} ${Math.round(px)}px Montserrat, system-ui, sans-serif`;
+  if (kind === 'status') {
+    // The service drive's status TV (2026-11-05, the interior audit): where each car is, on a dark board.
+    x.fillStyle = '#121a2e';
+    x.fillRect(0, 0, w, h);
+    Object.assign(x, { fillStyle: '#ffffff', textAlign: 'left', textBaseline: 'middle', font: font(700, h * 0.075) });
+    x.fillText('SERVICE STATUS', w * 0.05, h * 0.1);
+    bar(w * 0.05, h * 0.165, w * 0.09, h * 0.012, '#fd410d', 2);
+    const cols = [0.05, 0.36, 0.6], heads = ['VEHICLE', 'ADVISOR', 'STATUS'];
+    x.font = font(600, h * 0.04);
+    x.fillStyle = 'rgba(255,255,255,0.55)';
+    heads.forEach((t, i) => x.fillText(t, w * cols[i], h * 0.25));
+    const pills = [['READY', '#2e9b6a'], ['IN SERVICE', '#2f6fd6'], ['WASH', '#7d8898'], ['IN SERVICE', '#2f6fd6'],
+      ['PARTS', '#f0b429'], ['READY', '#2e9b6a']];
+    pills.forEach(([t, c], r) => {
+      const y = h * (0.33 + r * 0.11);
+      bar(w * 0.04, y - h * 0.045, w * 0.92, h * 0.09, r % 2 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)', 4);
+      bar(w * cols[0], y - h * 0.012, w * (0.16 + 0.05 * (r % 3)), h * 0.024, 'rgba(255,255,255,0.8)');
+      bar(w * cols[1], y - h * 0.012, w * 0.13, h * 0.024, 'rgba(255,255,255,0.6)');
+      bar(w * cols[2], y - h * 0.032, w * 0.2, h * 0.064, c, h * 0.032);
+      Object.assign(x, { fillStyle: '#ffffff', textAlign: 'center', font: font(700, h * 0.034) });
+      x.fillText(t, w * (cols[2] + 0.1), y + h * 0.002);
+      x.textAlign = 'left';
+    });
+    return;
+  }
+  if (kind === 'kiosk') {
+    // The key-drop kiosk's touch screen (2026-11-05): drop off or pick up, scan your code.
+    x.fillStyle = '#f4f6f9';
+    x.fillRect(0, 0, w, h);
+    x.fillStyle = '#1d2740';
+    x.fillRect(0, 0, w, h * 0.16);
+    Object.assign(x, { fillStyle: '#ffffff', textAlign: 'center', textBaseline: 'middle', font: font(700, h * 0.07) });
+    x.fillText('KEY DROP', w / 2, h * 0.08);
+    const btn = (y, c, t) => {
+      bar(w * 0.1, y, w * 0.8, h * 0.17, c, h * 0.03);
+      Object.assign(x, { fillStyle: '#ffffff', font: font(700, h * 0.065) });
+      x.fillText(t, w / 2, y + h * 0.085);
+    };
+    btn(h * 0.27, '#fd410d', 'DROP OFF KEYS');
+    btn(h * 0.5, '#1d2740', 'PICK UP KEYS');
+    Object.assign(x, { fillStyle: '#7d8898', font: font(600, h * 0.045) });
+    x.fillText('Scan your code below', w / 2, h * 0.79);
+    bar(w * 0.44, h * 0.85, w * 0.12, h * 0.1, '#c3cad4', 4);
+    return;
+  }
+  if (kind === 'configurator') {
+    // The sales floor's touch-screen kiosk (2026-11-05, item 4): build and price, a car in profile, its colors.
+    const g = x.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#f7f8fa');
+    g.addColorStop(1, '#dfe4ea');
+    x.fillStyle = g;
+    x.fillRect(0, 0, w, h);
+    Object.assign(x, { fillStyle: '#1d2740', textAlign: 'left', textBaseline: 'middle', font: font(700, h * 0.08) });
+    x.fillText('BUILD & PRICE', w * 0.06, h * 0.11);
+    x.fillStyle = '#2b3446';                            // the car in profile: body, cabin, wheels
+    x.beginPath();
+    x.moveTo(w * 0.14, h * 0.62);
+    x.lineTo(w * 0.17, h * 0.5);
+    x.lineTo(w * 0.33, h * 0.46);
+    x.lineTo(w * 0.42, h * 0.33);
+    x.lineTo(w * 0.62, h * 0.32);
+    x.lineTo(w * 0.73, h * 0.45);
+    x.lineTo(w * 0.85, h * 0.49);
+    x.lineTo(w * 0.87, h * 0.62);
+    x.closePath();
+    x.fill();
+    x.fillStyle = '#9fb4cc';
+    x.fillRect(w * 0.44, h * 0.36, w * 0.08, h * 0.09);
+    x.fillRect(w * 0.54, h * 0.36, w * 0.08, h * 0.09);
+    for (const cx of [0.3, 0.72]) {
+      x.fillStyle = '#111317';
+      x.beginPath();
+      x.arc(w * cx, h * 0.63, h * 0.085, 0, 7);
+      x.fill();
+      x.fillStyle = '#aab2bd';
+      x.beginPath();
+      x.arc(w * cx, h * 0.63, h * 0.04, 0, 7);
+      x.fill();
+    }
+    ['#2b3446', '#c62f2f', '#f2f2f2', '#7d8898', '#1f5fae'].forEach((c, i) => {
+      x.fillStyle = c;
+      x.beginPath();
+      x.arc(w * (0.12 + i * 0.07), h * 0.86, h * 0.035, 0, 7);
+      x.fill();
+    });
+    bar(w * 0.62, h * 0.8, w * 0.32, h * 0.12, '#fd410d', h * 0.03);
+    Object.assign(x, { fillStyle: '#ffffff', textAlign: 'center', font: font(700, h * 0.05) });
+    x.fillText('START', w * 0.78, h * 0.86);
+    return;
+  }
+  if (kind === 'sign-men' || kind === 'sign-women') {
+    // A restroom's sign beside its door (2026-11-05, item 5): white figure and word on a dark plaque, braille under.
+    x.fillStyle = '#2a2d33';
+    x.fillRect(0, 0, w, h);
+    x.fillStyle = '#ffffff';
+    const cx = w / 2, top = h * 0.12;
+    x.beginPath();
+    x.arc(cx, top + h * 0.06, h * 0.055, 0, 7);
+    x.fill();
+    if (kind === 'sign-men') {
+      x.fillRect(cx - w * 0.12, top + h * 0.13, w * 0.24, h * 0.24);
+      x.fillRect(cx - w * 0.1, top + h * 0.36, w * 0.08, h * 0.2);
+      x.fillRect(cx + w * 0.02, top + h * 0.36, w * 0.08, h * 0.2);
+    } else {
+      x.beginPath();
+      x.moveTo(cx - w * 0.06, top + h * 0.13);
+      x.lineTo(cx + w * 0.06, top + h * 0.13);
+      x.lineTo(cx + w * 0.17, top + h * 0.42);
+      x.lineTo(cx - w * 0.17, top + h * 0.42);
+      x.closePath();
+      x.fill();
+      x.fillRect(cx - w * 0.08, top + h * 0.42, w * 0.06, h * 0.14);
+      x.fillRect(cx + w * 0.02, top + h * 0.42, w * 0.06, h * 0.14);
+    }
+    Object.assign(x, { textAlign: 'center', textBaseline: 'middle', font: font(700, h * 0.1) });
+    x.fillText(kind === 'sign-men' ? 'MEN' : 'WOMEN', cx, h * 0.8);
+    for (let i = 0; i < (kind === 'sign-men' ? 6 : 10); i++) {
+      x.beginPath();
+      x.arc(cx + (i - (kind === 'sign-men' ? 2.5 : 4.5)) * w * 0.06 + (i % 2) * w * 0.012, h * 0.92 + (i % 3 - 1) * h * 0.012,
+        h * 0.008, 0, 7);
+      x.fill();
+    }
+    return;
+  }
   // A program's window: the title bar with its mark and menus, the sidebar, then the page.
   x.fillStyle = '#eef1f5';
   x.fillRect(0, 0, w, h);
@@ -3359,6 +3671,7 @@ for (const s of S.screens || []) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.h), screenMats[s.kind]);
   m.position.fromArray(s.at);
   m.lookAt(m.position.clone().add(new THREE.Vector3(...s.facing)));
+  if (s.tilt) m.rotateX(-s.tilt);                     // its top leaning back (the sales kiosk's, 2026-11-05)
   m.onBeforeRender = (r) => m.material.color.setScalar(SCREEN_WHITE / r.toneMappingExposure);
   scene.add(m);
 }
@@ -3809,7 +4122,9 @@ function syncDetail() {
   if (!o) return;
   $('#dName').textContent = o.product;
   // A job borrowed to fill a theme's place says where it was really installed.
-  $('#dJob').textContent = `${o.dealer}${jobText(o)}${o.installed ? ` · installed as: ${o.installed}` : ''}`;
+  // A note when the job doesn't suit this store as it is (2026-11-05, the placement audit): shown smaller than its real
+  // size, or words and arrows made for another store's layout.
+  $('#dJob').textContent = `${o.dealer}${jobText(o)}${o.installed ? ` · installed as: ${o.installed}` : ''}${o.note ? ` · ${o.note}` : ''}`;
   $('#dMsg').textContent = o.message;
   $('#dWhere').textContent = SPOT[o.spot].where;
   $('#dSize').textContent = sizeText(o);
@@ -4995,7 +5310,7 @@ function loop(now) {
   last = now;
   const busy = updateFly(now) | updateKeys(dt) | updateLight(dt) | updateGlow(now) | updateCutaway() | updateShift(dt)
     | updateWeather(now) | updateJump(dt) | updateSway(now) | updateBody(dt) | updateSlides(now) | updateTV(now)
-    | updateGrass();
+    | updateGrass() | updateDoors(now, dt);
   if (dirtyPending) { dirtyPending = false; needs = true; if (BAKED) staleProbes(); }   // a texture or light map arrived
   if (warmAt && now > warmAt) warmShaders();                       // the moves' shaders, in the background
   if (warmDraw && !(now - movedAt < REST_MS)) { warmDraw = false; drawWarm(); needs = true; }   // then a full frame over it
@@ -5054,6 +5369,8 @@ function relight(v = {}) {
   dirty();
 }
 window.__dsb = { scene, cam, camera, goStop, goUpClose, groups, renderer, relight, S, cast, floorAt, THREE, applyTheme, state, blades,
+  doors: () => doors.map((d) => ({ id: d.id, t: +d.t.toFixed(3), held: d.held, parts: d.leaves.map((l) => l.parts.length) })),
+  toggleDoor, roomAt, walkTo, blocked, keys,
   NIGHT, setNight, setTime, pickProduct, setStore, storeList, keysOf, openStudio, closeStudio, bringBack, THEMES,
   setQuality, baked, probes, body, fullFrames: (on) => { fullAlways = !!on; dirty(); },
   tv: () => ({ mode: tv.mode, vi: tv.vi, ready: tv.ready, full: tv.m && tv.m.uniforms.full.value,
