@@ -4316,8 +4316,21 @@ function closeStudio(fromHistory = false) {
   $('#studio').hidden = true;
   $('#studioFrame').src = 'about:blank';
   if (!fromHistory) history.back();
-  if (back !== null) bringBack(back.split(',').filter(Boolean));
+  if (back !== null) {
+    const keys = back.split(',').filter(Boolean);
+    // The team's art uploaded in the studio for the windshield's top, the doors or the hood is in this browser's store,
+    // tagged with the car place it goes to here: fetched now, if it came after this page loaded (see "your own art").
+    if (TEAM && keys.some((k) => k.startsWith('upload:') && !byKey[k])) pullUploads().then(() => bringBack(keys));
+    else bringBack(keys);
+  }
   dirty();
+}
+async function pullUploads() {
+  for (const r of await upAll()) {
+    if (byKey[`upload:${r.id}`] || !SPOT[r.spot]) continue;
+    await buildUpload(uploadOption(r));
+  }
+  renderRail();
 }
 // One quote for both builders: the build made in the vehicle studio rides along in the package. The review lists it under
 // the vehicle it was built on, the copied list and the quote email carry it with a link back to it, and the page's link
@@ -4346,8 +4359,8 @@ function bringBack(keys) {
   // place the build left empty comes off the cars too.
   const next = new Map(state.chosen), took = new Set();
   for (const k of keys) {
-    const o = byKey[`vgb-${k}`];
-    if (!o || took.has(o.spot)) continue;
+    const o = byKey[k.startsWith('upload:') ? k : `vgb-${k}`];   // the team's own art keeps its key across both builders
+    if (!o || !CAR_SPOTS.includes(o.spot) || took.has(o.spot)) continue;
     took.add(o.spot);
     next.set(o.spot, o.key);
   }
