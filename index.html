@@ -561,6 +561,12 @@ img { max-width: none; }
 .linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
 .store-note { margin: 0; min-height: 1em; overflow-wrap: anywhere; }
 .store-none { margin: 4px 0 10px; color: var(--ink-2); font-size: 12.5px; }
+/* Your own art (the team's, 2026-11-16): an upload button under each place, and the size and file dialog */
+.grp-up { margin: -4px 0 10px 16px; }
+.up-size { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.store-form label.up-check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+.store-form label.up-check input { width: 16px; height: 16px; padding: 0; }
+.card.upload .card-dealer { color: var(--accent); }
 .card.own .card-dealer::after { content: " · your job"; color: var(--accent); font-weight: 700; }
 .dlg-body tr.r-head td { padding-top: 18px; color: var(--ink-2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 /* The vehicle studio: the Vehicle Graphics Builder over the dealership */
@@ -836,6 +842,10 @@ img { max-width: none; }
           <button type="button" id="before" aria-pressed="false">Before</button>
           <button type="button" id="after" aria-pressed="true">After</button>
         </div>
+        <button class="chip-btn" id="mockBtn" type="button" hidden>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2v8M4.6 7.2 8 10.6l3.4-3.4M2.6 13.4h10.8"/></svg>
+          <span class="label">Download mockup</span>
+        </button>
       </div>
       <div class="theme-pill" id="themePill" hidden>
         <button type="button" id="themePrev" aria-label="The occasion before">
@@ -984,6 +994,35 @@ img { max-width: none; }
     <button class="btn-quiet" id="storeOff" type="button" hidden>Back to the showcase</button>
   </div>
 </dialog>
+<dialog class="sheet-dlg store-dlg" id="upDlg" aria-labelledby="upTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="upTitle">Your art</h2>
+      <p id="upSub">Placed at its real size. It stays on this computer.</p>
+    </div>
+    <button class="dlg-x" id="upClose" type="button" aria-label="Close">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
+    </button>
+  </div>
+  <div class="dlg-body store-form">
+    <div class="logo-drop" id="upDrop">
+      <img id="upPreview" alt="Your art" hidden>
+      <span>Drop a PNG, JPG, SVG or PDF here, or <button class="linkish" id="upPick" type="button">choose a file</button>.</span>
+      <input id="upFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,application/pdf,.pdf,.ai" hidden>
+    </div>
+    <label>Name <input id="upName" type="text" maxlength="60" autocomplete="off"></label>
+    <div class="up-size">
+      <label>Width, inches <input id="upW" type="number" min="1" step="0.5" inputmode="decimal"></label>
+      <label>Height, inches <input id="upH" type="number" min="1" step="0.5" inputmode="decimal"></label>
+    </div>
+    <label class="up-check"><input id="upWhite" type="checkbox"> Remove the white background</label>
+    <p class="dlg-note store-note" id="upNote" role="status"></p>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn-primary" id="upGo" type="button" disabled>Place it</button>
+    <button class="btn-quiet" id="upCancel" type="button">Cancel</button>
+  </div>
+</dialog>
 <script src="assets/3d/catalog.js?v=20261030b"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
@@ -1008,7 +1047,7 @@ import { computeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 // themes from catalog.py (assets/3d/catalog.js). Each place holds one job at a time, as each spot does in the vehicle
 // builder; a theme puts a whole set on.
 const C = window.DSB_CATALOG;
-const ASSET_V = '0c2b6db034';
+const ASSET_V = '884a05bccb';
 const av = (u) => `${u}${u.includes('?') ? '&' : '?'}v=${ASSET_V}`;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1057,6 +1096,48 @@ let night = false, nightBy = null, kit = null;          // the night view (see "
 let dusk = false;                                       // with night: the lights on under dusk's sky instead
 let signs = null;                                       // the store's name signs (see "your store")
 const storeKeys = new Map();                            // each theme's set for the store in view
+
+// ---- your own art (the team's, 2026-11-16) ------------------------------------------------------------------------
+// Barrett: "allow us to upload artwork (e.g. bodysides/windshield banners/flags/etc) and have them place directly on
+// the dealership/vehicles". On his calls: for our team only (team=1 in the link turns it on in this browser, team=0
+// off), and the art never leaves the browser: each upload is kept here (IndexedDB) and stands in the catalog as a job
+// of its own, 'upload:<id>', so picking, the quote and the link work as they do for any job. Where it goes and how big:
+// assets/3d/upload-slots.json (build/upload_slots.py), from the same placement rules as the catalog's jobs.
+const TEAM = (() => {
+  const v = new URLSearchParams(location.search).get('team') ?? new URLSearchParams(location.hash.slice(1)).get('team');
+  try {
+    if (v === '1') localStorage.setItem('dsb-team', '1');
+    if (v === '0') localStorage.removeItem('dsb-team');
+    return localStorage.getItem('dsb-team') === '1';
+  } catch { return v === '1'; }
+})();
+const UP_DB = 'dsb-uploads';
+function upStore(mode, fn) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(UP_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('art', { keyPath: 'id' });
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const t = r.result.transaction('art', mode), q = fn(t.objectStore('art'));
+      t.oncomplete = () => { r.result.close(); res(q && q.result); };
+      t.onerror = () => { r.result.close(); rej(t.error); };
+    };
+  });
+}
+const upAll = () => upStore('readonly', (st) => st.getAll()).catch(() => []);
+const upPut = (rec) => upStore('readwrite', (st) => st.put(rec));
+const upDel = (id) => upStore('readwrite', (st) => st.delete(id));
+function uploadOption(r) {
+  // An upload as a job: its place's name, 'Your upload' where a job names its dealer, and its own picture.
+  const o = { key: `upload:${r.id}`, spot: r.spot, product: SPOT[r.spot].label, dealer: 'Your upload', job: '',
+    message: r.name, themes: [], makes: [], neutral: true,          // shown in any store's view
+    size: [r.w, r.h], count: 1, thumb: URL.createObjectURL(r.blob), upload: r };
+  opts.push(o);
+  byKey[o.key] = o;
+  return o;
+}
+for (const r of TEAM ? await upAll() : []) if (SPOT[r.spot]) uploadOption(r);
+const thumbOf = (o) => (o.upload ? o.thumb : av(o.thumb));
 
 const p = new URLSearchParams(location.hash.slice(1));
 if (p.has('g')) {
@@ -2097,25 +2178,249 @@ for (const o of doorParts) {
   const d = doorById[o.userData.door];
   if (d && d.leaves[o.userData.leaf]) doorPart(o, d.leaves[o.userData.leaf]);
 }
-{
+function doorGraphics(key, g) {
   // The graphics on a door's glass: each piece of a job in the door's graphic place that lies on the doorway goes with
-  // the leaf whose hinge is nearest. Every job's pieces are in the model (hidden until picked), so all are taken.
+  // the leaf whose hinge is nearest. Every job's pieces are in the model (hidden until picked), so all are taken; an
+  // upload's, when it's made.
   const box3 = new THREE.Box3(), c = new THREE.Vector3();
-  for (const [key, g] of Object.entries(groups)) {
-    const d = doors.find((dd) => byKey[key] && byKey[key].spot === dd.gfx);
-    if (!d) continue;
-    const [a, b] = d.line, vx = b[0] - a[0], vz = b[2] - a[2], L2 = vx * vx + vz * vz;
-    g.traverse((o) => {
-      if (!o.isMesh) return;
-      box3.setFromObject(o).getCenter(c);
-      const u = ((c.x - a[0]) * vx + (c.z - a[2]) * vz) / L2;
-      if (u < 0 || u > 1 || Math.hypot(c.x - a[0] - vx * u, c.z - a[2] - vz * u) > 0.25) return;
-      const leaf = d.leaves.reduce((m, l) => (Math.hypot(c.x - l.hinge[0], c.z - l.hinge[2])
-        < Math.hypot(c.x - m.hinge[0], c.z - m.hinge[2]) ? l : m));
-      doorPart(o, leaf);
-    });
-  }
+  const d = doors.find((dd) => byKey[key] && byKey[key].spot === dd.gfx);
+  if (!d) return;
+  const [a, b] = d.line, vx = b[0] - a[0], vz = b[2] - a[2], L2 = vx * vx + vz * vz;
+  g.updateMatrixWorld(true);
+  g.traverse((o) => {
+    if (!o.isMesh) return;
+    box3.setFromObject(o).getCenter(c);
+    const u = ((c.x - a[0]) * vx + (c.z - a[2]) * vz) / L2;
+    if (u < 0 || u > 1 || Math.hypot(c.x - a[0] - vx * u, c.z - a[2] - vz * u) > 0.25) return;
+    const leaf = d.leaves.reduce((m, l) => (Math.hypot(c.x - l.hinge[0], c.z - l.hinge[2])
+      < Math.hypot(c.x - m.hinge[0], c.z - m.hinge[2]) ? l : m));
+    doorPart(o, leaf);
+  });
 }
+for (const [key, g] of Object.entries(groups)) doorGraphics(key, g);
+
+// ---- your own art on the model (the team's, 2026-11-16) -------------------------------------------------------------
+// Where an upload goes: a place whose pieces lie flat (a wall, glass, the floor, a car) takes any size up to its room,
+// placed by upload-slots.json's table, read the way build/upload_slots.py's predict() reads it; each piece borrows the
+// light baked for the nearest piece of the place's catalog job. A place that hangs its art on hardware (pole arms,
+// frames, flagpoles, stakes, posts, stands, rods) borrows the catalog job there nearest the upload's size, hardware
+// and all, and the upload goes on its faces, cropped to them.
+const SLOTS = TEAM ? await fetch(av('assets/3d/upload-slots.json')).then((r) => r.json()).catch(() => ({})) : {};
+const FT_M = 0.3048;
+const ftV = (v) => new THREE.Vector3(v[0], v[2], -v[1]);              // feet axes (x east, y north, z up) to the page's
+function slotRow(rows, s) {
+  const n = rows.length;
+  if (s <= rows[0].s) return rows[0].parts;
+  if (s >= rows[n - 1].s) return rows[n - 1].parts;
+  let i = 0;
+  while (rows[i + 1].s <= s) i++;
+  const a = rows[i], b = rows[i + 1], t = (s - a.s) / (b.s - a.s);
+  if (a.parts.length !== b.parts.length) return (t < 0.5 ? a : b).parts;
+  return a.parts.map((pa, k) => {
+    const pb = b.parts[k];
+    return { at: pa.at.map((v, d) => v + (pb.at[d] - v) * t), w: pa.w + (pb.w - pa.w) * t, h: pa.h + (pb.h - pa.h) * t,
+      cover: pa.cover || pb.cover };
+  });
+}
+function slotGrid(g, w, h) {
+  const at = (xs, x) => {
+    if (x <= xs[0]) return [0, 0];
+    if (x >= xs[xs.length - 1]) return [xs.length - 2, 1];
+    let i = 0;
+    while (xs[i + 1] <= x) i++;
+    return [i, (x - xs[i]) / (xs[i + 1] - xs[i])];
+  };
+  const [i, tw] = at(g.ws, w), [j, th] = at(g.hs, h);
+  const c = [g.cells[i][j], g.cells[i + 1][j], g.cells[i][j + 1], g.cells[i + 1][j + 1]];
+  const near = c[(tw >= 0.5 ? 1 : 0) + (th >= 0.5 ? 2 : 0)];
+  const same = c.every((x) => x.length === c[0].length)
+    && c[0].every((p, k) => c.every((x) => x[k].at.every((v, d) => Math.abs(v - p.at[d]) < 1)));
+  if (!same) return near.map((p) => ({ at: p.at, w: w * p.k, h: h * p.k }));
+  const wt = [(1 - tw) * (1 - th), tw * (1 - th), (1 - tw) * th, tw * th];
+  return c[0].map((_, k) => {
+    const f = Math.min(1, wt.reduce((a, q, n) => a + q * c[n][k].k, 0));
+    return { at: [0, 1, 2].map((d) => wt.reduce((a, q, n) => a + q * c[n][k].at[d], 0)), w: w * f, h: h * f };
+  });
+}
+function slotParts(slot, w, h) {
+  // The pieces for an upload w x h inches: the horizontal placement from the width's row, the vertical from the
+  // height's (a place whose layout turns on the shape reads its grid instead).
+  const frame = (i) => slot.frames[i % slot.frames.length];
+  if (slot.G) return slotGrid(slot.G, w, h).map((p, i) => ({ ...p, frame: frame(i) }));
+  const pw = slotRow(slot.W, w), ph = slotRow(slot.H, h), both = ph.length === pw.length;
+  return pw.map((p, i) => {
+    const up = frame(i)[1];
+    let at = p.at;
+    if (both) {
+      const d = [0, 1, 2].reduce((a, k) => a + (ph[i].at[k] - at[k]) * up[k], 0);
+      at = at.map((v, k) => v + up[k] * d);
+    }
+    return { at, w: p.cover ? p.w : w, h: both && ph[i].cover ? ph[i].h : h, cover: p.cover || (both && ph[i].cover),
+      frame: frame(i) };
+  });
+}
+const fitRoom = (w, h, room) => { const k = Math.min(1, room[0] / w, room[1] / h); return [w * k, h * k, k]; };
+const nf = (x) => String(Math.round(x * 10) / 10);   // (num() is declared further down, after this runs at load)
+const inchText = (w, h) => (Math.max(w, h) >= 120 ? `${nf(w / 12)} × ${nf(h / 12)} ft` : `${nf(w)} × ${nf(h)} in`);
+function nearestJob(spot, w, h) {
+  // The catalog job in a place nearest an upload's size (for a place whose hardware fixes the size).
+  let best = null, bd = Infinity;
+  for (const x of opts) {
+    if (x.spot !== spot || x.upload || !groups[x.key] || !x.size) continue;
+    const d = Math.abs(Math.log(x.size[0] / w)) + Math.abs(Math.log(x.size[1] / h));
+    if (d < bd) { bd = d; best = x; }
+  }
+  return best;
+}
+function templateJob(spot) {
+  const e = GENERIC_EVERYDAY[spot];
+  return e && groups[e] ? byKey[e] : opts.find((x) => x.spot === spot && !x.upload && groups[x.key]);
+}
+function cornersUv1(mesh) {
+  // The light map's coordinates at a printed piece's four corners: top left, top right, bottom left, bottom right.
+  const a = mesh.geometry.attributes;
+  if (!a.uv1 || !a.uv) return null;
+  return [[0, 0], [1, 0], [0, 1], [1, 1]].map(([u, v]) => {
+    let best = 0, bd = Infinity;
+    for (let i = 0; i < a.uv.count; i++) {
+      const d = (a.uv.getX(i) - u) ** 2 + (a.uv.getY(i) - v) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    }
+    return [a.uv1.getX(best), a.uv1.getY(best)];
+  });
+}
+function uploadQuad(c, R, U, w, h, uv1) {
+  // One printed piece: w x h meters about c, its art's top along U (texture coordinates as glTF's: v down).
+  const g = new THREE.BufferGeometry(), n = new THREE.Vector3().crossVectors(R, U).normalize(), pos = [], nrm = [];
+  for (const [a, b] of [[-w / 2, h / 2], [w / 2, h / 2], [-w / 2, -h / 2], [w / 2, -h / 2]]) {
+    const v = c.clone().addScaledVector(R, a).addScaledVector(U, b);
+    pos.push(v.x, v.y, v.z);
+    nrm.push(n.x, n.y, n.z);
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
+  if (uv1) g.setAttribute('uv1', new THREE.Float32BufferAttribute(uv1.flat(), 2));
+  g.setIndex([0, 2, 1, 1, 2, 3]);
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  return g;
+}
+function cropFor(art, face) {
+  // The middle of the art that fills a face of another shape: [repeat x, repeat y, offset x, offset y].
+  if (Math.abs(art / face - 1) < 0.01) return null;
+  return art > face ? [face / art, 1, (1 - face / art) / 2, 0] : [1, art / face, 0, (1 - art / face) / 2];
+}
+function uploadMat(r, tex, kind, back, lit, crop, spot) {
+  // Its own material (the catalog's are shared by every piece with the same art), with the picture already in.
+  const m = artMaterial(`upload:${r.id}:${crop ? crop.map((v) => v.toFixed(3)).join(',') : ''}`, kind, back, lit);
+  const t = crop ? tex.clone() : tex;
+  if (crop) { t.repeat.set(crop[0], crop[1]); t.offset.set(crop[2], crop[3]); t.needsUpdate = true; }
+  Object.assign(m, { map: t, visible: true });
+  m.userData.loading = true;                           // nothing for loadArt() to fetch
+  m.userData.upload = r.id;
+  if (kit && NIGHT_LIT[spot]) { m.userData.nightMap = true; m.emissiveMap = t; }
+  m.needsUpdate = true;
+  return m;
+}
+function dropUpload(key, forget) {
+  // Takes an upload off the model; forgetting it, out of the catalog too.
+  const g = groups[key];
+  if (g) {
+    g.traverse((x) => {
+      if (!x.isMesh) return;
+      const i = pickGfx.indexOf(x);
+      if (i >= 0) pickGfx.splice(i, 1);
+      if (x.userData.uploadQuad) x.geometry.dispose();
+    });
+    g.removeFromParent();
+  }
+  for (const m of artOf[key] || []) { m.map && m.map.dispose(); m.dispose(); }
+  for (const k of Object.keys(artCache)) if (k.startsWith(`upload:${key.slice(7)}:`)) delete artCache[k];
+  delete groups[key];
+  delete artOf[key];
+  delete S.faces[key];
+  if (!forget) return;
+  const o = byKey[key];
+  if (state.chosen.get(o.spot) === key) {
+    if (EVERYDAY[o.spot]) state.chosen.set(o.spot, EVERYDAY[o.spot]); else state.chosen.delete(o.spot);
+  }
+  opts.splice(opts.indexOf(o), 1);
+  delete byKey[key];
+  URL.revokeObjectURL(o.thumb);
+}
+async function buildUpload(o, atLoad = false) {
+  const r = o.upload, slot = SLOTS[r.spot];
+  dropUpload(o.key, false);
+  if (!r.image) r.image = await createImageBitmap(r.blob);
+  const tex = new THREE.Texture(r.image);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.flipY = false;                                   // glTF texture coordinates, as the catalog's art
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  tex.needsUpdate = true;
+  const g = new THREE.Group(), faces = [], mats = new Set(), box = new THREE.Box3(), tmp = new THREE.Vector3();
+  g.name = o.key;
+  if (slot && slot.free) {
+    const [w, h, k] = fitRoom(r.w, r.h, slot.room);
+    const tj = templateJob(r.spot), tms = [], tfs = tj ? S.faces[tj.key] || [] : [];
+    if (tj) groups[tj.key].traverse((x) => { if (x.isMesh && x.userData.art) tms.push([x, box.setFromObject(x).getCenter(new THREE.Vector3())]); });
+    const nearest = (l, c, at) => l.reduce((m, x) => (!m || at(x).distanceTo(c) < at(m).distanceTo(c) ? x : m), null);
+    for (const p of slotParts(slot, w, h)) {
+      const R = ftV(p.frame[0]).normalize(), U = ftV(p.frame[1]).normalize(), c = ftV(p.at).multiplyScalar(FT_M);
+      const src = nearest(tms, c, (x) => x[1]);
+      const ud = src ? src[0].userData : { kind: slot.kind, back: 0 };
+      const uv1 = BAKED && src ? cornersUv1(src[0]) : null;
+      const m = uploadMat(r, tex, ud.kind || slot.kind, ud.back || 0, !!uv1, p.cover ? cropFor(r.w / r.h, p.w / p.h) : null, r.spot);
+      const pw = p.w / 12 * FT_M, ph = p.h / 12 * FT_M;
+      const mesh = new THREE.Mesh(uploadQuad(c, R, U, pw, ph, uv1), m);
+      mesh.userData = { gfx: o.key, art: `upload:${r.id}`, kind: ud.kind, uploadQuad: true };
+      mesh.castShadow = !(KIND[ud.kind] || {}).flat;
+      mesh.receiveShadow = true;
+      if (ud.kind === 'perf') mesh.renderOrder = 3;
+      g.add(mesh);
+      pickGfx.push(mesh);
+      mats.add(m);
+      const t = nearest(tfs, c, (f) => tmp.set(...f.at)) || {};
+      faces.push({ at: c.toArray(), normal: tmp.crossVectors(R, U).normalize().toArray(), w: pw, h: ph, car: t.car, view: t.view });
+    }
+    model.add(g);
+    o.size = [r.w, r.h];
+    o.note = k < 0.98 ? `shown at ${Math.round(k * 100)}% of its real size: this place holds up to ${inchText(...slot.room)}` : '';
+  } else {
+    const tj = nearestJob(r.spot, r.w, r.h);
+    if (!tj) return;
+    const src = groups[tj.key], c = src.clone(true), crop = cropFor(r.w / r.h, tj.size[0] / tj.size[1]);
+    c.visible = true;
+    c.traverse((x) => {
+      if (!x.isMesh) return;
+      x.userData = { ...x.userData, gfx: o.key };
+      if (x.userData.art) {
+        const m = uploadMat(r, tex, x.userData.kind, x.userData.back, BAKED && !!x.geometry.attributes.uv1, crop, r.spot);
+        if (x.userData.kind === 'flag') addSway(m, 'flag');
+        else if (HANG_SPOTS.has(r.spot)) addSway(m, 'hang');
+        x.material = m;
+        x.userData.art = `upload:${r.id}`;
+        mats.add(m);
+      }
+      pickGfx.push(x);
+    });
+    g.add(c);
+    src.parent.add(g);
+    faces.push(...(S.faces[tj.key] || []));
+    o.size = [...tj.size];
+    o.count = tj.count;
+    o.note = `shown at ${inchText(...tj.size)}, the nearest size this place has hardware for (your art: `
+      + `${inchText(r.w, r.h)})${crop ? ', cropped to fit' : ''}`;
+  }
+  groups[o.key] = g;
+  artOf[o.key] = mats;
+  S.faces[o.key] = faces;
+  doorGraphics(o.key, g);
+  g.visible = isOn(o.key) && !state.plain;
+  renderer.shadowMap.needsUpdate = true;
+  if (!atLoad) dirty();                                 // (at load the first frame is still to come, and dirty() with it)
+}
+for (const o of opts.filter((x) => x.upload)) await buildUpload(o, true);
 const doorT = new THREE.Matrix4(), doorR = new THREE.Matrix4(), doorB = new THREE.Matrix4(), doorM = new THREE.Matrix4();
 function setDoor(d) {
   const e = d.t * d.t * (3 - 2 * d.t);
@@ -3768,6 +4073,176 @@ $('#storeGo').addEventListener('click', () => {
   setStore({ name: f.name, make: f.make, logo: pendingLogo }, f.theme);
 });
 $('#storeOff').addEventListener('click', () => { $('#storeDlg').close(); setStore(null); });
+
+// ---- your own art: the upload dialog and the mockup (the team's, 2026-11-16) -----------------------------------------
+// A PNG, JPG, WebP or SVG is read here; a PDF (an Illustrator file saved with PDF content is one) by pdf.js, loaded from
+// cdnjs the first time one is dropped. EPS, TIFF and PSD files are turned away: export a PNG or PDF. The art is kept at
+// up to 4096 px a side. Its size: a PDF's page size, else the place's own job's width, its height following the art.
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+let upSpot = null, upArt = null;                        // the place, and the art read: { canvas, inches, pages, name, say }
+function upHint() {
+  const w = +$('#upW').value, h = +$('#upH').value, slot = SLOTS[upSpot] || {};
+  if (!(w > 0 && h > 0)) return '';
+  if (slot.free) {
+    const k = fitRoom(w, h, slot.room)[2];
+    return k < 0.98 ? `This place holds up to ${inchText(...slot.room)}, so it shows at ${Math.round(k * 100)}% of its size.`
+      : `It fits here at its real size (this place holds up to ${inchText(...slot.room)}).`;
+  }
+  const tj = nearestJob(upSpot, w, h);
+  if (!tj) return '';
+  const crop = cropFor(w / h, tj.size[0] / tj.size[1]);
+  return `This place’s hardware comes in set sizes: it goes up at ${inchText(...tj.size)}, the nearest to this size${crop ? ', cropped to fit' : ''}.`;
+}
+function syncUp() {
+  $('#upGo').disabled = !(upArt && +$('#upW').value > 0 && +$('#upH').value > 0);
+  if (upArt) $('#upNote').textContent = [upArt.say, upHint()].filter(Boolean).join(' ');
+}
+function openUpload(spot) {
+  upSpot = spot;
+  upArt = null;
+  $('#upTitle').textContent = `Your art: ${SPOT[spot].label}`;
+  $('#upSub').textContent = `${SPOT[spot].where} Placed at its real size. It stays on this computer.`;
+  $('#upPreview').hidden = true;
+  for (const id of ['upName', 'upW', 'upH']) $(`#${id}`).value = '';
+  $('#upWhite').checked = false;
+  $('#upNote').textContent = '';
+  syncUp();
+  $('#upDlg').showModal();
+}
+function toCanvas(src, w, h) {
+  const k = Math.min(1, 4096 / Math.max(w, h)), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * k));
+  c.height = Math.max(1, Math.round(h * k));
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+async function readPdf(file) {
+  // The first page, drawn by pdf.js up to 4096 px, and its page size in inches (72 points to the inch).
+  const lib = await import(PDFJS);
+  lib.GlobalWorkerOptions.workerSrc = PDFJS.replace('pdf.min.mjs', 'pdf.worker.min.mjs');
+  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  try {
+    const page = await doc.getPage(1), v1 = page.getViewport({ scale: 1 });
+    const v = page.getViewport({ scale: Math.min(8, 4096 / Math.max(v1.width, v1.height)) });
+    const c = document.createElement('canvas');
+    c.width = Math.round(v.width);
+    c.height = Math.round(v.height);
+    await page.render({ canvasContext: c.getContext('2d'), viewport: v, background: 'rgba(0,0,0,0)' }).promise;
+    return { canvas: c, inches: [v1.width / 72, v1.height / 72], pages: doc.numPages };
+  } finally { doc.destroy(); }
+}
+async function readUpload(file) {
+  const head = new Uint8Array(await file.slice(0, 4).arrayBuffer()), tag = String.fromCharCode(...head);
+  if (tag === '%PDF') return readPdf(file);
+  if (tag.startsWith('%!') || tag === '8BPS' || tag === 'II*\0' || tag === 'MM\0*' || (head[0] === 0xc5 && head[1] === 0xd0)) {
+    throw new Error('That file needs exporting first: save it as a PNG or a PDF.');
+  }
+  if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type) && !/\.(png|jpe?g|webp|svg)$/i.test(file.name)) {
+    throw new Error('Use a PNG, JPG, WebP, SVG or PDF.');
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return { canvas: toCanvas(img, img.naturalWidth || 2048, img.naturalHeight || 1024) };   // an SVG with no size: 2:1
+  } finally { URL.revokeObjectURL(url); }
+}
+async function takeUpload(file) {
+  if (!file) return;
+  upArt = null;
+  syncUp();
+  $('#upNote').textContent = 'Reading the file…';
+  try {
+    const a = await readUpload(file);
+    a.name = file.name.replace(/\.[^.]+$/, '');
+    const ratio = a.canvas.width / a.canvas.height, slot = SLOTS[upSpot] || {}, tj = templateJob(upSpot);
+    let w = tj && tj.size ? tj.size[0] : slot.room ? slot.room[0] / 2 : 24;
+    if (a.inches && a.inches[0] >= 3 && a.inches[0] <= 2400) {
+      w = a.inches[0];
+      a.say = 'The size is the PDF’s page size: change it if the file is drawn to scale.';
+    }
+    if (a.pages > 1) a.say = `${a.say || ''} It has ${a.pages} pages; the first is used.`.trim();
+    upArt = a;
+    $('#upW').value = nf(w);
+    $('#upH').value = nf(w / ratio);
+    $('#upName').value = a.name;
+    $('#upPreview').src = toCanvas(a.canvas, a.canvas.width, a.canvas.height).toDataURL('image/png');
+    $('#upPreview').hidden = false;
+  } catch (e) {
+    $('#upNote').textContent = (e && e.message && !/^[A-Z][a-z]+Error/.test(e.message) ? e.message : '')
+      || 'That file couldn’t be read. Try a PNG or a PDF.';
+  }
+  syncUp();
+}
+function dropWhite(c) {
+  // White and near-white turned clear, with a soft edge (art sent on a white page).
+  const x = c.getContext('2d'), d = x.getImageData(0, 0, c.width, c.height), a = d.data;
+  for (let i = 0; i < a.length; i += 4) {
+    const m = Math.min(a[i], a[i + 1], a[i + 2]);
+    if (m > 232) a[i + 3] = Math.round(a[i + 3] * Math.max(0, (252 - m) / 20));
+  }
+  x.putImageData(d, 0, 0);
+}
+async function removeUpload(o) {
+  dropUpload(o.key, true);
+  try { await upDel(o.upload.id); } catch { /* not kept: nothing to forget */ }
+  state.focus = null;
+  state.hover = null;
+  showChosen();
+  renderRail();
+  syncDetail();
+  updateUrl();
+  toast('Your art is off, and gone from this computer.');
+}
+const upDrop = $('#upDrop');
+upDrop.addEventListener('dragover', (e) => { e.preventDefault(); upDrop.classList.add('over'); });
+upDrop.addEventListener('dragleave', () => upDrop.classList.remove('over'));
+upDrop.addEventListener('drop', (e) => { e.preventDefault(); upDrop.classList.remove('over'); takeUpload(e.dataTransfer.files[0]); });
+$('#upPick').addEventListener('click', () => $('#upFile').click());
+$('#upFile').addEventListener('change', () => { takeUpload($('#upFile').files[0]); $('#upFile').value = ''; });
+$('#upW').addEventListener('input', () => {
+  if (upArt && +$('#upW').value > 0) $('#upH').value = nf(+$('#upW').value * upArt.canvas.height / upArt.canvas.width);
+  syncUp();
+});
+$('#upH').addEventListener('input', () => {
+  if (upArt && +$('#upH').value > 0) $('#upW').value = nf(+$('#upH').value * upArt.canvas.width / upArt.canvas.height);
+  syncUp();
+});
+$('#upClose').addEventListener('click', () => $('#upDlg').close());
+$('#upCancel').addEventListener('click', () => $('#upDlg').close());
+$('#upGo').addEventListener('click', async () => {
+  const w = +$('#upW').value, h = +$('#upH').value;
+  if (!upArt || !(w > 0 && h > 0)) return;
+  $('#upGo').disabled = true;
+  if ($('#upWhite').checked) dropWhite(upArt.canvas);
+  const blob = await new Promise((res) => upArt.canvas.toBlob(res, 'image/png'));
+  const rec = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, spot: upSpot,
+    name: $('#upName').value.trim() || upArt.name || 'Your art', w, h, blob, made: Date.now() };
+  let kept = true;
+  try { await upPut(rec); } catch { kept = false; }       // a private window: it lasts this visit
+  const o = uploadOption(rec);
+  await buildUpload(o);
+  $('#upDlg').close();
+  choose(o.key);
+  showChosen();
+  state.focus = o.key;
+  renderRail();
+  showInfo(o.spot);
+  syncAll();
+  updateUrl();
+  goUpClose(o.key, true);
+  toast(kept ? 'Your art is on, at its real size. It stays on this computer.' : 'Your art is on for this visit: this browser won’t keep it.');
+});
+$('#mockBtn').hidden = !TEAM;
+$('#mockBtn').addEventListener('click', () => {
+  // The view as it is, one full frame drawn and read straight back (the canvas keeps no copy of what it shows).
+  draw(false);
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `dealership-mockup-${new Date().toISOString().slice(0, 10)}.png`;
+  a.click();
+});
 $('#storeLink').addEventListener('click', async () => {
   // A link to the store's view, its everyday set or the theme picked: the logo isn't in it.
   const f = storeForm();
@@ -3936,12 +4411,12 @@ const GROUP_TAB = { 'Storefront glass': 'Storefront', 'Service drive': 'Service'
 function card(o) {
   const b = document.createElement('button');
   b.type = 'button';
-  b.className = ownJob(o) ? 'card own' : 'card';
+  b.className = `card${ownJob(o) ? ' own' : ''}${o.upload ? ' upload' : ''}`;
   b.dataset.key = o.key;
   b.setAttribute('aria-pressed', isOn(o.key));
   b.innerHTML = `<span class="card-art"><img alt="" loading="lazy"><span class="card-check">${CHECK}</span></span>`
     + '<span class="card-name"></span><span class="card-dealer"></span>';
-  load(b.querySelector('img'), av(o.thumb));
+  load(b.querySelector('img'), thumbOf(o));
   b.querySelector('.card-name').textContent = o.message;
   b.querySelector('.card-dealer').textContent = o.dealer;
   b.addEventListener('click', () => toggle(o.key));
@@ -4066,11 +4541,19 @@ function renderRail() {
       where.className = 'grp-blurb';
       where.textContent = sp.where;
       // A store's view lists its make's jobs (its own first), and folds the other makes' away.
-      const all = opts.filter((x) => x.spot === sp.id);
+      const all = [...opts.filter((x) => x.spot === sp.id && x.upload), ...opts.filter((x) => x.spot === sp.id && !x.upload)];
       const mine = state.store ? storeList(sp.id) : all, rest = state.store ? all.filter((o) => !fitsStore(o)) : [];
       const folds = (o) => occasionOf(o) && EVERYDAY[o.spot] !== o.key;   // the place's starting job stays in view
       const now = mine.filter((o) => !folds(o)), later = mine.filter(folds);
       sec.append(h, where);
+      if (TEAM && sp.id !== 'screens') {                // the team's own art (see "your own art")
+        const up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'linkish grp-up';
+        up.textContent = 'Upload art for this place';
+        up.addEventListener('click', () => openUpload(sp.id));
+        sec.append(up);
+      }
       const say = state.store && sp.id === 'fascia' ? `${state.store.name}’s name is here. Pick a job to see another store’s letters instead.`
         : state.store && !mine.length ? `No ${MAKE[state.store.make]} job for this place yet, so it stays bare.` : '';
       if (say) {
@@ -4143,7 +4626,13 @@ function syncDetail() {
   b.title = (VIEW[stop] || {}).label || '';
   b.setAttribute('aria-pressed', stop === state.view);
   b.addEventListener('click', () => goStop(stop));
-  $('#dViews').replaceChildren(close, b);
+  const gone = o.upload ? document.createElement('button') : null;   // the team's own art: taken off and forgotten
+  if (gone) {
+    gone.type = 'button';
+    gone.textContent = 'Remove';
+    gone.addEventListener('click', () => removeUpload(o));
+  }
+  $('#dViews').replaceChildren(close, b, ...(gone ? [gone] : []));
 }
 function syncAll() {
   for (const c of document.querySelectorAll('.card')) c.setAttribute('aria-pressed', isOn(c.dataset.key));
@@ -4189,9 +4678,10 @@ function openSheet() {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><span class="r-graphic"><img class="r-thumb" alt=""><span><span class="r-name"></span>'
       + '<span class="r-dealer"></span></span></span></td><td class="r-where"></td><td class="r-size"></td>';
-    load(tr.querySelector('img'), av(o.thumb));
+    load(tr.querySelector('img'), thumbOf(o));
     tr.querySelector('.r-name').textContent = o.product;
-    tr.querySelector('.r-dealer').textContent = `As made for ${o.dealer}${o.installed ? ` (installed as: ${o.installed})` : ''}`;
+    tr.querySelector('.r-dealer').textContent = o.upload ? 'Your art, uploaded'
+      : `As made for ${o.dealer}${o.installed ? ` (installed as: ${o.installed})` : ''}`;
     tr.querySelector('.r-where').textContent = SPOT[o.spot].where;
     tr.querySelector('.r-size').textContent = sizeText(o);
     return tr;
