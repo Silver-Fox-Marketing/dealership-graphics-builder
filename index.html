@@ -561,7 +561,7 @@ img { max-width: none; }
 .linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
 .store-note { margin: 0; min-height: 1em; overflow-wrap: anywhere; }
 .store-none { margin: 4px 0 10px; color: var(--ink-2); font-size: 12.5px; }
-/* Your own art (the team's, 2026-11-16): an upload button under each place, and the size and file dialog */
+/* Your own art (2026-11-16): an upload button under each place, and the size and file dialog */
 .grp-up { margin: -4px 0 10px 16px; }
 .up-size { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .store-form label.up-check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
@@ -842,7 +842,7 @@ img { max-width: none; }
           <button type="button" id="before" aria-pressed="false">Before</button>
           <button type="button" id="after" aria-pressed="true">After</button>
         </div>
-        <button class="chip-btn" id="mockBtn" type="button" hidden>
+        <button class="chip-btn" id="mockBtn" type="button">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2v8M4.6 7.2 8 10.6l3.4-3.4M2.6 13.4h10.8"/></svg>
           <span class="label">Download mockup</span>
         </button>
@@ -1097,20 +1097,14 @@ let dusk = false;                                       // with night: the light
 let signs = null;                                       // the store's name signs (see "your store")
 const storeKeys = new Map();                            // each theme's set for the store in view
 
-// ---- your own art (the team's, 2026-11-16) ------------------------------------------------------------------------
+// ---- your own art (2026-11-16; part of the builder for everyone since 2026-11-17) --------------------------------
 // Barrett: "allow us to upload artwork (e.g. bodysides/windshield banners/flags/etc) and have them place directly on
-// the dealership/vehicles". On his calls: for our team only (team=1 in the link turns it on in this browser, team=0
-// off), and the art never leaves the browser: each upload is kept here (IndexedDB) and stands in the catalog as a job
-// of its own, 'upload:<id>', so picking, the quote and the link work as they do for any job. Where it goes and how big:
-// assets/3d/upload-slots.json (build/upload_slots.py), from the same placement rules as the catalog's jobs.
-const TEAM = (() => {
-  const v = new URLSearchParams(location.search).get('team') ?? new URLSearchParams(location.hash.slice(1)).get('team');
-  try {
-    if (v === '1') localStorage.setItem('dsb-team', '1');
-    if (v === '0') localStorage.removeItem('dsb-team');
-    return localStorage.getItem('dsb-team') === '1';
-  } catch { return v === '1'; }
-})();
+// the dealership/vehicles". On 11/17: "I dont want this feature to be hidden behind a teams link, I'd just like it to
+// seamlessly be a part of the builder" (it had been behind team=1). The art never leaves the browser: each upload is
+// kept here (IndexedDB) and stands in the catalog as a job of its own, 'upload:<id>', so picking, the quote and the
+// link work as they do for any job. Where it goes and how big: assets/3d/upload-slots.json (build/upload_slots.py),
+// from the same placement rules as the catalog's jobs; fetched now, alongside the model, and read further down.
+const SLOTS_P = fetch(av('assets/3d/upload-slots.json')).then((r) => r.json()).catch(() => ({}));
 const UP_DB = 'dsb-uploads';
 function upStore(mode, fn) {
   return new Promise((res, rej) => {
@@ -1136,7 +1130,7 @@ function uploadOption(r) {
   byKey[o.key] = o;
   return o;
 }
-for (const r of TEAM ? await upAll() : []) if (SPOT[r.spot]) uploadOption(r);
+for (const r of await upAll()) if (SPOT[r.spot]) uploadOption(r);
 const thumbOf = (o) => (o.upload ? o.thumb : av(o.thumb));
 
 const p = new URLSearchParams(location.hash.slice(1));
@@ -2199,13 +2193,13 @@ function doorGraphics(key, g) {
 }
 for (const [key, g] of Object.entries(groups)) doorGraphics(key, g);
 
-// ---- your own art on the model (the team's, 2026-11-16) -------------------------------------------------------------
+// ---- your own art on the model (2026-11-16) -------------------------------------------------------------
 // Where an upload goes: a place whose pieces lie flat (a wall, glass, the floor, a car) takes any size up to its room,
 // placed by upload-slots.json's table, read the way build/upload_slots.py's predict() reads it; each piece borrows the
 // light baked for the nearest piece of the place's catalog job. A place that hangs its art on hardware (pole arms,
 // frames, flagpoles, stakes, posts, stands, rods) borrows the catalog job there nearest the upload's size, hardware
 // and all, and the upload goes on its faces, cropped to them.
-const SLOTS = TEAM ? await fetch(av('assets/3d/upload-slots.json')).then((r) => r.json()).catch(() => ({})) : {};
+const SLOTS = await SLOTS_P;
 const FT_M = 0.3048;
 const ftV = (v) => new THREE.Vector3(v[0], v[2], -v[1]);              // feet axes (x east, y north, z up) to the page's
 function slotRow(rows, s) {
@@ -4074,7 +4068,7 @@ $('#storeGo').addEventListener('click', () => {
 });
 $('#storeOff').addEventListener('click', () => { $('#storeDlg').close(); setStore(null); });
 
-// ---- your own art: the upload dialog and the mockup (the team's, 2026-11-16) -----------------------------------------
+// ---- your own art: the upload dialog and the mockup (2026-11-16) -----------------------------------------------------
 // A PNG, JPG, WebP or SVG is read here; a PDF (an Illustrator file saved with PDF content is one) by pdf.js, loaded from
 // cdnjs the first time one is dropped. EPS, TIFF and PSD files are turned away: export a PNG or PDF. The art is kept at
 // up to 4096 px a side. Its size: a PDF's page size, else the place's own job's width, its height following the art.
@@ -4234,7 +4228,6 @@ $('#upGo').addEventListener('click', async () => {
   goUpClose(o.key, true);
   toast(kept ? 'Your art is on, at its real size. It stays on this computer.' : 'Your art is on for this visit: this browser won’t keep it.');
 });
-$('#mockBtn').hidden = !TEAM;
 $('#mockBtn').addEventListener('click', () => {
   // The view as it is, one full frame drawn and read straight back (the canvas keeps no copy of what it shows).
   draw(false);
@@ -4318,9 +4311,9 @@ function closeStudio(fromHistory = false) {
   if (!fromHistory) history.back();
   if (back !== null) {
     const keys = back.split(',').filter(Boolean);
-    // The team's art uploaded in the studio for the windshield's top, the doors or the hood is in this browser's store,
+    // Art uploaded in the studio for the windshield's top, the doors or the hood is in this browser's store,
     // tagged with the car place it goes to here: fetched now, if it came after this page loaded (see "your own art").
-    if (TEAM && keys.some((k) => k.startsWith('upload:') && !byKey[k])) pullUploads().then(() => bringBack(keys));
+    if (keys.some((k) => k.startsWith('upload:') && !byKey[k])) pullUploads().then(() => bringBack(keys));
     else bringBack(keys);
   }
   dirty();
@@ -4359,7 +4352,7 @@ function bringBack(keys) {
   // place the build left empty comes off the cars too.
   const next = new Map(state.chosen), took = new Set();
   for (const k of keys) {
-    const o = byKey[k.startsWith('upload:') ? k : `vgb-${k}`];   // the team's own art keeps its key across both builders
+    const o = byKey[k.startsWith('upload:') ? k : `vgb-${k}`];   // your own art keeps its key across both builders
     if (!o || !CAR_SPOTS.includes(o.spot) || took.has(o.spot)) continue;
     took.add(o.spot);
     next.set(o.spot, o.key);
@@ -4559,7 +4552,7 @@ function renderRail() {
       const folds = (o) => occasionOf(o) && EVERYDAY[o.spot] !== o.key;   // the place's starting job stays in view
       const now = mine.filter((o) => !folds(o)), later = mine.filter(folds);
       sec.append(h, where);
-      if (TEAM && sp.id !== 'screens') {                // the team's own art (see "your own art")
+      if (sp.id !== 'screens') {                        // your own art (see "your own art")
         const up = document.createElement('button');
         up.type = 'button';
         up.className = 'linkish grp-up';
@@ -4639,7 +4632,7 @@ function syncDetail() {
   b.title = (VIEW[stop] || {}).label || '';
   b.setAttribute('aria-pressed', stop === state.view);
   b.addEventListener('click', () => goStop(stop));
-  const gone = o.upload ? document.createElement('button') : null;   // the team's own art: taken off and forgotten
+  const gone = o.upload ? document.createElement('button') : null;   // your own art: taken off and forgotten
   if (gone) {
     gone.type = 'button';
     gone.textContent = 'Remove';
